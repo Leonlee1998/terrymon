@@ -22,7 +22,7 @@ export default function KioskPet() {
     setSelecting(pet.id)
     setSelectedPet(pet)
     await new Promise(r => setTimeout(r, 600))
-    router.push('/kiosk/services')
+    router.push(checkinMode === 'has_appointment' ? '/kiosk/contract' : '/kiosk/services')
   }
 
   return (

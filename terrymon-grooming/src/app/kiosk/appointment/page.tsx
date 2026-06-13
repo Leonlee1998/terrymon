@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ChevronLeft, CalendarDays, Clock, Scissors, PawPrint } from 'lucide-react'
 import { useKioskStore } from '@/stores/kioskStore'
+import { MOCK_MAIN_SERVICES, MOCK_ADDON_SERVICES } from '@/lib/mock'
 import { Button } from '@/components/ui/button'
 
 // Mock 預約資料（後期從 Supabase 查）
@@ -11,6 +12,7 @@ const MOCK_APPOINTMENT = {
   time: '14:00',
   groomer: '小美',
   service: '洗澡＋剪毛',
+  addons: ['香氛深層護毛'] as string[],
   petName: '小怪獸',
   duration: 90,
   note: '需特別注意耳朵清潔',
@@ -18,7 +20,7 @@ const MOCK_APPOINTMENT = {
 
 export default function KioskAppointment() {
   const router = useRouter()
-  const { member, setGroomer, setTime } = useKioskStore()
+  const { member, setGroomer, setTime, setMainService, toggleAddon } = useKioskStore()
 
   useEffect(() => {
     if (!member) router.replace('/kiosk')
@@ -31,6 +33,16 @@ export default function KioskAppointment() {
   function handleConfirm() {
     setGroomer(appt.groomer)
     setTime(appt.time)
+
+    // Pre-populate services from appointment so contract page has data
+    const allServices = [...MOCK_MAIN_SERVICES, ...MOCK_ADDON_SERVICES]
+    const mainService = allServices.find(s => !s.isAddon && s.name === appt.service)
+    if (mainService) setMainService(mainService)
+    appt.addons?.forEach(addonName => {
+      const addon = allServices.find(s => s.isAddon && s.name === addonName)
+      if (addon) toggleAddon(addon)
+    })
+
     router.push('/kiosk/pet')
   }
 
