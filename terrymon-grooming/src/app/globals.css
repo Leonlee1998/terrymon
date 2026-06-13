@@ -185,3 +185,8 @@
     @apply bg-background text-foreground font-sans antialiased;
   }
 }
+
+@keyframes scan {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(calc(100% + 8px)); }
+}

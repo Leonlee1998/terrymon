@@ -9,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import type { GroomingService } from '@/types'
+import type { KioskService } from '@/types'
 
 const schema = z.object({
   name: z.string().min(1, '必填'),
@@ -25,8 +25,8 @@ type FormValues = z.infer<typeof schema>
 interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
-  editTarget: GroomingService | null
-  onSave: (data: Omit<GroomingService, 'id'>) => void
+  editTarget: KioskService | null
+  onSave: (data: Omit<KioskService, 'id'>) => void
 }
 
 const DEFAULTS: FormValues = { name: '', description: '', price: 0, duration: 0, isAddon: false, enabled: true }

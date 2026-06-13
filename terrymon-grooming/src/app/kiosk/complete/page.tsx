@@ -1,84 +1,144 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
+import { CheckCircle2, FileDown, Wallet, CreditCard } from 'lucide-react'
 import { useKioskStore } from '@/stores/kioskStore'
+import { formatPrice } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+
+const COUNTDOWN_SECONDS = 15
 
 export default function KioskComplete() {
   const router = useRouter()
-  const { signatureData, selectedMain, selectedAddons, totalPrice, totalDuration, reset } = useKioskStore()
-  const [countdown, setCountdown] = useState(10)
+  const { member, selectedPet, selectedMain, totalPrice, totalDuration, serviceNames, contractUrl, balanceToUse, cardAmount, reset } = useKioskStore()
+  const [countdown, setCountdown] = useState(COUNTDOWN_SECONDS)
 
   useEffect(() => {
-    if (!signatureData) { router.replace('/kiosk'); return }
-    const id = setInterval(() => {
-      setCountdown(c => {
-        if (c <= 1) {
-          clearInterval(id)
+    if (!selectedMain) { router.replace('/kiosk'); return }
+
+    const timer = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(timer)
           reset()
           router.replace('/kiosk')
           return 0
         }
-        return c - 1
+        return prev - 1
       })
     }, 1000)
-    return () => clearInterval(id)
-  }, [signatureData, router, reset])
 
-  if (!signatureData || !selectedMain) return null
+    return () => clearInterval(timer)
+  }, [selectedMain, reset, router])
 
-  const allServices = [selectedMain, ...selectedAddons]
+  if (!member || !selectedPet || !selectedMain) return null
 
-  function handleReturn() {
-    reset()
-    router.replace('/kiosk')
-  }
+  const names = serviceNames()
+  const price = totalPrice()
+  const duration = totalDuration()
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center px-6 text-center">
-      <style>{`
-        @keyframes pop {
-          0%   { scale: 0 }
-          80%  { scale: 1.15 }
-          100% { scale: 1 }
-        }
-      `}</style>
-
-      {/* Success icon */}
-      <div className="w-24 h-24 rounded-full bg-primary flex items-center justify-center mb-6"
-           style={{ animation: 'pop 0.5s ease-out' }}>
-        <span className="text-white text-5xl font-black">✓</span>
+    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+      <div className="animate-pop mb-6">
+        <CheckCircle2 size={80} className="text-white" strokeWidth={1.5} />
       </div>
 
-      <h1 className="text-3xl font-black text-primary mb-2">服務確認完成！</h1>
-      <p className="text-slate-400 mb-8">感謝您的光臨 🐾</p>
+      <h1 className="text-white font-black text-4xl mb-2">服務確認完成！</h1>
+      <p className="text-white/70 text-lg mb-8">感謝 {member.name} 的光臨 🐾</p>
 
       {/* Summary card */}
-      <div className="bg-primary-bg rounded-2xl p-5 w-full max-w-sm text-left mb-6">
-        <div className="space-y-1 mb-4">
-          {allServices.map(s => (
-            <p key={s.id} className="text-sm text-ink">✓ {s.name}</p>
+      <div className="bg-white rounded-3xl p-6 w-full max-w-md mb-6 text-left shadow-xl">
+        <div className="flex items-center gap-3 mb-4 pb-4 border-b border-border-t">
+          <img
+            src={selectedPet.photoUrl}
+            alt={selectedPet.name}
+            className="w-14 h-14 rounded-xl object-cover"
+          />
+          <div>
+            <p className="font-black text-ink text-lg">{selectedPet.name}</p>
+            <p className="text-slate-t text-sm">{selectedPet.breed}</p>
+            <p className="text-slate-t text-xs">{member.name}</p>
+          </div>
+        </div>
+
+        <div className="space-y-2 mb-4">
+          {names.map(name => (
+            <div key={name} className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+              <p className="text-ink text-sm">{name}</p>
+            </div>
           ))}
         </div>
-        <p className="font-bold text-ink">總費用：NT$ {totalPrice()}</p>
-        <p className="text-sm text-slate-500 mt-0.5">預計時間：約 {totalDuration()} 分鐘</p>
+
+        <div className="border-t border-border-t pt-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-slate-t">預計時間</p>
+              <p className="font-bold text-ink">約 {duration} 分鐘</p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-slate-t">服務費用</p>
+              <p className="text-2xl font-black text-primary">{formatPrice(price)}</p>
+            </div>
+          </div>
+
+          {/* Payment breakdown */}
+          <div className="bg-surface rounded-2xl px-4 py-3 space-y-2">
+            {balanceToUse > 0 && (
+              <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-1.5">
+                  <Wallet size={13} className="text-primary" />
+                  <span className="text-slate-t">儲值折抵</span>
+                </div>
+                <span className="font-semibold text-primary">-{formatPrice(balanceToUse)}</span>
+              </div>
+            )}
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-1.5">
+                <CreditCard size={13} className="text-slate-t" />
+                <span className="text-slate-t">刷卡金額</span>
+              </div>
+              <span className="font-bold text-ink">{formatPrice(cardAmount())}</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <p className="text-xs text-slate-400 mb-8">合約已傳送至您的手機 App 及 LINE</p>
+      <div className="bg-white/20 rounded-2xl px-4 py-3 mb-4 text-sm text-white text-center">
+        合約已傳送至 LINE 並儲存至雲端 📲
+      </div>
 
-      {/* Countdown bar */}
-      <div className="w-full max-w-sm mb-2">
-        <div className="bg-border-t rounded-full h-1.5 w-full">
+      {contractUrl && (
+        <a
+          href={contractUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 bg-white text-primary font-bold rounded-2xl px-6 py-3 mb-4 text-sm shadow-md hover:bg-primary-bg transition-colors"
+        >
+          <FileDown size={18} />
+          下載合約 PDF
+        </a>
+      )}
+
+      <div className="w-full max-w-md mb-4">
+        <div className="flex justify-between text-white/60 text-xs mb-2">
+          <span>{countdown} 秒後自動返回首頁</span>
+          <span>{COUNTDOWN_SECONDS - countdown}/{COUNTDOWN_SECONDS}</span>
+        </div>
+        <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
           <div
-            className="bg-primary h-full rounded-full transition-all duration-1000"
-            style={{ width: `${countdown * 10}%` }}
+            className="h-full bg-white rounded-full transition-all duration-1000"
+            style={{ width: `${(countdown / COUNTDOWN_SECONDS) * 100}%` }}
           />
         </div>
       </div>
-      <p className="text-xs text-slate-400 mb-4">{countdown} 秒後自動返回</p>
 
-      <Button variant="outline" onClick={handleReturn}>
-        立即返回
+      <Button
+        onClick={() => { reset(); router.replace('/kiosk') }}
+        variant="outline"
+        className="border-white/30 text-white hover:bg-white/10 hover:text-white"
+      >
+        立即返回首頁
       </Button>
     </div>
   )

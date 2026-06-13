@@ -1,26 +1,30 @@
 import type {
-  Member, Pet, MedicalRecord, GroomingRecord,
-  Appointment, GroomingService, QueueItem, DocItem, Product
+  Member, Pet, MedicalRecord, PetGroomingRecord,
+  Appointment, KioskService, QueueItem, DocItem, Product,
+  Groomer, Breed, WeightRange, CoatLength, GroomingService, ServicePriceMatrix,
+  ShopProduct, GroomerShift, StoreHours, GroomingRecord,
 } from '@/types'
 
 export const MOCK_MEMBER: Member = {
   id: 'M001', name: '林小華', phone: '0912-345-678',
   email: 'demo@terrymon.com', qrCode: 'TERRYMON-M001-1718000000',
-  memberSince: '2023-06-01', balance: 3500, points: 280, pets: [],
+  memberSince: '2023-06-01', balance: 3500, points: 280,
+  tier: 'silver', pets: [],
 }
 
 export const MOCK_PETS: Pet[] = [
   {
     id: 'P001', memberId: 'M001', name: '小怪獸',
     species: 'dog', breed: '柯基犬', birthDate: '2020-03-15',
-    weight: 9.2, photoUrl: 'https://placedog.net/300/300?id=10',
-    allergies: ['雞肉蛋白'], notes: '個性活潑，對陌生人較敏感',
+    weight: 9.2, photoUrl: 'https://placedog.net/200/200?id=10',
+    allergies: ['雞肉蛋白'], chipId: 'TWN123456789',
+    notes: '個性活潑，對陌生人較敏感', isActive: true,
   },
   {
     id: 'P002', memberId: 'M001', name: '咪咪',
     species: 'cat', breed: '英國短毛貓', birthDate: '2021-08-20',
-    weight: 4.8, photoUrl: 'https://placekitten.com/300/300',
-    allergies: [], notes: '喜歡安靜環境',
+    weight: 4.8, photoUrl: 'https://placekitten.com/200/200',
+    allergies: [], notes: '喜歡安靜環境', isActive: true,
   },
 ]
 
@@ -53,7 +57,7 @@ export const MOCK_MEDICAL: MedicalRecord[] = [
   },
 ]
 
-export const MOCK_GROOMING_RECORDS: GroomingRecord[] = [
+export const MOCK_PET_GROOMING_RECORDS: PetGroomingRecord[] = [
   {
     id: 'GR001', petId: 'P001', date: '2026-06-01',
     shopName: 'Furchic 寵物美容',
@@ -86,26 +90,35 @@ export const MOCK_APPOINTMENTS: Appointment[] = [
   },
 ]
 
-export const MOCK_MAIN_SERVICES: GroomingService[] = [
-  { id: 'GS001', name: '基礎洗澡', price: 800, duration: 90,
-    description: '沐浴、吹乾、基本梳毛', isAddon: false, enabled: true },
-  { id: 'GS002', name: '洗澡＋剪毛', price: 1200, duration: 150,
-    description: '沐浴、吹乾、全身剪毛', isAddon: false, enabled: true },
-  { id: 'GS003', name: '全套造型', price: 1800, duration: 210,
-    description: '沐浴、吹乾、造型剪毛', isAddon: false, enabled: true },
+export const MOCK_MAIN_SERVICES: KioskService[] = [
+  {
+    id: 'GS001', name: '基礎洗澡', price: 800, duration: 90,
+    description: '沐浴、吹乾、基本梳毛整理',
+    isAddon: false, enabled: true,
+  },
+  {
+    id: 'GS002', name: '洗澡＋剪毛', price: 1200, duration: 150,
+    description: '沐浴、吹乾、全身造型剪毛',
+    isAddon: false, enabled: true,
+  },
+  {
+    id: 'GS003', name: '全套精緻造型', price: 1800, duration: 210,
+    description: '沐浴、吹乾、精緻造型剪毛、飾品',
+    isAddon: false, enabled: true,
+  },
 ]
 
-export const MOCK_ADDON_SERVICES: GroomingService[] = [
-  { id: 'GA001', name: '香氛護毛', price: 200, duration: 20,
-    description: '深層護毛精華', isAddon: true, enabled: true },
-  { id: 'GA002', name: '牙齒潔淨', price: 150, duration: 15,
-    description: '超音波潔牙', isAddon: true, enabled: true },
-  { id: 'GA003', name: '耳道清潔', price: 100, duration: 10,
-    description: '清除耳垢', isAddon: true, enabled: true },
-  { id: 'GA004', name: '趾甲磨圓', price: 100, duration: 10,
-    description: '剪甲磨圓', isAddon: true, enabled: true },
+export const MOCK_ADDON_SERVICES: KioskService[] = [
+  { id: 'GA001', name: '香氛深層護毛', price: 200, duration: 20,
+    description: '頂級護毛精華，持久留香', isAddon: true, enabled: true },
+  { id: 'GA002', name: '牙齒潔淨護理', price: 150, duration: 15,
+    description: '超音波輔助潔牙', isAddon: true, enabled: true },
+  { id: 'GA003', name: '耳道深層清潔', price: 100, duration: 10,
+    description: '清除耳垢，預防外耳炎', isAddon: true, enabled: true },
+  { id: 'GA004', name: '趾甲修剪磨圓', price: 100, duration: 10,
+    description: '剪短並磨圓，防止刮傷', isAddon: true, enabled: true },
   { id: 'GA005', name: '肛門腺清潔', price: 150, duration: 10,
-    description: '定期清潔', isAddon: true, enabled: true },
+    description: '定期清潔維持健康', isAddon: true, enabled: true },
 ]
 
 export const MOCK_QUEUE: QueueItem[] = [
@@ -188,7 +201,7 @@ export const CONTRACT_TEMPLATE = `寵物美容定型化契約書
 
 立約當事人：
 甲方（飼主）：{{memberName}}　聯絡電話：{{memberPhone}}
-乙方（美容業者）：TerryMon 美容院
+乙方（美容業者）：TerryMon 寵物美容
 
 服務寵物：
 寵物名稱：{{petName}}　品種：{{petBreed}}　體重：{{petWeight}} kg
@@ -199,31 +212,318 @@ export const CONTRACT_TEMPLATE = `寵物美容定型化契約書
 服務費用：新台幣 {{totalPrice}} 元整
 服務日期：{{serviceDate}}
 
-注意事項：
-一、甲方委託乙方對寵物進行美容服務。
-二、甲方應事先告知寵物健康狀況，包含過敏史及特殊狀況。
-三、乙方發現寵物異常時，有權暫停服務並通知甲方。
-四、服務期間因寵物自身健康因素造成的意外，乙方不負賠償責任。
-五、甲方疑義應於服務完成當日提出。
+特別注意事項：
+{{allergyNote}}
 
-甲方簽名：________________________　日期：{{signDate}}`
+服務條款：
+一、甲方委託乙方對寵物進行美容服務，乙方應依甲方指示及本契約規定提供服務。
+二、甲方應事先告知寵物的健康狀況，包含過敏史、慢性疾病及特殊狀況。
+三、乙方發現寵物有異常狀況時，有權暫停服務並立即通知甲方。
+四、服務期間因寵物自身健康因素造成的意外，乙方不負賠償責任，但應立即通知甲方。
+五、甲方對服務有任何疑義，應於服務完成當日提出。
+六、本契約一式二份，甲乙雙方各執一份為憑。
+
+甲方簽名：_______________　　日期：{{signDate}}`
+
+export function lookupMember(input: string): Member | null {
+  if (!input.trim()) return null
+  return { ...MOCK_MEMBER, pets: MOCK_PETS }
+}
+
+export function fillContract(params: {
+  memberName: string
+  memberPhone: string
+  petName: string
+  petBreed: string
+  petWeight: number
+  petAllergies: string[]
+  services: string[]
+  totalPrice: number
+}): string {
+  const serviceList = params.services.map((s, i) => `${i + 1}. ${s}`).join('\n')
+  const allergyNote = params.petAllergies.length > 0
+    ? `⚠️ 重要提醒：${params.petName} 對「${params.petAllergies.join('、')}」有過敏史，請使用相容產品。`
+    : '無特殊過敏史紀錄。'
+  const today = new Date().toLocaleDateString('zh-TW', {
+    year: 'numeric', month: '2-digit', day: '2-digit',
+  })
+  return CONTRACT_TEMPLATE
+    .replace('{{memberName}}', params.memberName)
+    .replace('{{memberPhone}}', params.memberPhone)
+    .replace('{{petName}}', params.petName)
+    .replace('{{petBreed}}', params.petBreed)
+    .replace('{{petWeight}}', String(params.petWeight))
+    .replace('{{serviceList}}', serviceList)
+    .replace('{{totalPrice}}', params.totalPrice.toLocaleString())
+    .replace('{{serviceDate}}', today)
+    .replace('{{allergyNote}}', allergyNote)
+    .replace('{{signDate}}', today)
+}
 
 export const MOCK_TODAY_SCHEDULE = [
-  { id: 'SCH001', time: '10:00', petName: '小怪獸',
-    memberName: '林小華', service: '全套造型',
+  { id: 'SCH001', time: '10:00', endTime: '11:30', petName: '小怪獸',
+    memberName: '林小華', service: '全套精緻造型',
     groomer: '小美', status: 'completed' as const },
-  { id: 'SCH002', time: '11:30', petName: '咪咪',
+  { id: 'SCH002', time: '11:30', endTime: '13:00', petName: '咪咪',
     memberName: '林小華', service: '洗澡＋剪毛',
     groomer: '小芳', status: 'in-progress' as const },
-  { id: 'SCH003', time: '14:00', petName: '胖虎',
+  { id: 'SCH003', time: '14:00', endTime: '15:30', petName: '胖虎',
     memberName: '張大明', service: '基礎洗澡',
     groomer: '小美', status: 'pending' as const },
-  { id: 'SCH004', time: '15:30', petName: '雪球',
-    memberName: '陳美玲', service: '全套造型',
+  { id: 'SCH004', time: '15:30', endTime: '17:30', petName: '雪球',
+    memberName: '陳美玲', service: '全套精緻造型',
     groomer: '小芳', status: 'pending' as const },
-  { id: 'SCH005', time: '17:00', petName: '黑糖',
+  { id: 'SCH005', time: '17:00', endTime: '18:30', petName: '黑糖',
     memberName: '王志豪', service: '洗澡＋剪毛',
     groomer: '小美', status: 'pending' as const },
 ]
 
-export const MOCK_GROOMERS = ['小美', '小芳', '阿志']
+export const MOCK_GROOMER_NAMES = ['小美', '小芳', '阿志']
+
+// ─────────────────────────────────────────────────────
+// 以下為美容後台完整版新增 Mock 資料
+// ─────────────────────────────────────────────────────
+
+export const WEIGHT_RANGES: WeightRange[] = [
+  { id: 'xs', label: 'XS（1-3 kg）',   minKg: 1,  maxKg: 3  },
+  { id: 's',  label: 'S（3-6 kg）',    minKg: 3,  maxKg: 6  },
+  { id: 'm',  label: 'M（6-12 kg）',   minKg: 6,  maxKg: 12 },
+  { id: 'l',  label: 'L（12-25 kg）',  minKg: 12, maxKg: 25 },
+  { id: 'xl', label: 'XL（25 kg+）',   minKg: 25, maxKg: 99 },
+]
+
+export const BREED_DATABASE: Breed[] = [
+  { id: 'B001', name: '馬爾濟斯',       nameEn: 'Maltese',           species: 'dog', defaultCoatLength: 'long',   defaultWeightRangeId: 'xs', tags: ['容易打結'],              isCustom: false },
+  { id: 'B002', name: '貴賓犬（玩具）', nameEn: 'Toy Poodle',        species: 'dog', defaultCoatLength: 'medium', defaultWeightRangeId: 'xs', tags: ['需定期修剪'],             isCustom: false },
+  { id: 'B003', name: '約克夏',         nameEn: 'Yorkshire Terrier', species: 'dog', defaultCoatLength: 'long',   defaultWeightRangeId: 'xs', tags: ['長毛需護理'],             isCustom: false },
+  { id: 'B004', name: '吉娃娃',         nameEn: 'Chihuahua',         species: 'dog', defaultCoatLength: 'short',  defaultWeightRangeId: 'xs', tags: [],                        isCustom: false },
+  { id: 'B005', name: '博美',           nameEn: 'Pomeranian',        species: 'dog', defaultCoatLength: 'long',   defaultWeightRangeId: 'xs', tags: ['雙層毛'],                 isCustom: false },
+  { id: 'B006', name: '西施',           nameEn: 'Shih Tzu',          species: 'dog', defaultCoatLength: 'long',   defaultWeightRangeId: 's',  tags: ['容易打結'],               isCustom: false },
+  { id: 'B007', name: '貴賓犬（迷你）', nameEn: 'Miniature Poodle',  species: 'dog', defaultCoatLength: 'medium', defaultWeightRangeId: 's',  tags: ['需定期修剪'],             isCustom: false },
+  { id: 'B008', name: '蝴蝶犬',         nameEn: 'Papillon',          species: 'dog', defaultCoatLength: 'long',   defaultWeightRangeId: 'xs', tags: [],                        isCustom: false },
+  { id: 'B009', name: '比熊犬',         nameEn: 'Bichon Frise',      species: 'dog', defaultCoatLength: 'medium', defaultWeightRangeId: 's',  tags: ['毛質蓬鬆'],              isCustom: false },
+  { id: 'B010', name: '臘腸犬',         nameEn: 'Dachshund',         species: 'dog', defaultCoatLength: 'short',  defaultWeightRangeId: 's',  tags: [],                        isCustom: false },
+  { id: 'B011', name: '柯基犬',         nameEn: 'Corgi',             species: 'dog', defaultCoatLength: 'medium', defaultWeightRangeId: 'm',  tags: ['雙層毛'],                 isCustom: false },
+  { id: 'B012', name: '雪納瑞',         nameEn: 'Schnauzer',         species: 'dog', defaultCoatLength: 'wire',   defaultWeightRangeId: 'm',  tags: ['鋼毛需手拔'],             isCustom: false },
+  { id: 'B013', name: '柴犬',           nameEn: 'Shiba Inu',         species: 'dog', defaultCoatLength: 'double', defaultWeightRangeId: 'm',  tags: ['雙層毛', '換毛期大量掉毛'], isCustom: false },
+  { id: 'B014', name: '法國鬥牛',       nameEn: 'French Bulldog',    species: 'dog', defaultCoatLength: 'short',  defaultWeightRangeId: 'm',  tags: ['皮膚皺摺需清潔'],         isCustom: false },
+  { id: 'B015', name: '米格魯',         nameEn: 'Beagle',            species: 'dog', defaultCoatLength: 'short',  defaultWeightRangeId: 'm',  tags: [],                        isCustom: false },
+  { id: 'B016', name: '標準貴賓',       nameEn: 'Standard Poodle',   species: 'dog', defaultCoatLength: 'medium', defaultWeightRangeId: 'l',  tags: ['需定期修剪'],             isCustom: false },
+  { id: 'B017', name: '黃金獵犬',       nameEn: 'Golden Retriever',  species: 'dog', defaultCoatLength: 'long',   defaultWeightRangeId: 'l',  tags: ['掉毛多', '需除毛'],       isCustom: false },
+  { id: 'B018', name: '拉布拉多',       nameEn: 'Labrador',          species: 'dog', defaultCoatLength: 'short',  defaultWeightRangeId: 'l',  tags: [],                        isCustom: false },
+  { id: 'B019', name: '薩摩耶',         nameEn: 'Samoyed',           species: 'dog', defaultCoatLength: 'double', defaultWeightRangeId: 'xl', tags: ['雙層毛', '梳毛耗時'],     isCustom: false },
+  { id: 'B020', name: '哈士奇',         nameEn: 'Siberian Husky',    species: 'dog', defaultCoatLength: 'double', defaultWeightRangeId: 'l',  tags: ['雙層毛'],                 isCustom: false },
+  { id: 'B021', name: '邊境牧羊犬',     nameEn: 'Border Collie',     species: 'dog', defaultCoatLength: 'medium', defaultWeightRangeId: 'l',  tags: [],                        isCustom: false },
+  { id: 'B022', name: '英國短毛貓',     nameEn: 'British Shorthair', species: 'cat', defaultCoatLength: 'short',  defaultWeightRangeId: 's',  tags: [],                        isCustom: false },
+  { id: 'B023', name: '美國短毛貓',     nameEn: 'American Shorthair',species: 'cat', defaultCoatLength: 'short',  defaultWeightRangeId: 's',  tags: [],                        isCustom: false },
+  { id: 'B024', name: '波斯貓',         nameEn: 'Persian',           species: 'cat', defaultCoatLength: 'long',   defaultWeightRangeId: 's',  tags: ['長毛需日常梳理'],         isCustom: false },
+  { id: 'B025', name: '緬因貓',         nameEn: 'Maine Coon',        species: 'cat', defaultCoatLength: 'long',   defaultWeightRangeId: 'm',  tags: ['大型貓', '長毛'],         isCustom: false },
+  { id: 'B026', name: '暹羅貓',         nameEn: 'Siamese',           species: 'cat', defaultCoatLength: 'short',  defaultWeightRangeId: 'xs', tags: [],                        isCustom: false },
+  { id: 'B027', name: '布偶貓',         nameEn: 'Ragdoll',           species: 'cat', defaultCoatLength: 'long',   defaultWeightRangeId: 'm',  tags: ['溫馴', '長毛'],           isCustom: false },
+  { id: 'B028', name: '蘇格蘭折耳',     nameEn: 'Scottish Fold',     species: 'cat', defaultCoatLength: 'short',  defaultWeightRangeId: 's',  tags: ['耳道需注意'],             isCustom: false },
+  { id: 'B029', name: '混種犬',         nameEn: 'Mixed Dog',         species: 'dog', defaultCoatLength: 'medium', defaultWeightRangeId: 'm',  tags: [],                        isCustom: false },
+  { id: 'B030', name: '混種貓',         nameEn: 'Mixed Cat',         species: 'cat', defaultCoatLength: 'short',  defaultWeightRangeId: 'xs', tags: [],                        isCustom: false },
+]
+
+export const MOCK_GROOMERS: Groomer[] = [
+  { id: 'G001', storeId: 'S001', name: '王美玲', rank: 'director',
+    specialties: ['貴賓', '比熊', '長毛犬'], maxDailySlots: 4, isActive: true, joinedAt: '2020-01-01' },
+  { id: 'G002', storeId: 'S001', name: '陳小芳', rank: 'senior',
+    specialties: ['大型犬', '雙層毛'], maxDailySlots: 5, isActive: true, joinedAt: '2021-06-01' },
+  { id: 'G003', storeId: 'S001', name: '李阿志', rank: 'stylist',
+    specialties: ['洗澡', '基礎護理'], maxDailySlots: 6, isActive: true, joinedAt: '2023-03-01' },
+  { id: 'G004', storeId: 'S001', name: '張曉雯', rank: 'stylist',
+    specialties: ['貓咪', '短毛犬'], maxDailySlots: 6, isActive: true, joinedAt: '2024-01-15' },
+]
+
+export const MOCK_SERVICES: GroomingService[] = [
+  {
+    id: 'SV001', storeId: 'S001', name: '基礎洗澡', category: 'main',
+    description: '沐浴、吹乾、基本梳毛整理',
+    applicableSpecies: ['dog', 'cat'], isEnabled: true, sortOrder: 1,
+    priceMatrix: [
+      { weightRangeId: 'xs', coatLength: 'short',  regularPrice: 600,  memberPrice: 560,  balancePrice: 520,  durationMin: 60  },
+      { weightRangeId: 'xs', coatLength: 'long',   regularPrice: 750,  memberPrice: 700,  balancePrice: 660,  durationMin: 90  },
+      { weightRangeId: 's',  coatLength: 'short',  regularPrice: 750,  memberPrice: 700,  balancePrice: 650,  durationMin: 75  },
+      { weightRangeId: 's',  coatLength: 'long',   regularPrice: 900,  memberPrice: 850,  balancePrice: 800,  durationMin: 100 },
+      { weightRangeId: 'm',  coatLength: 'short',  regularPrice: 950,  memberPrice: 900,  balancePrice: 850,  durationMin: 90  },
+      { weightRangeId: 'm',  coatLength: 'medium', regularPrice: 1100, memberPrice: 1050, balancePrice: 990,  durationMin: 120 },
+      { weightRangeId: 'm',  coatLength: 'double', regularPrice: 1300, memberPrice: 1200, balancePrice: 1150, durationMin: 150 },
+      { weightRangeId: 'l',  coatLength: 'short',  regularPrice: 1400, memberPrice: 1300, balancePrice: 1250, durationMin: 120 },
+      { weightRangeId: 'l',  coatLength: 'long',   regularPrice: 1800, memberPrice: 1700, balancePrice: 1600, durationMin: 180 },
+      { weightRangeId: 'xl', coatLength: 'short',  regularPrice: 2000, memberPrice: 1850, balancePrice: 1750, durationMin: 150 },
+      { weightRangeId: 'xl', coatLength: 'double', regularPrice: 2800, memberPrice: 2600, balancePrice: 2400, durationMin: 240 },
+    ],
+    createdAt: '2024-01-01',
+  },
+  {
+    id: 'SV002', storeId: 'S001', name: '洗澡＋剪毛', category: 'main',
+    description: '沐浴、吹乾、全身造型修剪',
+    applicableSpecies: ['dog', 'cat'], isEnabled: true, sortOrder: 2,
+    priceMatrix: [
+      { weightRangeId: 'xs', coatLength: 'short',  regularPrice: 900,  memberPrice: 850,  balancePrice: 800,  durationMin: 90  },
+      { weightRangeId: 'xs', coatLength: 'long',   regularPrice: 1100, memberPrice: 1000, balancePrice: 950,  durationMin: 120 },
+      { weightRangeId: 's',  coatLength: 'short',  regularPrice: 1100, memberPrice: 1050, balancePrice: 980,  durationMin: 100 },
+      { weightRangeId: 's',  coatLength: 'long',   regularPrice: 1400, memberPrice: 1300, balancePrice: 1200, durationMin: 150 },
+      { weightRangeId: 'm',  coatLength: 'short',  regularPrice: 1500, memberPrice: 1400, balancePrice: 1300, durationMin: 130 },
+      { weightRangeId: 'm',  coatLength: 'medium', regularPrice: 1800, memberPrice: 1700, balancePrice: 1600, durationMin: 180 },
+      { weightRangeId: 'm',  coatLength: 'double', regularPrice: 2200, memberPrice: 2000, balancePrice: 1900, durationMin: 210 },
+      { weightRangeId: 'l',  coatLength: 'short',  regularPrice: 2200, memberPrice: 2000, balancePrice: 1900, durationMin: 180 },
+      { weightRangeId: 'l',  coatLength: 'long',   regularPrice: 2800, memberPrice: 2600, balancePrice: 2400, durationMin: 240 },
+      { weightRangeId: 'xl', coatLength: 'short',  regularPrice: 3200, memberPrice: 2900, balancePrice: 2700, durationMin: 240 },
+    ],
+    createdAt: '2024-01-01',
+  },
+  {
+    id: 'SV003', storeId: 'S001', name: '全套精緻造型', category: 'main',
+    description: '沐浴、吹乾、精緻造型修剪、造型飾品',
+    applicableSpecies: ['dog'], isEnabled: true, sortOrder: 3,
+    priceMatrix: [
+      { weightRangeId: 'xs', coatLength: 'long',   regularPrice: 1500, memberPrice: 1400, balancePrice: 1300, durationMin: 180 },
+      { weightRangeId: 's',  coatLength: 'long',   regularPrice: 1800, memberPrice: 1700, balancePrice: 1600, durationMin: 210 },
+      { weightRangeId: 'm',  coatLength: 'medium', regularPrice: 2200, memberPrice: 2000, balancePrice: 1900, durationMin: 240 },
+      { weightRangeId: 'l',  coatLength: 'long',   regularPrice: 3200, memberPrice: 3000, balancePrice: 2800, durationMin: 300 },
+    ],
+    createdAt: '2024-01-01',
+  },
+  {
+    id: 'SV101', storeId: 'S001', name: '香氛護毛', category: 'addon',
+    description: '深層護毛精華，持久留香',
+    applicableSpecies: ['dog', 'cat'], isEnabled: true, sortOrder: 1,
+    priceMatrix: [
+      { weightRangeId: 'xs', coatLength: 'short', regularPrice: 200, memberPrice: 180, balancePrice: 170, durationMin: 20 },
+      { weightRangeId: 's',  coatLength: 'short', regularPrice: 200, memberPrice: 180, balancePrice: 170, durationMin: 20 },
+      { weightRangeId: 'm',  coatLength: 'short', regularPrice: 250, memberPrice: 230, balancePrice: 210, durationMin: 25 },
+      { weightRangeId: 'l',  coatLength: 'short', regularPrice: 300, memberPrice: 280, balancePrice: 260, durationMin: 30 },
+      { weightRangeId: 'xl', coatLength: 'short', regularPrice: 350, memberPrice: 320, balancePrice: 300, durationMin: 35 },
+    ],
+    createdAt: '2024-01-01',
+  },
+  {
+    id: 'SV102', storeId: 'S001', name: '耳道深層清潔', category: 'addon',
+    description: '清除耳垢，預防外耳炎',
+    applicableSpecies: ['dog', 'cat'], isEnabled: true, sortOrder: 2,
+    priceMatrix: [
+      { weightRangeId: 'xs', coatLength: 'short', regularPrice: 100, memberPrice: 90,  balancePrice: 85,  durationMin: 10 },
+      { weightRangeId: 's',  coatLength: 'short', regularPrice: 100, memberPrice: 90,  balancePrice: 85,  durationMin: 10 },
+      { weightRangeId: 'm',  coatLength: 'short', regularPrice: 120, memberPrice: 110, balancePrice: 100, durationMin: 12 },
+      { weightRangeId: 'l',  coatLength: 'short', regularPrice: 150, memberPrice: 130, balancePrice: 120, durationMin: 15 },
+      { weightRangeId: 'xl', coatLength: 'short', regularPrice: 150, memberPrice: 130, balancePrice: 120, durationMin: 15 },
+    ],
+    createdAt: '2024-01-01',
+  },
+  {
+    id: 'SV201', storeId: 'S001', name: '精緻全護套組', category: 'package',
+    description: '洗澡剪毛 + 香氛護毛 + 耳道清潔，套組九折',
+    applicableSpecies: ['dog', 'cat'], isEnabled: true, sortOrder: 1,
+    packageMainServiceId: 'SV002',
+    packageAddonIds: ['SV101', 'SV102'],
+    packageDiscountPct: 10,
+    priceMatrix: [],
+    createdAt: '2024-01-01',
+  },
+]
+
+export const MOCK_SHOP_PRODUCTS: ShopProduct[] = [
+  { id: 'SP001', storeId: 'S001', name: '香氛沐浴乳 250ml', category: '清潔', price: 280, memberPrice: 250, stock: 30, isActive: true },
+  { id: 'SP002', storeId: 'S001', name: '護毛精華素 100ml', category: '護理', price: 380, memberPrice: 350, stock: 15, isActive: true },
+  { id: 'SP003', storeId: 'S001', name: '藍莓潔耳液 120ml', category: '清潔', price: 180, memberPrice: 160, stock: 20, isActive: true },
+  { id: 'SP004', storeId: 'S001', name: '造型噴霧 200ml',   category: '造型', price: 240, memberPrice: 220, stock: 12, isActive: true },
+  { id: 'SP005', storeId: 'S001', name: '天然除蚤噴劑 300ml', category: '保健', price: 320, memberPrice: 290, stock: 8,  isActive: true },
+]
+
+const _todayDate = new Date().toISOString().split('T')[0]
+
+export const MOCK_SHIFTS: GroomerShift[] = [
+  { id: 'SH001', groomerId: 'G001', date: _todayDate, shiftType: 'full',    startTime: '10:00', endTime: '18:00', maxSlots: 4 },
+  { id: 'SH002', groomerId: 'G002', date: _todayDate, shiftType: 'full',    startTime: '09:00', endTime: '18:00', maxSlots: 5 },
+  { id: 'SH003', groomerId: 'G003', date: _todayDate, shiftType: 'morning', startTime: '09:00', endTime: '13:00', maxSlots: 3 },
+  { id: 'SH004', groomerId: 'G004', date: _todayDate, shiftType: 'off' },
+]
+
+export const MOCK_STORE_HOURS: StoreHours[] = [
+  { dayOfWeek: 0, isOpen: false, openTime: '10:00', closeTime: '18:00', lastBookingTime: '17:00' },
+  { dayOfWeek: 1, isOpen: true,  openTime: '10:00', closeTime: '19:00', lastBookingTime: '18:00' },
+  { dayOfWeek: 2, isOpen: true,  openTime: '10:00', closeTime: '19:00', lastBookingTime: '18:00' },
+  { dayOfWeek: 3, isOpen: true,  openTime: '10:00', closeTime: '19:00', lastBookingTime: '18:00' },
+  { dayOfWeek: 4, isOpen: true,  openTime: '10:00', closeTime: '19:00', lastBookingTime: '18:00' },
+  { dayOfWeek: 5, isOpen: true,  openTime: '10:00', closeTime: '19:00', lastBookingTime: '18:00' },
+  { dayOfWeek: 6, isOpen: true,  openTime: '10:00', closeTime: '18:00', lastBookingTime: '17:00' },
+]
+
+export const MOCK_GROOMING_RECORDS: GroomingRecord[] = [
+  {
+    id: 'GR001', memberId: 'M001', memberName: '林小華',
+    petId: 'P001', petName: '小怪獸', petBreed: '柯基犬', petWeight: 9.2,
+    groomerId: 'G001', groomerName: '王美玲', storeId: 'S001',
+    date: _todayDate, startTime: '10:00', endTime: '12:30',
+    services: ['洗澡＋剪毛', '香氛護毛'],
+    totalPrice: 1980, paymentMethod: 'balance', balanceUsed: 1980, cardAmount: 0,
+    status: 'completed', contractUrl: '#', receiptUrl: '#',
+    cctv: [
+      {
+        id: 'CCTV001', recordId: 'GR001', cameraName: '美容台 A',
+        startTime: '10:05', endTime: '12:25', status: 'completed',
+        vodUrl: '#', thumbnailUrl: 'https://placehold.co/320x180/1a1d1a/ffffff?text=美容台A',
+        durationMin: 140, shareToken: 'tok_abc123', shareExpiry: '2026-06-20T23:59:00',
+      },
+    ],
+    notes: '客人要求留耳毛',
+    createdAt: `${_todayDate}T10:00:00`,
+  },
+  {
+    id: 'GR002', memberId: 'M002', memberName: '張大明',
+    petId: 'P003', petName: '胖虎', petBreed: '拉布拉多', petWeight: 32.5,
+    groomerId: 'G002', groomerName: '陳小芳', storeId: 'S001',
+    date: _todayDate, startTime: '11:30',
+    services: ['基礎洗澡'],
+    totalPrice: 2000, paymentMethod: 'card', balanceUsed: 0, cardAmount: 2000,
+    status: 'in-progress', cctv: [
+      {
+        id: 'CCTV002', recordId: 'GR002', cameraName: '美容台 B',
+        startTime: '11:35', status: 'recording',
+        streamUrl: 'https://placehold.co/640x360/1a1d1a/ffffff?text=LIVE',
+      },
+    ],
+    notes: '',
+    createdAt: `${_todayDate}T11:30:00`,
+  },
+]
+
+export const GROOMER_RANK_CONFIG = {
+  director: { label: '領域長',    color: '#F59E0B', bg: '#FEF3C7', icon: '👑' },
+  senior:   { label: '首席美容師', color: '#6B7280', bg: '#F3F4F6', icon: '⭐' },
+  stylist:  { label: '美容師',    color: '#2B7A4B', bg: '#F0F9F3', icon: '✂️' },
+}
+
+export const SHIFT_CONFIG = {
+  full:      { label: '全天', color: 'bg-primary-bg text-primary' },
+  morning:   { label: '上午', color: 'bg-blue-50 text-blue-700' },
+  afternoon: { label: '下午', color: 'bg-purple-50 text-purple-700' },
+  off:       { label: '休假', color: 'bg-gray-100 text-gray-500' },
+}
+
+export function lookupServicePrice(
+  service: GroomingService,
+  weightKg: number,
+  coatLength: CoatLength,
+): ServicePriceMatrix | undefined {
+  const range = WEIGHT_RANGES.find(r => weightKg >= r.minKg && weightKg < r.maxKg)
+    ?? WEIGHT_RANGES[WEIGHT_RANGES.length - 1]
+  return (
+    service.priceMatrix.find(m => m.weightRangeId === range.id && m.coatLength === coatLength)
+    ?? service.priceMatrix.find(m => m.weightRangeId === range.id)
+  )
+}
+
+export const SCANNABLE_MEMBER = {
+  id: 'M001',
+  name: '林小華',
+  phone: '0912-345-678',
+  qrPrefix: 'TERRYMON-M001',
+}
+
+export const CLINIC_INFO = {
+  name: '布恩動物醫院',
+  doctor: '陳明哲 醫師',
+}

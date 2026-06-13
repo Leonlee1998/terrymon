@@ -2,8 +2,10 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ChevronLeft, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { useKioskStore } from '@/stores/kioskStore'
+import { posApi } from '@/services/api'
 
 type Phase = 'connecting' | 'measuring' | 'done'
 
@@ -11,21 +13,22 @@ const NUMPAD = ['1','2','3','4','5','6','7','8','9','.','0','⌫']
 
 export default function KioskWeight() {
   const router = useRouter()
-  const { selectedPet, setWeight, assignQueue } = useKioskStore()
+  const { member, selectedPet, setWeight, assignQueue } = useKioskStore()
   const [phase, setPhase] = useState<Phase>('connecting')
   const [displayWeight, setDisplayWeight] = useState('0.0')
   const [manualMode, setManualMode] = useState(false)
   const [manualInput, setManualInput] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     if (!selectedPet) { router.replace('/kiosk'); return }
   }, [selectedPet, router])
 
   useEffect(() => {
-    if (manualMode) return
+    if (manualMode || !selectedPet) return
     const t1 = setTimeout(() => setPhase('measuring'), 1000)
     const t2 = setTimeout(() => {
-      const target = 9.4
+      const target = parseFloat((selectedPet.weight + 0.2).toFixed(1))
       let current = 0
       const steps = 30
       const interval = setInterval(() => {
@@ -54,11 +57,20 @@ export default function KioskWeight() {
     })
   }
 
-  function handleConfirm() {
+  async function handleConfirm() {
+    if (!member || !selectedPet) return
     const val = manualMode ? manualInput : displayWeight
-    setWeight(parseFloat(val).toFixed(1))
-    assignQueue()
-    router.push('/kiosk/waiting')
+    const finalWeight = parseFloat(val)
+    setSubmitting(true)
+    try {
+      setWeight(finalWeight.toFixed(1))
+      assignQueue()
+      await posApi.checkin({ memberId: member.id, petId: selectedPet.id, weight: finalWeight })
+      router.push('/kiosk/waiting')
+    } catch {
+      toast.error('掛號失敗，請重試')
+      setSubmitting(false)
+    }
   }
 
   const shown = manualMode ? (manualInput || '0.0') : displayWeight
@@ -137,9 +149,12 @@ export default function KioskWeight() {
         <div className="px-6 pb-8 mt-auto">
           <Button
             onClick={handleConfirm}
-            className="w-full h-14 text-lg font-bold bg-white text-primary hover:bg-primary-bg rounded-2xl"
+            disabled={submitting}
+            className="w-full h-14 text-lg font-bold bg-white text-primary hover:bg-primary-bg rounded-2xl disabled:opacity-50"
           >
-            確認體重，完成掛號
+            {submitting
+              ? <><Loader2 size={18} className="animate-spin mr-2 text-primary" />掛號中...</>
+              : '確認體重，完成掛號'}
           </Button>
         </div>
       )}

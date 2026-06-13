@@ -1,7 +1,6 @@
 'use client'
 import { create } from 'zustand'
 import type { Member, Pet } from '@/types'
-import { MOCK_MEMBER, MOCK_PETS } from '@/lib/mock'
 
 interface KioskStore {
   member: Member | null

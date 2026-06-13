@@ -1,18 +1,20 @@
-import type { Metadata } from 'next'
-import type React from 'react'
+import type { Metadata, Viewport } from 'next'
 import { Toaster } from 'sonner'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'TerryMon 寵物會員',
-  description: '寵物會員、醫療與美容紀錄管理',
+  title: 'TerryMon 預約怪獸',
+  description: '每一位毛孩的健康燈塔',
+  manifest: '/manifest.json',
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#2B7A4B',
+}
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="zh-TW">
       <head>
@@ -21,9 +23,9 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="font-sans bg-surface text-ink antialiased">
+      <body>
         {children}
-        <Toaster position="top-center" richColors />
+        <Toaster position="top-center" richColors closeButton />
       </body>
     </html>
   )

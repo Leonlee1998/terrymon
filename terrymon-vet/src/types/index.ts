@@ -93,6 +93,13 @@ export interface QueueItem {
   petName: string
   petBreed: string
   allergies: string[]
+  consultation?: {
+    diagnosis: string
+    prescriptions: PrescriptionItem[]
+    notes: string
+    fee: number
+    followUpDate: string | null
+  }
 }
 
 export interface DocItem {
@@ -129,4 +136,12 @@ export interface ConsultationData {
   notes: string
   needsFollowUp: boolean
   followUpDate: string
+}
+
+export interface ConsultationResult {
+  diagnosis: string
+  prescriptions: PrescriptionItem[]
+  notes: string
+  fee: number
+  followUpDate: string | null
 }

@@ -1,6 +1,6 @@
-import { MOCK_PRODUCTS } from "@/lib/mock"
-import ShopClient from "@/components/shop/ShopClient"
+import { MOCK_PRODUCTS } from '@/lib/mock'
+import ShopClient from '@/components/shop/ShopClient'
 
 export default function ShopPage() {
-  return <ShopClient products={MOCK_PRODUCTS} />
+  return <ShopClient initialProducts={MOCK_PRODUCTS} />
 }

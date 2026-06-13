@@ -1,6 +1,6 @@
 'use client'
 import { create } from 'zustand'
-import type { QueueItem } from '@/types'
+import type { QueueItem, ConsultationResult } from '@/types'
 import { MOCK_QUEUE, MOCK_DONE_TODAY } from '@/lib/mock'
 
 interface QueueStore {
@@ -8,7 +8,7 @@ interface QueueStore {
   inProgress: QueueItem | null
   done: QueueItem[]
   callNext: () => void
-  completeCurrent: () => void
+  completeCurrent: (result: ConsultationResult) => void
 }
 
 export const useQueueStore = create<QueueStore>()((set, get) => ({
@@ -27,9 +27,12 @@ export const useQueueStore = create<QueueStore>()((set, get) => ({
     })
   },
 
-  completeCurrent: () => {
+  completeCurrent: (result: ConsultationResult) => {
     const { inProgress, done } = get()
     if (!inProgress) return
-    set({ inProgress: null, done: [...done, { ...inProgress, status: 'done' }] })
+    set({
+      inProgress: null,
+      done: [...done, { ...inProgress, status: 'done', consultation: result }],
+    })
   },
 }))

@@ -3,8 +3,10 @@ import AdminSidebar from '@/components/admin/AdminSidebar'
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen bg-surface">
-      <AdminSidebar />
-      <main className="flex-1 ml-64 p-6">
+      <div className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 z-30">
+        <AdminSidebar />
+      </div>
+      <main className="flex-1 md:ml-64">
         {children}
       </main>
     </div>

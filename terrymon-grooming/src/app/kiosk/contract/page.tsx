@@ -1,58 +1,84 @@
 'use client'
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { ChevronLeft } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { useKioskStore } from '@/stores/kioskStore'
-import { fillContract } from '@/lib/contract'
+import { fillContract } from '@/lib/mock'
+import { formatPrice } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 
 export default function KioskContract() {
   const router = useRouter()
-  const { member, selectedPet, selectedMain, selectedAddons, totalPrice } = useKioskStore()
+  const { member, selectedPet, selectedMain, selectedAddons, totalPrice, serviceNames } = useKioskStore()
 
   useEffect(() => {
     if (!selectedMain) router.replace('/kiosk')
   }, [selectedMain, router])
 
-  if (!selectedMain || !member || !selectedPet) return null
+  const contractText = useMemo(() => {
+    if (!member || !selectedPet || !selectedMain) return ''
+    return fillContract({
+      memberName: member.name,
+      memberPhone: member.phone,
+      petName: selectedPet.name,
+      petBreed: selectedPet.breed,
+      petWeight: selectedPet.weight,
+      petAllergies: selectedPet.allergies,
+      services: serviceNames(),
+      totalPrice: totalPrice(),
+    })
+  }, [member, selectedPet, selectedMain, selectedAddons]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const allServices = [selectedMain, ...selectedAddons].map(s => s.name)
-  const contractText = fillContract({
-    memberName: member.name,
-    memberPhone: member.phone,
-    petName: selectedPet.name,
-    petBreed: selectedPet.breed,
-    petWeight: selectedPet.weight,
-    services: allServices,
-    totalPrice: totalPrice(),
-  })
+  if (!member || !selectedPet || !selectedMain) return null
 
   return (
-    <div className="flex flex-col min-h-screen bg-white">
-      {/* Header */}
-      <div className="bg-primary h-14 flex items-center px-4 gap-3 shrink-0">
-        <button onClick={() => router.back()} className="text-white/80 hover:text-white">
-          <ChevronLeft size={22} />
+    <div className="flex-1 flex flex-col bg-white">
+      <div className="bg-primary px-6 py-5 flex-shrink-0">
+        <button onClick={() => router.back()} className="text-white/70 hover:text-white mb-3">
+          <ChevronLeft size={28} />
         </button>
-        <h1 className="text-white font-bold">美容服務合約確認</h1>
+        <h1 className="text-white font-bold text-2xl">美容服務合約</h1>
+        <p className="text-white/70 mt-1">請仔細閱讀後點選「同意並簽名」</p>
       </div>
 
-      {/* Contract content */}
-      <div className="flex-1 overflow-y-auto h-[calc(100vh-120px)]">
-        <div className="bg-white p-6">
-          <p className="whitespace-pre-line text-sm text-slate-600 leading-relaxed">
-            {contractText}
-          </p>
+      {/* Service summary bar */}
+      <div className="bg-primary-bg border-b border-border-t px-6 py-3 flex items-center justify-between">
+        <div>
+          <p className="text-xs text-slate-t">服務項目</p>
+          <p className="font-semibold text-ink text-sm">{serviceNames().join('、')}</p>
+        </div>
+        <div className="text-right">
+          <p className="text-xs text-slate-t">費用</p>
+          <p className="font-black text-primary text-xl">{formatPrice(totalPrice())}</p>
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="shrink-0 p-4 border-t border-border-t bg-white">
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-6">
+          <pre className="whitespace-pre-wrap font-sans text-sm text-ink leading-relaxed">
+            {contractText.split('\n').map((line, i) => {
+              const isDynamic =
+                line.includes(member.name) ||
+                line.includes(selectedPet.name) ||
+                line.includes(selectedPet.breed) ||
+                line.includes('NT$') ||
+                line.includes('過敏')
+              return (
+                <span key={i} className={isDynamic ? 'font-semibold text-primary' : 'text-ink'}>
+                  {line}{'\n'}
+                </span>
+              )
+            })}
+          </pre>
+        </div>
+      </div>
+
+      <div className="border-t border-border-t p-6 flex-shrink-0">
         <Button
           onClick={() => router.push('/kiosk/signature')}
-          className="w-full h-12 font-semibold"
+          className="w-full h-14 font-bold text-lg"
         >
-          內容正確，前往簽名 →
+          我已閱讀並同意，前往簽名 →
         </Button>
       </div>
     </div>

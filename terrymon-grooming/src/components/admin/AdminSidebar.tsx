@@ -1,67 +1,87 @@
 'use client'
-
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import {
-  LayoutDashboard,
-  ListOrdered,
-  CalendarDays,
-  Scissors,
-  Package,
-  Users,
-  BarChart2,
-  Settings,
+  LayoutDashboard, Scissors, CalendarDays,
+  Users, FileText, Settings, LogOut, Stethoscope, ShoppingBag
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useAdminStore } from '@/stores/adminStore'
+import { toast } from 'sonner'
 
-const NAV_ITEMS = [
-  { href: '/admin', label: '儀表板', icon: LayoutDashboard, exact: true },
-  { href: '/admin/queue', label: '候診隊列', icon: ListOrdered },
-  { href: '/admin/schedule', label: '排班預約', icon: CalendarDays },
-  { href: '/admin/services', label: '服務項目', icon: Scissors },
-  { href: '/admin/products', label: '商品管理', icon: Package },
-  { href: '/admin/members', label: '會員管理', icon: Users },
-  { href: '/admin/records', label: '美容紀錄', icon: BarChart2 },
-  { href: '/admin/settings', label: '設定', icon: Settings },
+const NAV = [
+  { href: '/admin',               icon: LayoutDashboard, label: '儀表板' },
+  { href: '/admin/services',      icon: Scissors,        label: '服務管理' },
+  { href: '/admin/shop-products', icon: ShoppingBag,     label: '現場商品' },
+  { href: '/admin/schedule',      icon: CalendarDays,    label: '排班管理' },
+  { href: '/admin/members',       icon: Users,           label: '會員查詢' },
+  { href: '/admin/records',       icon: FileText,        label: '服務紀錄' },
+  { href: '/admin/settings',      icon: Settings,        label: '系統設定' },
 ]
 
 export default function AdminSidebar() {
   const pathname = usePathname()
+  const router = useRouter()
+  const { shopName, logout } = useAdminStore()
+
+  function handleLogout() {
+    logout()
+    toast.success('已登出')
+    router.push('/admin/login')
+  }
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-64 bg-surface border-r border-border-t flex flex-col">
-      <div className="h-16 flex items-center px-6 border-b border-border-t shrink-0">
-        <span className="text-primary font-bold text-lg tracking-tight">
-          TerryMon 美容院
-        </span>
+    <aside className="flex flex-col bg-gray-900 h-full">
+      {/* Logo */}
+      <div className="p-6 border-b border-gray-700">
+        <div className="flex items-center gap-2">
+          <Scissors size={20} className="text-primary" />
+          <div>
+            <p className="text-white font-black text-base leading-tight">TerryMon</p>
+            <p className="text-gray-400 text-xs">美容管理系統</p>
+          </div>
+        </div>
+        <p className="text-gray-500 text-xs mt-3 truncate">{shopName}</p>
       </div>
 
-      <nav className="flex-1 overflow-y-auto py-4 px-3">
-        <ul className="space-y-1">
-          {NAV_ITEMS.map(({ href, label, icon: Icon, exact }) => {
-            const active = exact ? pathname === href : pathname.startsWith(href)
-            return (
-              <li key={href}>
-                <Link
-                  href={href}
-                  className={cn(
-                    'flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors',
-                    active
-                      ? 'bg-primary-bg text-primary'
-                      : 'text-slate-t hover:bg-primary-bg/50 hover:text-ink'
-                  )}
-                >
-                  <Icon size={18} strokeWidth={active ? 2.5 : 2} />
-                  {label}
-                </Link>
-              </li>
-            )
-          })}
-        </ul>
+      {/* Nav */}
+      <nav className="flex-1 p-3 space-y-0.5">
+        {NAV.map(({ href, icon: Icon, label }) => {
+          const active = pathname === href || (href !== '/admin' && pathname.startsWith(href))
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={cn(
+                'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all',
+                active
+                  ? 'bg-primary text-white'
+                  : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+              )}
+            >
+              <Icon size={18} />
+              {label}
+            </Link>
+          )
+        })}
       </nav>
 
-      <div className="px-4 py-4 border-t border-border-t text-xs text-slate-t">
-        TerryMon POS v1.0
+      {/* Footer */}
+      <div className="p-3 border-t border-gray-700">
+        <Link
+          href="/kiosk"
+          className="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white text-sm transition-colors"
+        >
+          <Stethoscope size={16} />
+          切換至前台 Kiosk
+        </Link>
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-3 px-3 py-2 w-full rounded-xl text-gray-400 hover:bg-red-900/30 hover:text-red-400 text-sm transition-colors mt-1"
+        >
+          <LogOut size={16} />
+          登出
+        </button>
       </div>
     </aside>
   )

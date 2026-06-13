@@ -1,11 +1,11 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronRight } from 'lucide-react'
+import { ChevronLeft, AlertTriangle, ChevronRight, Clock } from 'lucide-react'
 import { useKioskStore } from '@/stores/kioskStore'
+import { MOCK_MEDICAL } from '@/lib/mock'
+import { getSpeciesEmoji, formatDate, calcAge } from '@/lib/utils'
 import type { Pet } from '@/types'
-
-const SPECIES_EMOJI: Record<string, string> = { dog: '🐕', cat: '🐈', other: '🐾' }
 
 export default function KioskPet() {
   const router = useRouter()
@@ -18,51 +18,77 @@ export default function KioskPet() {
 
   if (!member) return null
 
-  function handleSelect(pet: Pet) {
+  async function handleSelect(pet: Pet) {
     setSelecting(pet.id)
     setSelectedPet(pet)
-    setTimeout(() => router.push('/kiosk/services'), 500)
+    await new Promise(r => setTimeout(r, 600))
+    router.push('/kiosk/weight')
   }
 
   return (
-    <div className="flex-1 flex flex-col">
-      <div className="pt-12 pb-6 px-6 text-center">
-        <p className="text-white font-black text-2xl">請選擇今天的服務毛孩</p>
-        <p className="text-white/60 text-sm mt-1">{member.name} 的毛孩</p>
+    <div className="flex-1 flex flex-col bg-white">
+      <div className="bg-primary px-6 py-5">
+        <button onClick={() => router.back()} className="text-white/70 hover:text-white mb-3">
+          <ChevronLeft size={28} />
+        </button>
+        <h1 className="text-white font-bold text-2xl">
+          {member.name}，請選擇今天的就診寵物
+        </h1>
       </div>
 
-      <div className="max-w-md mx-auto w-full space-y-3 px-6">
-        {member.pets.map(pet => (
-          <button
-            key={pet.id}
-            onClick={() => handleSelect(pet)}
-            className={`w-full bg-white rounded-2xl p-4 flex items-center gap-4 transition-all
-              ${selecting === pet.id ? 'scale-95 opacity-80' : 'hover:scale-[1.02]'}`}
-          >
-            {/* Avatar */}
-            <div className="w-16 h-16 rounded-full bg-primary-bg flex items-center justify-center text-3xl shrink-0 overflow-hidden">
-              {pet.photoUrl
-                ? <img src={pet.photoUrl} alt={pet.name} className="w-full h-full object-cover" />
-                : SPECIES_EMOJI[pet.species]
-              }
-            </div>
+      <div className="flex-1 p-6 space-y-4 overflow-y-auto">
+        {member.pets.map(pet => {
+          const lastMedical = MOCK_MEDICAL.filter(r => r.petId === pet.id)[0]
+          const isSelecting = selecting === pet.id
+          return (
+            <button
+              key={pet.id}
+              onClick={() => handleSelect(pet)}
+              disabled={!!selecting}
+              className={`w-full flex flex-col p-4 rounded-2xl border-2 text-left transition-all ${
+                isSelecting
+                  ? 'border-primary bg-primary-bg scale-[0.98]'
+                  : 'border-border-t bg-white hover:border-primary/50 hover:shadow-md'
+              }`}
+            >
+              <div className="flex items-center gap-4">
+                <div className="relative flex-shrink-0">
+                  <img src={pet.photoUrl} alt={pet.name}
+                       className="w-20 h-20 rounded-2xl object-cover" />
+                  <span className="absolute -bottom-1 -right-1 text-xl bg-white rounded-full p-0.5 shadow-sm">
+                    {getSpeciesEmoji(pet.species)}
+                  </span>
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-xl font-black text-ink">{pet.name}</h3>
+                    {isSelecting && <span className="text-primary text-sm animate-pulse">選取中...</span>}
+                  </div>
+                  <p className="text-slate-t">{pet.breed} · {calcAge(pet.birthDate)}</p>
+                  <p className="text-slate-t text-sm">體重：{pet.weight} kg</p>
+                </div>
+                <ChevronRight size={24} className={isSelecting ? 'text-primary' : 'text-slate-t'} />
+              </div>
 
-            {/* Info */}
-            <div className="flex-1 text-left">
-              <p className="font-bold text-lg text-ink">{pet.name}</p>
-              <p className="text-sm text-slate-500">{pet.breed}・{pet.weight} kg</p>
-            </div>
+              {lastMedical && (
+                <div className="flex items-center gap-2 mt-3 px-3 py-2 bg-surface rounded-xl text-xs text-slate-t">
+                  <Clock size={12} />
+                  <span>上次就診：{formatDate(lastMedical.date)} — {lastMedical.diagnosis}</span>
+                </div>
+              )}
 
-            {/* Right */}
-            {pet.allergies.length > 0 ? (
-              <span className="text-xs bg-red-100 text-red-600 font-semibold px-2 py-1 rounded-full shrink-0">
-                ⚠️ 過敏
-              </span>
-            ) : (
-              <ChevronRight size={20} className="text-slate-400 shrink-0" />
-            )}
-          </button>
-        ))}
+              {pet.allergies.length > 0 && (
+                <div className="flex items-center gap-2 mt-2 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
+                  <AlertTriangle size={16} className="text-red-600 flex-shrink-0" />
+                  <div>
+                    <p className="text-xs font-bold text-red-700">⚠️ 過敏史（請告知醫師）</p>
+                    <p className="text-xs text-red-600">{pet.allergies.join('、')}</p>
+                  </div>
+                </div>
+              )}
+            </button>
+          )
+        })}
       </div>
     </div>
   )

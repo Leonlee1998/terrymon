@@ -1,7 +1,7 @@
 'use client'
 
 import { Minus, Plus } from 'lucide-react'
-import { toast } from 'sonner'
+import { useRouter } from 'next/navigation'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -21,11 +21,13 @@ interface CartSheetProps {
 
 export function CartSheet({ open, onOpenChange }: CartSheetProps) {
   const { items, addItem, decrementItem, clearCart } = useCartStore()
+  const router = useRouter()
   const totalItems = items.reduce((sum, item) => sum + item.qty, 0)
   const totalPrice = items.reduce((sum, item) => sum + item.product.price * item.qty, 0)
 
   const handleCheckout = () => {
-    toast.info('線上結帳即將開放，歡迎至門市付款')
+    onOpenChange(false)
+    router.push('/shop/checkout')
   }
 
   return (
@@ -54,7 +56,9 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
               <p className="font-medium text-ink">購物車是空的</p>
               <p className="mt-1 text-sm text-muted-foreground">挑選商品後會顯示在這裡。</p>
             </div>
-            <SheetClose render={<Button variant="outline" />}>繼續購物</SheetClose>
+            <SheetClose asChild>
+              <Button variant="outline">繼續購物</Button>
+            </SheetClose>
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto p-4">
@@ -87,7 +91,7 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
                           <Button
                             type="button"
                             variant="outline"
-                            size="icon-sm"
+                            size="icon"
                             onClick={() => decrementItem(item.product.id)}
                           >
                             <Minus />
@@ -97,7 +101,7 @@ export function CartSheet({ open, onOpenChange }: CartSheetProps) {
                           <Button
                             type="button"
                             variant="outline"
-                            size="icon-sm"
+                            size="icon"
                             onClick={() => addItem(item.product)}
                             disabled={item.qty >= item.product.stock}
                           >

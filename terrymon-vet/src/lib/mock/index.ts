@@ -185,3 +185,8 @@ export const CLINIC_INFO = {
   doctor: '陳明哲 醫師',
   phone: '04-2234-5678',
 }
+
+export function lookupMember(input: string): Member | null {
+  if (!input.trim()) return null
+  return { ...MOCK_MEMBER, pets: MOCK_PETS }
+}

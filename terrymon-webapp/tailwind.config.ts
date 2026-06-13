@@ -9,45 +9,30 @@ const config: Config = {
       colors: {
         primary: {
           DEFAULT: '#F28C00',
-          hover: '#FFAA33',
-          active: '#D97706',
-          light: '#FFD08A',
-          bg: '#FFF6E8',
+          hover:   '#E87800',
+          light:   '#FFB54F',
+          bg:      '#FFF4DF',
         },
-
         accent: {
           DEFAULT: '#00B8D9',
-          hover: '#00A2C0',
-          light: '#E8FAFD',
+          hover:   '#00A2C0',
+          light:   '#E8FBFF',
         },
-
-        ink: '#111111',
-        'slate-t': '#4A4A4A',
-        'border-t': '#E5E5E5',
-        surface: '#FFFFFF',
-        background: '#FAFAFA',
-
-        success: '#16A34A',
-        warning: '#F59E0B',
-        error: '#EF4444',
-        info: '#00B8D9',
+        ink:       '#231815',
+        'slate-t': '#6E6258',
+        'border-t':'#F1DECA',
+        surface:   '#FFF8ED',
       },
-
       fontFamily: {
         sans: ['Noto Sans TC', 'Inter', 'sans-serif'],
       },
-
-      boxShadow: {
-        sm: '0 2px 8px rgba(0,0,0,0.06)',
-        md: '0 6px 20px rgba(0,0,0,0.08)',
-        lg: '0 12px 30px rgba(0,0,0,0.12)',
+      keyframes: {
+        'fade-in': { '0%': { opacity: '0', transform: 'translateY(8px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+        'pop':     { '0%': { scale: '0' }, '80%': { scale: '1.08' }, '100%': { scale: '1' } },
       },
-
-      borderRadius: {
-        sm: '8px',
-        md: '12px',
-        lg: '16px',
-        xl: '24px',
+      animation: {
+        'fade-in': 'fade-in 0.3s ease-out',
+        'pop':     'pop 0.4s ease-out',
       },
     },
   },

@@ -76,7 +76,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
           <div className="flex items-center justify-between rounded-xl border border-border-t p-2">
             <span className="text-sm font-medium">數量</span>
             <div className="flex items-center gap-2">
-              <Button type="button" variant="outline" size="icon-sm" onClick={decrease}>
+              <Button type="button" variant="outline" size="icon" onClick={decrease}>
                 <Minus />
                 <span className="sr-only">減少數量</span>
               </Button>
@@ -84,7 +84,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
               <Button
                 type="button"
                 variant="outline"
-                size="icon-sm"
+                size="icon"
                 onClick={increase}
                 disabled={qty >= maxQty}
               >
