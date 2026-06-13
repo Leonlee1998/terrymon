@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: terrymon-webapp
+    runtime: node
+    rootDir: terrymon-webapp
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    pullRequestPreviewsEnabled: true
+    envVars:
+      - key: NODE_VERSION
+        value: 22

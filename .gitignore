@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.next/
+**/node_modules/
+**/.next/
+**/next-env.d.ts
+**/*.tsbuildinfo
+.env
+.env.local
+.env.*.local
+**/.env
+**/.env.local
+**/.env.*.local
+.firebase/
+firebase-debug.log
+*.log
