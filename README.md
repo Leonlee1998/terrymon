@@ -12,17 +12,22 @@ Monorepo for the TerryMon pet membership, grooming POS, vet POS, and future API 
 ## Webapp
 
 ```bash
-cd terrymon-webapp
-npm install
-npm run dev
+npm run webapp
 ```
 
 Production build:
 
 ```bash
-cd terrymon-webapp
-npm run build
+npm run build:webapp
 ```
+
+## Local Apps
+
+Run each app on a fixed local port:
+
+- Webapp: `npm run webapp` -> `http://127.0.0.1:3000`
+- Grooming POS: `npm run grooming` -> `http://127.0.0.1:3001`
+- Vet POS: `npm run vet` -> `http://127.0.0.1:3002`
 
 ## Render
 
