@@ -1,5 +1,9 @@
-import { MOCK_ORDERS } from '@/lib/mock'
 import OrdersClient from '@/components/shop/OrdersClient'
-export default function OrdersPage() {
-  return <OrdersClient orders={MOCK_ORDERS} />
+import { api } from '@/services/api'
+
+export const dynamic = 'force-dynamic'
+
+export default async function OrdersPage() {
+  const orders = await api.getOrders()
+  return <OrdersClient orders={orders} />
 }

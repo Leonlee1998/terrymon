@@ -1,8 +1,9 @@
 'use client'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { MOCK_VENDOR, MOCK_PRODUCTS, MOCK_PROMOTIONS } from '@/lib/mock'
+import { MOCK_PRODUCTS, MOCK_PROMOTIONS } from '@/lib/mock'
 import type { Vendor, Product, Promotion } from '@/types'
+import { vendorApi } from '@/services/api'
 
 interface VendorStore {
   isLoggedIn: boolean
@@ -10,7 +11,8 @@ interface VendorStore {
   products: Product[]
   promotions: Promotion[]
 
-  login: () => void
+  load: () => Promise<void>
+  login: () => Promise<void>
   logout: () => void
   updateProduct: (p: Product) => void
   addProduct: (p: Product) => void
@@ -21,13 +23,28 @@ interface VendorStore {
 
 export const useVendorStore = create<VendorStore>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       isLoggedIn: false,
       vendor: null,
       products: MOCK_PRODUCTS,
       promotions: MOCK_PROMOTIONS,
 
-      login: () => set({ isLoggedIn: true, vendor: MOCK_VENDOR }),
+      load: async () => {
+        const [products, promotions] = await Promise.all([
+          vendorApi.getProducts(),
+          vendorApi.getPromotions(),
+        ])
+        const vendor = await vendorApi.getVendor(products)
+        set({ vendor, products, promotions })
+      },
+      login: async () => {
+        const [products, promotions] = await Promise.all([
+          vendorApi.getProducts(),
+          vendorApi.getPromotions(),
+        ])
+        const vendor = await vendorApi.getVendor(products)
+        set({ isLoggedIn: true, vendor, products, promotions })
+      },
       logout: () => set({ isLoggedIn: false, vendor: null }),
 
       updateProduct: (p) =>

@@ -3,13 +3,13 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ChevronLeft, AlertTriangle, ChevronRight, Clock } from 'lucide-react'
 import { useKioskStore } from '@/stores/kioskStore'
-import { MOCK_MEDICAL } from '@/lib/mock'
+import { MOCK_PET_GROOMING_RECORDS } from '@/lib/mock'
 import { getSpeciesEmoji, formatDate, calcAge } from '@/lib/utils'
 import type { Pet } from '@/types'
 
 export default function KioskPet() {
   const router = useRouter()
-  const { member, setSelectedPet } = useKioskStore()
+  const { member, setSelectedPet, checkinMode } = useKioskStore()
   const [selecting, setSelecting] = useState<string | null>(null)
 
   useEffect(() => {
@@ -22,7 +22,7 @@ export default function KioskPet() {
     setSelecting(pet.id)
     setSelectedPet(pet)
     await new Promise(r => setTimeout(r, 600))
-    router.push('/kiosk/weight')
+    router.push('/kiosk/services')
   }
 
   return (
@@ -32,13 +32,13 @@ export default function KioskPet() {
           <ChevronLeft size={28} />
         </button>
         <h1 className="text-white font-bold text-2xl">
-          {member.name}，請選擇今天的就診寵物
+          {member.name}，請選擇今天要美容的毛孩
         </h1>
       </div>
 
       <div className="flex-1 p-6 space-y-4 overflow-y-auto">
         {member.pets.map(pet => {
-          const lastMedical = MOCK_MEDICAL.filter(r => r.petId === pet.id)[0]
+          const lastGrooming = MOCK_PET_GROOMING_RECORDS.filter(r => r.petId === pet.id)[0]
           const isSelecting = selecting === pet.id
           return (
             <button
@@ -70,10 +70,10 @@ export default function KioskPet() {
                 <ChevronRight size={24} className={isSelecting ? 'text-primary' : 'text-slate-t'} />
               </div>
 
-              {lastMedical && (
+              {lastGrooming && (
                 <div className="flex items-center gap-2 mt-3 px-3 py-2 bg-surface rounded-xl text-xs text-slate-t">
                   <Clock size={12} />
-                  <span>上次就診：{formatDate(lastMedical.date)} — {lastMedical.diagnosis}</span>
+                  <span>上次美容：{formatDate(lastGrooming.date)} — {lastGrooming.services.join('、')}</span>
                 </div>
               )}
 

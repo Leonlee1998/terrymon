@@ -1,10 +1,10 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Truck } from 'lucide-react'
 import { toast } from 'sonner'
-import { MOCK_ORDERS } from '@/lib/mock'
 import { formatPrice, formatDate } from '@/lib/utils'
+import { vendorApi } from '@/services/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -30,22 +30,28 @@ const STATUS_LABEL: Record<string, string> = {
 }
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState<Order[]>(MOCK_ORDERS)
+  const [orders, setOrders] = useState<Order[]>([])
   const [filter, setFilter] = useState<OrderStatus | 'all'>('all')
   const [shipId, setShipId] = useState<string | null>(null)
   const [trackingNum, setTrackingNum] = useState('')
 
   const filtered = orders.filter(o => filter === 'all' || o.status === filter)
 
-  function confirmShip() {
+  useEffect(() => {
+    vendorApi.getOrders().then(setOrders)
+  }, [])
+
+  async function confirmShip() {
     if (!trackingNum.trim()) { toast.error('請填寫物流單號'); return }
+    if (shipId) await vendorApi.updateOrderStatus(shipId, 'shipped', trackingNum)
     setOrders(prev => prev.map(o =>
       o.id === shipId ? { ...o, status: 'shipped' as const, trackingNumber: trackingNum, shippedAt: new Date().toISOString() } : o
     ))
     toast.success('已標記出貨'); setShipId(null); setTrackingNum('')
   }
 
-  function confirmDelivery(id: string) {
+  async function confirmDelivery(id: string) {
+    await vendorApi.updateOrderStatus(id, 'delivered')
     setOrders(prev => prev.map(o => o.id === id ? { ...o, status: 'delivered' as const } : o))
     toast.success('已確認收貨')
   }

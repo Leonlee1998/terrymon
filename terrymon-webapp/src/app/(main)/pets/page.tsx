@@ -1,16 +1,28 @@
-import { MOCK_DEVICES, MOCK_GROOMING_RECORDS, MOCK_HEALTH_DATA, MOCK_MEDICAL, MOCK_PETS } from '@/lib/mock'
 import PetsClient from '@/components/pets/PetsClient'
+import { api } from '@/services/api'
+import EmptyState from '@/components/shared/EmptyState'
 
-export default function PetsPage() {
-  const activePet = MOCK_PETS[0]
-  const medicalRecords = MOCK_MEDICAL.filter(record => record.petId === activePet.id)
-  const healthData = { ...MOCK_HEALTH_DATA, petId: activePet.id }
-  const devices = MOCK_DEVICES.filter(device => device.petId === activePet.id)
-  const groomingRecords = MOCK_GROOMING_RECORDS.filter(record => record.petId === activePet.id)
+export const dynamic = 'force-dynamic'
+
+export default async function PetsPage() {
+  const pets = await api.getPets()
+  const activePet = pets[0]
+  if (!activePet) {
+    return <EmptyState icon="🐾" title="目前沒有寵物資料" subtitle="新增寵物後就能查看醫療、美容與健康紀錄" />
+  }
+
+  const [medicalRecords, healthData, devices, groomingRecords] = activePet
+    ? await Promise.all([
+        api.getMedical(activePet.id),
+        api.getHealthData(activePet.id),
+        api.getDevices(activePet.id),
+        api.getGroomingRecords(activePet.id),
+      ])
+    : [[], { petId: '', weight: [], bloodSugar: [], bloodPressureSys: [], bloodPressureDia: [], heartRate: [], temperature: [] }, [], []]
 
   return (
     <PetsClient
-      pets={MOCK_PETS}
+      pets={pets}
       activePet={activePet}
       medicalRecords={medicalRecords}
       healthData={healthData}

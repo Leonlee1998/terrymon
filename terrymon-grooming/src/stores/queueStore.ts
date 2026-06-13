@@ -2,6 +2,7 @@
 import { create } from 'zustand'
 import type { QueueItem } from '@/types'
 import { MOCK_QUEUE } from '@/lib/mock'
+import { posApi } from '@/services/api'
 
 interface QueueStore {
   queue:          QueueItem[]
@@ -14,6 +15,7 @@ interface QueueStore {
   startConsult:   (item: QueueItem) => void
   completeCurrent: () => void
   clearCheckout:  () => void
+  loadQueue:      () => Promise<void>
 }
 
 function derive(queue: QueueItem[]) {
@@ -23,11 +25,20 @@ function derive(queue: QueueItem[]) {
   }
 }
 
-export const useQueueStore = create<QueueStore>()((set, get) => ({
+export const useQueueStore = create<QueueStore>()((set) => ({
   queue:         MOCK_QUEUE,
   ...derive(MOCK_QUEUE),
   inProgress:    MOCK_QUEUE.find(q => q.status === 'in-progress') ?? null,
   checkoutReady: null,
+
+  loadQueue: async () => {
+    const queue = await posApi.getQueue()
+    set({
+      queue,
+      inProgress: queue.find(q => q.status === 'in-progress') ?? null,
+      ...derive(queue),
+    })
+  },
 
   callNext: () => set(s => {
     const next = s.waiting[0]

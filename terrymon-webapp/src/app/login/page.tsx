@@ -69,19 +69,23 @@ export default function LoginPage() {
 
   async function onRegister(data: RegisterData) {
     setRegLoading(true)
-    await new Promise(r => setTimeout(r, 800))
-    const member = await api.login('demo@terrymon.com', 'demo1234')
-    setMember({
-      ...member,
-      name: data.name.trim(),
-      phone: data.phone.trim(),
-      email: data.email.trim(),
-    })
-    setRegLoading(false)
-    setRegisterOpen(false)
-    regReset()
-    toast.success(`歡迎加入 TerryMon，${data.name}！`)
-    router.replace('/')
+    try {
+      const member = await api.register({
+        name: data.name.trim(),
+        phone: data.phone.trim(),
+        email: data.email.trim(),
+        password: data.password,
+      })
+      setMember(member)
+      setRegisterOpen(false)
+      regReset()
+      toast.success(`歡迎加入 TerryMon，${data.name}！`)
+      router.replace('/')
+    } catch {
+      toast.error('註冊失敗，請稍後再試')
+    } finally {
+      setRegLoading(false)
+    }
   }
 
   return (

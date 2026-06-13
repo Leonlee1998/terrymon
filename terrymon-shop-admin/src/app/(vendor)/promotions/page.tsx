@@ -1,4 +1,5 @@
 'use client'
+/* eslint-disable react-hooks/purity */
 import { useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 import { useForm } from 'react-hook-form'

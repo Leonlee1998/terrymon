@@ -9,6 +9,7 @@ import DocumentsList from './DocumentsList'
 import OrderSummary from './OrderSummary'
 import { LogOut } from 'lucide-react'
 import { toast } from 'sonner'
+import { api } from '@/services/api'
 
 interface Props { member: Member; documents: DocItem[]; orders: Order[] }
 
@@ -17,8 +18,9 @@ export default function MemberClient({ member, documents, orders }: Props) {
   const effectiveMember = storeMember ?? member
   const router = useRouter()
 
-  function handleLogout() {
+  async function handleLogout() {
     if (!confirm('確定要登出嗎？')) return
+    await api.logout()
     logout()
     toast.success('已登出')
     router.replace('/login')

@@ -1,6 +1,9 @@
-import { MOCK_PRODUCTS } from '@/lib/mock'
 import ShopClient from '@/components/shop/ShopClient'
+import { api } from '@/services/api'
 
-export default function ShopPage() {
-  return <ShopClient initialProducts={MOCK_PRODUCTS} />
+export const dynamic = 'force-dynamic'
+
+export default async function ShopPage() {
+  const products = await api.getProducts()
+  return <ShopClient initialProducts={products} />
 }

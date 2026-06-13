@@ -1,19 +1,24 @@
-import { MOCK_PETS, MOCK_MEDICAL, MOCK_HEALTH_DATA, MOCK_DEVICES, MOCK_GROOMING_RECORDS } from '@/lib/mock'
 import { notFound } from 'next/navigation'
 import PetsClient from '@/components/pets/PetsClient'
+import { api } from '@/services/api'
 
-export default function PetDetailPage({ params }: { params: { id: string } }) {
-  const pet = MOCK_PETS.find(p => p.id === params.id)
+export const dynamic = 'force-dynamic'
+
+export default async function PetDetailPage({ params }: { params: { id: string } }) {
+  const pets = await api.getPets()
+  const pet = pets.find(p => p.id === params.id) ?? await api.getPet(params.id).catch(() => null)
   if (!pet) notFound()
 
-  const medicalRecords = MOCK_MEDICAL.filter(r => r.petId === params.id)
-  const healthData = { ...MOCK_HEALTH_DATA, petId: params.id }
-  const devices = MOCK_DEVICES.filter(d => d.petId === params.id)
-  const groomingRecords = MOCK_GROOMING_RECORDS.filter(r => r.petId === params.id)
+  const [medicalRecords, healthData, devices, groomingRecords] = await Promise.all([
+    api.getMedical(params.id),
+    api.getHealthData(params.id),
+    api.getDevices(params.id),
+    api.getGroomingRecords(params.id),
+  ])
 
   return (
     <PetsClient
-      pets={MOCK_PETS}
+      pets={pets}
       activePet={pet}
       medicalRecords={medicalRecords}
       healthData={healthData}
@@ -21,8 +26,4 @@ export default function PetDetailPage({ params }: { params: { id: string } }) {
       groomingRecords={groomingRecords}
     />
   )
-}
-
-export function generateStaticParams() {
-  return MOCK_PETS.map(p => ({ id: p.id }))
 }

@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { ChevronDown, AlertCircle } from 'lucide-react'
-import { MOCK_MEDICAL } from '@/lib/mock'
+import { MOCK_PET_GROOMING_RECORDS } from '@/lib/mock'
 import type { QueueItem } from '@/types'
 
 function Collapsible({ title, children }: { title: string; children: React.ReactNode }) {
@@ -22,7 +22,7 @@ function Collapsible({ title, children }: { title: string; children: React.React
 }
 
 export default function PatientPanel({ patient }: { patient: QueueItem }) {
-  const records = MOCK_MEDICAL.filter((r) => r.petId === patient.petId).slice(0, 2)
+  const records = MOCK_PET_GROOMING_RECORDS.filter((r) => r.petId === patient.petId).slice(0, 3)
 
   return (
     <div className="bg-card rounded-2xl p-5 space-y-5 overflow-y-auto">
@@ -42,28 +42,24 @@ export default function PatientPanel({ patient }: { patient: QueueItem }) {
           <div className="flex items-start gap-2 mt-3 p-3 bg-destructive/10 text-destructive rounded-lg">
             <AlertCircle size={16} className="shrink-0 mt-0.5" />
             <div className="text-sm">
-              <p className="font-semibold mb-0.5">過敏史</p>
+              <p className="font-semibold mb-0.5">過敏史（產品請注意）</p>
               <p>{patient.allergies.join('、')}</p>
             </div>
           </div>
         )}
       </div>
 
-      <Collapsible title="最近病歷">
+      <Collapsible title="美容紀錄">
         {records.length === 0 ? (
-          <p className="text-sm text-muted-foreground">無病歷紀錄</p>
+          <p className="text-sm text-muted-foreground">無美容紀錄</p>
         ) : (
           <div className="space-y-3">
             {records.map((r) => (
               <div key={r.id} className="text-sm border-b border-border pb-3 last:border-0 last:pb-0">
-                <p className="font-semibold">{r.date}　{r.clinicName}</p>
-                <p className="text-muted-foreground mt-0.5">診斷：{r.diagnosis}</p>
-                {r.prescription.length > 0 && (
-                  <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground">
-                    {r.prescription.map((rx, i) => (
-                      <li key={i}>• {rx.medicine} {rx.dosage}　{rx.frequency}　{rx.days}天</li>
-                    ))}
-                  </ul>
+                <p className="font-semibold">{r.date}　{r.shopName}</p>
+                <p className="text-muted-foreground mt-0.5">{r.services.join('、')}</p>
+                {r.notes && (
+                  <p className="text-xs text-muted-foreground mt-1">備注：{r.notes}</p>
                 )}
               </div>
             ))}

@@ -5,9 +5,12 @@ import { useVendorStore } from '@/stores/vendorStore'
 import VendorSidebar from '@/components/vendor/VendorSidebar'
 
 export default function VendorLayout({ children }: { children: React.ReactNode }) {
-  const { isLoggedIn } = useVendorStore()
+  const { isLoggedIn, load } = useVendorStore()
   const router = useRouter()
-  useEffect(() => { if (!isLoggedIn) router.replace('/login') }, [isLoggedIn, router])
+  useEffect(() => {
+    if (!isLoggedIn) router.replace('/login')
+    else load()
+  }, [isLoggedIn, load, router])
   if (!isLoggedIn) return null
 
   return (

@@ -1,4 +1,5 @@
 'use client'
+/* eslint-disable react-hooks/purity */
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'

@@ -7,9 +7,15 @@ import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { useNotifStore } from '@/stores/notificationStore'
 import { formatTime } from '@/lib/utils'
+import { api } from '@/services/api'
 
 export default function HomeHeader() {
   const { notifications, unreadCount, markAllRead } = useNotifStore()
+
+  async function handleMarkAllRead() {
+    markAllRead()
+    await api.markAllRead()
+  }
 
   return (
     <header className="sticky top-0 z-20 border-b border-[#f1deca] bg-[#fff8ed]/95 backdrop-blur">
@@ -44,7 +50,7 @@ export default function HomeHeader() {
             <SheetHeader className="flex-row items-center justify-between">
               <SheetTitle>通知</SheetTitle>
               {unreadCount > 0 && (
-                <Button variant="ghost" size="sm" onClick={markAllRead} className="text-xs text-primary">
+                <Button variant="ghost" size="sm" onClick={handleMarkAllRead} className="text-xs text-primary">
                   全部已讀
                 </Button>
               )}

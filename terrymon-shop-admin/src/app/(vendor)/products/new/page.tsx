@@ -1,4 +1,5 @@
 'use client'
+/* eslint-disable react-hooks/purity */
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'

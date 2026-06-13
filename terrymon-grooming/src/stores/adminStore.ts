@@ -7,6 +7,7 @@ import {
   BREED_DATABASE,
 } from '@/lib/mock'
 import { CONTRACT_TEMPLATE } from '@/lib/mock'
+import { adminApi } from '@/services/api'
 import type {
   Groomer, GroomingService, ShopProduct,
   GroomerShift, StoreHours, GroomingRecord, Breed,
@@ -28,6 +29,7 @@ interface AdminStore {
 
   login: () => void
   logout: () => void
+  load: () => Promise<void>
 
   // Shop
   updateShopInfo: (info: Partial<Pick<AdminStore, 'shopName' | 'shopPhone' | 'shopAddress' | 'shopLineId'>>) => void
@@ -72,6 +74,16 @@ export const useAdminStore = create<AdminStore>()(
 
       login:  () => set({ isLoggedIn: true }),
       logout: () => set({ isLoggedIn: false }),
+      load: async () => {
+        const [groomers, services, shopProducts, shifts, storeHours] = await Promise.all([
+          adminApi.getGroomers(),
+          adminApi.getServices(),
+          adminApi.getProducts(),
+          adminApi.getShifts(),
+          adminApi.getStoreHours(),
+        ])
+        set({ groomers, services, shopProducts, shifts, storeHours })
+      },
 
       updateShopInfo: (info) => set(info),
       updateContractTemplate: (text) => set({ contractTemplate: text }),

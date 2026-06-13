@@ -1,16 +1,18 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Check, ChevronLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { MOCK_ADDON_SERVICES, MOCK_MAIN_SERVICES } from '@/lib/mock'
+import { adminApi } from '@/services/api'
 import { formatPrice } from '@/lib/utils'
 import { useKioskStore } from '@/stores/kioskStore'
 import type { KioskService } from '@/types'
 
 export default function KioskServices() {
   const router = useRouter()
+  const [services, setServices] = useState<KioskService[]>([...MOCK_MAIN_SERVICES, ...MOCK_ADDON_SERVICES])
   const {
     selectedPet,
     selectedMain,
@@ -25,7 +27,15 @@ export default function KioskServices() {
     if (!selectedPet) router.replace('/kiosk')
   }, [selectedPet, router])
 
+  useEffect(() => {
+    adminApi.getKioskServices().then(next => {
+      if (next.length) setServices(next)
+    })
+  }, [])
+
   if (!selectedPet) return null
+  const mainServices = services.filter(service => !service.isAddon && service.enabled)
+  const addonServices = services.filter(service => service.isAddon && service.enabled)
 
   return (
     <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-[#fff8ed]">
@@ -55,7 +65,7 @@ export default function KioskServices() {
           </div>
 
           <div className="space-y-3">
-            {MOCK_MAIN_SERVICES.filter(service => service.enabled).map(service => (
+            {mainServices.map(service => (
               <MainServiceCard
                 key={service.id}
                 service={service}
@@ -76,7 +86,7 @@ export default function KioskServices() {
           </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {MOCK_ADDON_SERVICES.filter(service => service.enabled).map(service => (
+            {addonServices.map(service => (
               <AddonServiceCard
                 key={service.id}
                 service={service}

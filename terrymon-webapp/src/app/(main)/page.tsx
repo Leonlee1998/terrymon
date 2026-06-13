@@ -1,27 +1,38 @@
-import { MOCK_MEMBER, MOCK_PETS, MOCK_APPOINTMENTS, MOCK_MEDICAL, MOCK_HEALTH_DATA, MOCK_DEVICES } from '@/lib/mock'
 import HomeHeader from '@/components/home/HomeHeader'
 import WelcomeCard from '@/components/home/WelcomeCard'
 import TodaySchedule from '@/components/home/TodaySchedule'
 import AIoTDashboard from '@/components/home/AIoTDashboard'
 import QuickActions from '@/components/home/QuickActions'
 import HealthAlerts from '@/components/home/HealthAlerts'
+import { api } from '@/services/api'
 
-export default function HomePage() {
-  const member = { ...MOCK_MEMBER, pets: MOCK_PETS }
-  const pet = MOCK_PETS[0]
-  const todayAppt = MOCK_APPOINTMENTS.find(a =>
+export const dynamic = 'force-dynamic'
+
+export default async function HomePage() {
+  const [member, pets, appointments] = await Promise.all([
+    api.getMe(),
+    api.getPets(),
+    api.getAppointments(),
+  ])
+  const pet = pets[0] ?? member.pets[0]
+  const [healthData, devices] = pet
+    ? await Promise.all([
+        api.getHealthData(pet.id),
+        api.getDevices(pet.id),
+      ])
+    : [null, []]
+  const todayAppt = appointments.find(a =>
     a.status === 'confirmed' && new Date(a.date) >= new Date()
   ) ?? null
-  const latestMedical = MOCK_MEDICAL.filter(r => r.petId === pet.id)[0]
 
   return (
     <div className="flex flex-col animate-fade-in">
       <HomeHeader />
       <div className="p-4 space-y-4 max-w-2xl mx-auto w-full">
         <WelcomeCard member={member} appointment={todayAppt} />
-        <HealthAlerts pet={pet} healthData={MOCK_HEALTH_DATA} />
+        {pet && healthData && <HealthAlerts pet={pet} healthData={healthData} />}
         <TodaySchedule appointment={todayAppt} />
-        <AIoTDashboard pet={pet} devices={MOCK_DEVICES} healthData={MOCK_HEALTH_DATA} />
+        {pet && healthData && <AIoTDashboard pet={pet} devices={devices} healthData={healthData} />}
         <QuickActions />
       </div>
     </div>

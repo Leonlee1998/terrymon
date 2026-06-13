@@ -7,6 +7,7 @@ import { useNotifStore } from '@/stores/notificationStore'
 import { useCartStore } from '@/stores/cartStore'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
+import { api } from '@/services/api'
 
 const NAV = [
   { href: '/',             icon: Home,         label: '首頁' },
@@ -23,7 +24,8 @@ export default function SideNav() {
   const unreadCount = useNotifStore(s => s.unreadCount)
   const totalItems = useCartStore(s => s.totalItems())
 
-  function handleLogout() {
+  async function handleLogout() {
+    await api.logout()
     logout()
     toast.success('已登出')
     router.replace('/login')

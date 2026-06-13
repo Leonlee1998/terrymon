@@ -1,12 +1,20 @@
-import { MOCK_MEMBER, MOCK_DOCUMENTS, MOCK_ORDERS } from '@/lib/mock'
 import MemberClient from '@/components/member/MemberClient'
+import { api } from '@/services/api'
 
-export default function MemberPage() {
+export const dynamic = 'force-dynamic'
+
+export default async function MemberPage() {
+  const [member, documents, orders] = await Promise.all([
+    api.getMe(),
+    api.getDocuments(),
+    api.getOrders(),
+  ])
+
   return (
     <MemberClient
-      member={MOCK_MEMBER}
-      documents={MOCK_DOCUMENTS}
-      orders={MOCK_ORDERS}
+      member={member}
+      documents={documents}
+      orders={orders}
     />
   )
 }

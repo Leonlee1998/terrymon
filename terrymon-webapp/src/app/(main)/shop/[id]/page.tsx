@@ -1,13 +1,11 @@
-import { MOCK_PRODUCTS } from '@/lib/mock'
 import { notFound } from 'next/navigation'
 import ProductDetail from '@/components/shop/ProductDetail'
+import { api } from '@/services/api'
 
-export default function ProductPage({ params }: { params: { id: string } }) {
-  const product = MOCK_PRODUCTS.find(p => p.id === params.id)
+export const dynamic = 'force-dynamic'
+
+export default async function ProductPage({ params }: { params: { id: string } }) {
+  const product = await api.getProduct(params.id).catch(() => null)
   if (!product) notFound()
   return <ProductDetail product={product} />
-}
-
-export function generateStaticParams() {
-  return MOCK_PRODUCTS.map(p => ({ id: p.id }))
 }

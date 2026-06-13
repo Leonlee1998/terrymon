@@ -1,14 +1,13 @@
 -- ============================================================
--- TerryMon POS 地端 SQLite Schema
--- 用途：POS 機本地快取與離線排隊，連線後推上 Supabase
--- 執行環境：better-sqlite3（Node.js）
--- ============================================================
+-- TerryMon POS ?啁垢 SQLite Schema
+-- ?券?POS 璈?啣翰???Ｙ???嚗??敺銝?Supabase
+-- ?瑁??啣?嚗etter-sqlite3嚗ode.js嚗?-- ============================================================
 
--- 離線操作排隊
+-- ?Ｙ?????
 create table if not exists sync_queue (
   id          integer primary key autoincrement,
   action      text not null,     -- 'INSERT' | 'UPDATE'
-  table_name  text not null,     -- 對應 Supabase 的 table
+  table_name  text not null,     -- 撠? Supabase ??table
   payload     text not null,     -- JSON
   created_at  text not null,
   synced_at   text,
@@ -16,8 +15,7 @@ create table if not exists sync_queue (
   retry_count integer default 0
 );
 
--- 掃碼後會員快取（30 分鐘過期）
-create table if not exists local_members (
+-- ?Ⅳ敺??∪翰??30 ????嚗?create table if not exists local_members (
   id               text primary key,
   name             text,
   phone            text,
@@ -29,7 +27,7 @@ create table if not exists local_members (
   expires_at       text
 );
 
--- 本日預約快取（POS 開機時同步）
+-- ?祆??敹怠?嚗OS ????甇伐?
 create table if not exists local_appointments (
   id             text primary key,
   member_id      text,
@@ -40,3 +38,4 @@ create table if not exists local_appointments (
   groomer_id     text,
   synced         integer default 0
 );
+

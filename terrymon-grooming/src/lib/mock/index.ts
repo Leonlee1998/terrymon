@@ -182,21 +182,6 @@ export const MOCK_WEIGHT_HISTORY = [
   { month: '5月', value: 9.3 }, { month: '6月', value: 9.2 },
 ]
 
-export const COMMON_MEDICINES = [
-  { name: '美樂托寧', defaultDose: '10mg', defaultFreq: '每天2次' },
-  { name: '阿莫西林', defaultDose: '10mg/kg', defaultFreq: '每天2次' },
-  { name: '益生菌', defaultDose: '1包', defaultFreq: '每天1次' },
-  { name: '耳滴液', defaultDose: '5滴', defaultFreq: '每天2次' },
-  { name: '消炎止痛藥', defaultDose: '5mg/kg', defaultFreq: '每天1次' },
-  { name: '胃藥', defaultDose: '1顆', defaultFreq: '飯前30分鐘' },
-]
-
-export const COMMON_DIAGNOSES = [
-  '急性腸胃炎', '外耳炎', '皮膚炎', '上呼吸道感染',
-  '年度健康檢查', '疫苗接種', '關節炎', '牙結石',
-  '過敏反應', '泌尿道感染',
-]
-
 export const CONTRACT_TEMPLATE = `寵物美容定型化契約書
 
 立約當事人：
@@ -523,7 +508,7 @@ export const SCANNABLE_MEMBER = {
   qrPrefix: 'TERRYMON-M001',
 }
 
-export const CLINIC_INFO = {
-  name: '布恩動物醫院',
-  doctor: '陳明哲 醫師',
+export const SHOP_INFO = {
+  name: 'TerryMon 寵物美容',
+  groomer: '美容師管理後台',
 }

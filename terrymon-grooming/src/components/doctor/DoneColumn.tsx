@@ -28,6 +28,7 @@ export default function DoneColumn() {
               {item.consultation && (
                 <p className="text-xs text-slate-t mt-1 truncate">{item.consultation.diagnosis}</p>
               )}
+
             </div>
           ))
         )}

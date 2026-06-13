@@ -1,11 +1,18 @@
-import { MOCK_APPOINTMENTS, MOCK_PETS } from '@/lib/mock'
 import AppointmentsClient from '@/components/appointments/AppointmentsClient'
+import { api } from '@/services/api'
 
-export default function AppointmentsPage() {
+export const dynamic = 'force-dynamic'
+
+export default async function AppointmentsPage() {
+  const [appointments, pets] = await Promise.all([
+    api.getAppointments(),
+    api.getPets(),
+  ])
+
   return (
     <AppointmentsClient
-      initialAppointments={MOCK_APPOINTMENTS}
-      pets={MOCK_PETS}
+      initialAppointments={appointments}
+      pets={pets}
     />
   )
 }

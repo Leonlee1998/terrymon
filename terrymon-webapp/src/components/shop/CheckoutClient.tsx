@@ -51,7 +51,13 @@ export default function CheckoutClient() {
   async function handleConfirm() {
     setLoading(true)
     try {
-      const res = await api.placeOrder({ items, address: formData?.address })
+      const res = await api.placeOrder({
+        items,
+        recipientName: formData?.recipientName,
+        phone: formData?.phone,
+        address: formData?.address,
+        notes: formData?.notes,
+      })
       clear()
       setOrderId(res.id)
       setStep('success')

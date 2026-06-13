@@ -5,6 +5,7 @@ import { Clock, MapPin, ChevronDown, ChevronUp } from 'lucide-react'
 import { formatDate, getSpeciesEmoji } from '@/lib/utils'
 import StatusBadge from '@/components/shared/StatusBadge'
 import { toast } from 'sonner'
+import { api } from '@/services/api'
 
 interface Props { appointment: Appointment; pet: Pet | undefined; onCancel: (id: string) => void }
 
@@ -18,10 +19,15 @@ export default function AppointmentCard({ appointment, pet, onCancel }: Props) {
   async function handleCancel() {
     if (!confirm(`確定要取消 ${pet?.name ?? ''} 的預約嗎？`)) return
     setCancelling(true)
-    await new Promise(r => setTimeout(r, 500))
-    onCancel(appointment.id)
-    toast.success('預約已取消')
-    setCancelling(false)
+    try {
+      await api.cancelAppointment(appointment.id)
+      onCancel(appointment.id)
+      toast.success('預約已取消')
+    } catch {
+      toast.error('取消預約失敗，請稍後再試')
+    } finally {
+      setCancelling(false)
+    }
   }
 
   return (

@@ -18,7 +18,7 @@ export default function WaitingColumn() {
     <div className="w-1/3 flex flex-col bg-surface">
       <div className="px-4 py-3 bg-white border-b border-border-t flex items-center justify-between flex-shrink-0">
         <h2 className="font-bold text-ink">
-          候診中
+          等候美容
           <span className="ml-2 text-sm font-normal text-slate-t">({waiting.length})</span>
         </h2>
       </div>
