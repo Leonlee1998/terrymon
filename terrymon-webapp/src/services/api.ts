@@ -3,7 +3,7 @@ import {
   MOCK_HEALTH_DATA, MOCK_DEVICES, MOCK_PRODUCTS, MOCK_ORDERS,
   MOCK_DOCUMENTS, MOCK_NOTIFICATIONS, MOCK_GROOMING_RECORDS,
 } from '@/lib/mock'
-import { getSupabase } from '@/lib/supabase'
+import { getSupabase, isSupabaseConfigured } from '@/lib/supabase'
 import type {
   Member, Pet, MedicalRecord, Appointment, AppointmentStatus,
   PetHealthData, AIoTDevice, Product, Order, OrderItem,
@@ -307,34 +307,24 @@ export const api = {
   },
 
   register: async (data: { name: string; phone: string; email: string; password: string }): Promise<Member> => {
-    const supabase = getSupabase()
-    if (!supabase) {
+    if (!isSupabaseConfigured()) {
       await delay(800)
       return { ...MOCK_MEMBER, name: data.name, phone: data.phone, email: data.email }
     }
 
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: data.email,
-      password: data.password,
+    const response = await fetch('/api/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
     })
-    if (authError) throw authError
-    if (!authData.user) throw new Error('Registration did not return a user')
 
-    const { data: member, error } = await supabase
-      .from('members')
-      .insert({
-        supabase_uid: authData.user.id,
-        name: data.name,
-        phone: data.phone,
-        email: data.email,
-      })
-      .select('*')
-      .single()
-    if (error) throw error
+    if (!response.ok) {
+      const payload = await response.json().catch(() => null) as { error?: string } | null
+      throw new Error(payload?.error ?? 'Registration failed')
+    }
 
-    return mapMember(member, [])
+    return response.json()
   },
-
   logout: async (): Promise<void> => {
     const supabase = getSupabase()
     if (supabase) await supabase.auth.signOut()
