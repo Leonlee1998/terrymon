@@ -1,16 +1,21 @@
 'use client'
 
+import { useState } from 'react'
 import Image from 'next/image'
-import { Bell } from 'lucide-react'
+import { Bell, CalendarDays, Search } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { useNotifStore } from '@/stores/notificationStore'
 import { formatTime } from '@/lib/utils'
 import { api } from '@/services/api'
+import CalendarSheet from './CalendarSheet'
+import SearchSheet from './SearchSheet'
 
 export default function HomeHeader() {
   const { notifications, unreadCount, markAllRead } = useNotifStore()
+  const [calOpen, setCalOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
 
   async function handleMarkAllRead() {
     markAllRead()
@@ -20,20 +25,34 @@ export default function HomeHeader() {
   return (
     <header className="sticky top-0 z-20 border-b border-[#f1deca] bg-[#fff8ed]/95 backdrop-blur">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 md:px-6">
-        <div className="flex items-center gap-2">
+        {/* Mobile only — desktop sidebar already shows the logo */}
+        <div className="flex items-center md:hidden">
           <Image
-            src="/assets/terrymon-mascot.png"
-            alt="TerryMon mascot"
-            width={40}
-            height={40}
-            className="size-10 rounded-2xl object-cover"
+            src="/assets/logo.png"
+            alt="TerryMon 預約怪獸"
+            width={110}
+            height={37}
+            className="object-contain"
             priority
           />
-          <div>
-            <p className="text-lg font-black leading-none text-primary">TerryMon</p>
-            <p className="text-[11px] font-medium text-[#8d7f71]">一起健康，長久陪伴</p>
-          </div>
         </div>
+
+        <div className="ml-auto flex items-center gap-1.5">
+          {/* Search */}
+          <button
+            onClick={() => setSearchOpen(true)}
+            className="grid size-10 place-items-center rounded-2xl border border-[#eadfd2] bg-white text-ink shadow-sm transition hover:border-primary/40"
+          >
+            <Search size={18} />
+          </button>
+
+          {/* Calendar */}
+          <button
+            onClick={() => setCalOpen(true)}
+            className="grid size-10 place-items-center rounded-2xl border border-[#eadfd2] bg-white text-ink shadow-sm transition hover:border-primary/40"
+          >
+            <CalendarDays size={18} />
+          </button>
 
         <Sheet>
           <SheetTrigger asChild>
@@ -77,6 +96,10 @@ export default function HomeHeader() {
             </div>
           </SheetContent>
         </Sheet>
+        </div>
+
+        <CalendarSheet open={calOpen} onOpenChange={setCalOpen} />
+        <SearchSheet open={searchOpen} onOpenChange={setSearchOpen} />
       </div>
     </header>
   )

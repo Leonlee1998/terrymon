@@ -1,5 +1,6 @@
 import HomeHeader from '@/components/home/HomeHeader'
 import WelcomeCard from '@/components/home/WelcomeCard'
+import BarcodeWidget from '@/components/home/BarcodeWidget'
 import TodaySchedule from '@/components/home/TodaySchedule'
 import AIoTDashboard from '@/components/home/AIoTDashboard'
 import QuickActions from '@/components/home/QuickActions'
@@ -30,6 +31,7 @@ export default async function HomePage() {
       <HomeHeader />
       <div className="p-4 space-y-4 max-w-2xl mx-auto w-full">
         <WelcomeCard member={member} appointment={todayAppt} />
+        <BarcodeWidget member={member} />
         {pet && healthData && <HealthAlerts pet={pet} healthData={healthData} />}
         <TodaySchedule appointment={todayAppt} />
         {pet && healthData && <AIoTDashboard pet={pet} devices={devices} healthData={healthData} />}

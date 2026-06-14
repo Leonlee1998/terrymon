@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { MOCK_VENDOR, MOCK_PRODUCTS, MOCK_ORDERS, MOCK_PROMOTIONS, MOCK_SALES_REPORT } from '@/lib/mock'
 import { configuredVendorId, getSupabase } from '@/lib/supabase'
-import type { Vendor, Product, Order, Promotion, SalesReport } from '@/types'
+import type { Vendor, Product, Order, Promotion, SalesReport, ProductFormData } from '@/types'
 
 const delay = (ms = 300) => new Promise(r => setTimeout(r, ms))
 
@@ -50,6 +50,7 @@ function mapProduct(row: any): Product {
     id: row.id,
     vendorId: row.vendor_id,
     name: row.name,
+    petSpecies: row.pet_species ?? 'all',
     category: row.category,
     subcategory: row.subcategory ?? undefined,
     price: row.price,
@@ -121,6 +122,21 @@ function mapPromotion(row: any): Promotion {
 }
 
 export const vendorApi = {
+  signIn: async (email: string, password: string): Promise<Vendor> => {
+    const supabase = getSupabase()!
+    const { data: { user }, error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) throw new Error(error.message)
+    const { data, error: vErr } = await supabase
+      .from('vendors')
+      .select('*')
+      .eq('supabase_uid', user!.id)
+      .single()
+    if (vErr || !data) throw new Error('找不到商家帳號，請聯繫客服')
+    return mapVendor(data)
+  },
+  signOut: async (): Promise<void> => {
+    await getSupabase()!.auth.signOut()
+  },
   login: async () => {
     const products = await vendorApi.getProducts()
     return vendorApi.getVendor(products)
@@ -171,6 +187,37 @@ export const vendorApi = {
     MOCK_PROMOTIONS,
   ),
   getSalesReport: async (): Promise<SalesReport[]> => fallback(async () => MOCK_SALES_REPORT, MOCK_SALES_REPORT),
+  createProduct: async (data: ProductFormData): Promise<Product> => {
+    const res = await fetch('/api/products', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+    if (!res.ok) throw new Error((await res.json()).error ?? 'createProduct failed')
+    return mapProduct(await res.json())
+  },
+  updateProduct: async (id: string, data: ProductFormData): Promise<Product> => {
+    const res = await fetch(`/api/products/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+    if (!res.ok) throw new Error((await res.json()).error ?? 'updateProduct failed')
+    return mapProduct(await res.json())
+  },
+  patchProductStatus: async (id: string, status: Product['status']): Promise<Product> => {
+    const res = await fetch(`/api/products/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    })
+    if (!res.ok) throw new Error((await res.json()).error ?? 'patchProductStatus failed')
+    return mapProduct(await res.json())
+  },
+  deleteProduct: async (id: string): Promise<void> => {
+    const res = await fetch(`/api/products/${id}`, { method: 'DELETE' })
+    if (!res.ok) throw new Error((await res.json()).error ?? 'deleteProduct failed')
+  },
   updateOrderStatus: async (id: string, status: Order['status'], trackingNumber?: string) => fallback(
     async () => {
       const { error } = await getSupabase()!.from('orders').update({

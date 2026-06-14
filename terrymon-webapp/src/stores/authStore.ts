@@ -10,6 +10,7 @@ interface AuthStore {
   updateMember: (fields: Partial<Omit<Member, 'id' | 'pets'>>) => void
   addPet: (pet: Pet) => void
   updatePet: (pet: Pet) => void
+  removePet: (petId: string) => void
   logout: () => void
 }
 
@@ -30,6 +31,11 @@ export const useAuthStore = create<AuthStore>()(
       updatePet: (pet) => set(state => ({
         member: state.member
           ? { ...state.member, pets: state.member.pets.map(p => p.id === pet.id ? pet : p) }
+          : null,
+      })),
+      removePet: (petId) => set(state => ({
+        member: state.member
+          ? { ...state.member, pets: state.member.pets.filter(p => p.id !== petId) }
           : null,
       })),
       logout: () => set({ member: null, isLoggedIn: false }),

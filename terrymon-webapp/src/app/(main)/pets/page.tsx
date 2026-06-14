@@ -1,15 +1,21 @@
 import PetsClient from '@/components/pets/PetsClient'
 import { api } from '@/services/api'
-import EmptyState from '@/components/shared/EmptyState'
 
 export const dynamic = 'force-dynamic'
 
+const emptyHealthData = {
+  petId: '',
+  weight: [],
+  bloodSugar: [],
+  bloodPressureSys: [],
+  bloodPressureDia: [],
+  heartRate: [],
+  temperature: [],
+}
+
 export default async function PetsPage() {
   const pets = await api.getPets()
-  const activePet = pets[0]
-  if (!activePet) {
-    return <EmptyState icon="🐾" title="目前沒有寵物資料" subtitle="新增寵物後就能查看醫療、美容與健康紀錄" />
-  }
+  const activePet = pets[0] ?? null
 
   const [medicalRecords, healthData, devices, groomingRecords] = activePet
     ? await Promise.all([
@@ -18,7 +24,7 @@ export default async function PetsPage() {
         api.getDevices(activePet.id),
         api.getGroomingRecords(activePet.id),
       ])
-    : [[], { petId: '', weight: [], bloodSugar: [], bloodPressureSys: [], bloodPressureDia: [], heartRate: [], temperature: [] }, [], []]
+    : [[], emptyHealthData, [], []]
 
   return (
     <PetsClient

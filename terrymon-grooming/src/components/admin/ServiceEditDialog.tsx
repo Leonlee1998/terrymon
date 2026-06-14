@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { useAdminStore } from '@/stores/adminStore'
+import { adminApi } from '@/services/api'
 import { WEIGHT_RANGES } from '@/lib/mock'
 import { toast } from 'sonner'
 import type { GroomingService, ServicePriceMatrix, CoatLength } from '@/types'
@@ -77,7 +78,7 @@ export default function ServiceEditDialog({ open, service, defaultCategory, onCl
     })
   }
 
-  function onSubmit(data: FormValues) {
+  async function onSubmit(data: FormValues) {
     const payload: GroomingService = {
       id: service?.id ?? `SV${Date.now()}`,
       storeId: 'S001',
@@ -99,6 +100,9 @@ export default function ServiceEditDialog({ open, service, defaultCategory, onCl
       packageDiscountPct:   data.category === 'package' ? Number(data.packageDiscountPct) : undefined,
       createdAt: service?.createdAt ?? new Date().toISOString(),
     }
+    adminApi.saveService(payload, !isEdit).catch(err =>
+      toast.error('DB 同步失敗：' + (err as Error).message)
+    )
     if (isEdit) { updateService(payload); toast.success('服務已更新') }
     else         { addService(payload);    toast.success('服務已新增') }
     onClose()

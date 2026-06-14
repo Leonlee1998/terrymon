@@ -3,16 +3,39 @@ import {
   MOCK_HEALTH_DATA, MOCK_DEVICES, MOCK_PRODUCTS, MOCK_ORDERS,
   MOCK_DOCUMENTS, MOCK_NOTIFICATIONS, MOCK_GROOMING_RECORDS,
 } from '@/lib/mock'
+import { getMockBreeds } from '@/lib/breeds'
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase'
+import type { ProductPetSpecies } from '@/lib/shopFilters'
 import type {
   Member, Pet, MedicalRecord, Appointment, AppointmentStatus,
   PetHealthData, AIoTDevice, Product, Order, OrderItem,
-  DocItem, Notification, GroomingRecord, CartItem, PrescriptionItem,
+  DocItem, Notification, GroomingRecord, CartItem, PrescriptionItem, BreedOption,
+  MemberEvent, EmergencyContact, CaregiverPermissions, PetCaregiver,
 } from '@/types'
+import { DEFAULT_CAREGIVER_PERMISSIONS } from '@/types'
 
 const delay = (ms = 300) => new Promise(r => setTimeout(r, ms))
+
+const _mockEmergencyContacts: Record<string, EmergencyContact[]> = {}
+const _mockCaregivers: Record<string, PetCaregiver[]> = {}
 const ALL_CATEGORY = '全部'
 type DbRow = Record<string, unknown>
+export type PetPayload = {
+  name: string
+  species: Pet['species']
+  breedId?: string
+  breed?: string
+  birthDate?: string
+  weight?: number
+  photoUrl?: string
+  allergies?: string[]
+  chipId?: string
+  gender?: 'male' | 'female'
+  isNeutered?: boolean
+  bloodType?: string
+  caregiver?: string
+  notes?: string
+}
 
 const stringValue = (value: unknown, fallback = '') => typeof value === 'string' ? value : fallback
 const optionalString = (value: unknown) => typeof value === 'string' ? value : undefined
@@ -74,14 +97,57 @@ function mapPet(row: DbRow): Pet {
     memberId: stringValue(row.member_id),
     name: stringValue(row.name),
     species: stringValue(row.species, 'other') as Pet['species'],
+    breedId: optionalString(row.breed_id),
     breed: stringValue(row.breed),
     birthDate: stringValue(row.birth_date),
     weight: numberValue(row.weight),
     photoUrl: stringValue(row.photo_url),
     allergies: stringArray(row.allergies),
     chipId: optionalString(row.chip_id),
+    gender: optionalString(row.gender) as Pet['gender'],
+    isNeutered: typeof row.is_neutered === 'boolean' ? row.is_neutered : undefined,
+    bloodType: optionalString(row.blood_type),
+    caregiver: optionalString(row.caregiver),
     notes: stringValue(row.notes),
     isActive: booleanValue(row.is_active, true),
+  }
+}
+
+function mapPetPayload(data: Partial<PetPayload>) {
+  return {
+    name: data.name,
+    species: data.species,
+    breed_id: data.breedId || null,
+    breed: data.breed ?? '',
+    birth_date: data.birthDate || null,
+    weight: data.weight ?? null,
+    photo_url: data.photoUrl ?? '',
+    allergies: data.allergies ?? [],
+    chip_id: data.chipId || null,
+    gender: data.gender ?? null,
+    is_neutered: data.isNeutered ?? null,
+    blood_type: data.bloodType || null,
+    caregiver: data.caregiver || null,
+    notes: data.notes ?? '',
+  }
+}
+
+function mapBreed(row: DbRow): BreedOption {
+  return {
+    id: stringValue(row.id),
+    species: stringValue(row.species, 'dog') as BreedOption['species'],
+    nameZh: stringValue(row.canonical_name_zh),
+    nameEn: stringValue(row.canonical_name_en),
+    aliases: stringArray(row.aliases),
+    registrySources: stringArray(row.registry_sources),
+    group: stringValue(row.breed_group),
+    size: stringValue(row.size, 'unknown') as BreedOption['size'],
+    coatType: stringArray(row.coat_type),
+    groomingTags: stringArray(row.grooming_tags),
+    vetRiskTags: stringArray(row.vet_risk_tags),
+    legalStatusTw: stringValue(row.legal_status_tw, 'unknown') as BreedOption['legalStatusTw'],
+    legalNote: nullableString(row.legal_note),
+    sortOrder: numberValue(row.sort_order, 999),
   }
 }
 
@@ -92,6 +158,7 @@ function mapMember(row: DbRow, pets: Pet[] = []): Member {
     phone: stringValue(row.phone),
     email: stringValue(row.email),
     avatarUrl: optionalString(row.avatar_url),
+    handle: optionalString(row.handle),
     qrCode: `TERRYMON-${stringValue(row.id)}`,
     memberSince: stringValue(row.created_at),
     balance: numberValue(row.platform_balance),
@@ -189,6 +256,7 @@ function mapProduct(row: DbRow): Product {
     vendorId: stringValue(row.vendor_id),
     vendorName: stringValue(vendor.store_name, 'TerryMon'),
     name: stringValue(row.name),
+    petSpecies: stringValue(row.pet_species, 'all') as ProductPetSpecies,
     category: stringValue(row.category),
     subcategory: optionalString(row.subcategory),
     price: numberValue(row.price),
@@ -241,6 +309,19 @@ function mapDocument(row: DbRow): DocItem {
     size: fileSizeLabel(row.file_size as number | null | undefined),
     createdAt: stringValue(row.created_at),
     isRead: booleanValue(row.is_read),
+  }
+}
+
+function mapMemberEvent(row: DbRow): MemberEvent {
+  return {
+    id: stringValue(row.id),
+    memberId: stringValue(row.member_id),
+    petId: optionalString(row.pet_id),
+    title: stringValue(row.title),
+    date: stringValue(row.date),
+    time: optionalString(row.time)?.slice(0, 5),
+    notes: optionalString(row.notes),
+    createdAt: stringValue(row.created_at),
   }
 }
 
@@ -306,10 +387,10 @@ export const api = {
     return mapMember(data, pets)
   },
 
-  register: async (data: { name: string; phone: string; email: string; password: string }): Promise<Member> => {
+  register: async (data: { name: string; phone: string; email: string; password: string; handle: string }): Promise<Member> => {
     if (!isSupabaseConfigured()) {
       await delay(800)
-      return { ...MOCK_MEMBER, name: data.name, phone: data.phone, email: data.email }
+      return { ...MOCK_MEMBER, name: data.name, phone: data.phone, email: data.email, handle: data.handle }
     }
 
     const response = await fetch('/api/register', {
@@ -323,8 +404,17 @@ export const api = {
       throw new Error(payload?.error ?? 'Registration failed')
     }
 
-    return response.json()
+    const member = await response.json() as Member
+
+    const { error: signInError } = await getSupabase()!.auth.signInWithPassword({
+      email: data.email,
+      password: data.password,
+    })
+    if (signInError) throw signInError
+
+    return member
   },
+
   logout: async (): Promise<void> => {
     const supabase = getSupabase()
     if (supabase) await supabase.auth.signOut()
@@ -358,6 +448,26 @@ export const api = {
     { success: true },
   ),
 
+  getBreeds: async (species?: 'dog' | 'cat'): Promise<BreedOption[]> => fallback(
+    async () => {
+      let query = getSupabase()!
+        .from('breed_master')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true })
+        .order('canonical_name_zh', { ascending: true })
+
+      if (species) {
+        query = query.eq('species', species)
+      }
+
+      const { data, error } = await query
+      if (error) throw error
+      return data.map(mapBreed)
+    },
+    () => getMockBreeds(species),
+  ),
+
   getPets: async (memberId?: string): Promise<Pet[]> => fallback(
     async () => {
       const ownerId = memberId ?? (await getActiveMemberId())
@@ -370,7 +480,7 @@ export const api = {
       if (error) throw error
       return data.map(mapPet)
     },
-    MOCK_PETS,
+    [],
   ),
 
   getPet: async (id: string): Promise<Pet> => fallback(
@@ -386,6 +496,81 @@ export const api = {
     },
   ),
 
+  createPet: async (data: PetPayload): Promise<Pet> => fallback(
+    async () => {
+      const response = await fetch('/api/pets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(mapPetPayload(data)),
+      })
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null) as { error?: string } | null
+        throw new Error(payload?.error ?? 'Create pet failed')
+      }
+      return response.json()
+    },
+    () => ({
+      id: `PET_${Date.now()}`,
+      memberId: MOCK_MEMBER.id,
+      name: data.name,
+      species: data.species,
+      breed: data.breed ?? '',
+      birthDate: data.birthDate ?? '',
+      weight: data.weight ?? 0,
+      photoUrl: data.photoUrl ?? '',
+      allergies: data.allergies ?? [],
+      chipId: data.chipId || undefined,
+      notes: data.notes ?? '',
+      isActive: true,
+    }),
+  ),
+
+  updatePet: async (id: string, data: PetPayload): Promise<Pet> => fallback(
+    async () => {
+      const response = await fetch(`/api/pets/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(mapPetPayload(data)),
+      })
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null) as { error?: string } | null
+        throw new Error(payload?.error ?? 'Update pet failed')
+      }
+      return response.json()
+    },
+    () => {
+      const existing = MOCK_PETS.find(p => p.id === id)
+      return {
+        ...(existing ?? {
+          id,
+          memberId: MOCK_MEMBER.id,
+          isActive: true,
+        }),
+        name: data.name,
+        species: data.species,
+        breed: data.breed ?? '',
+        birthDate: data.birthDate ?? '',
+        weight: data.weight ?? 0,
+        photoUrl: data.photoUrl ?? '',
+        allergies: data.allergies ?? [],
+        chipId: data.chipId || undefined,
+        notes: data.notes ?? '',
+      } as Pet
+    },
+  ),
+
+  archivePet: async (id: string): Promise<{ success: boolean }> => fallback(
+    async () => {
+      const response = await fetch(`/api/pets/${id}`, { method: 'DELETE' })
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null) as { error?: string } | null
+        throw new Error(payload?.error ?? 'Archive pet failed')
+      }
+      return response.json()
+    },
+    { success: true },
+  ),
+
   getMedical: async (petId: string): Promise<MedicalRecord[]> => fallback(
     async () => {
       const { data, error } = await getSupabase()!
@@ -396,7 +581,7 @@ export const api = {
       if (error) throw error
       return data.map(mapMedical)
     },
-    () => MOCK_MEDICAL.filter(r => r.petId === petId),
+    [],
   ),
 
   getGroomingRecords: async (petId: string): Promise<GroomingRecord[]> => fallback(
@@ -409,7 +594,7 @@ export const api = {
       if (error) throw error
       return data.map(mapGrooming)
     },
-    () => MOCK_GROOMING_RECORDS.filter(r => r.petId === petId),
+    [],
   ),
 
   getHealthData: async (petId: string): Promise<PetHealthData> => fallback(
@@ -439,7 +624,7 @@ export const api = {
       }
       return health
     },
-    () => ({ ...MOCK_HEALTH_DATA, petId }),
+    () => emptyHealthData(petId),
   ),
 
   getDevices: async (petId: string): Promise<AIoTDevice[]> => fallback(
@@ -452,7 +637,7 @@ export const api = {
       if (error) throw error
       return data.map(mapDevice)
     },
-    () => MOCK_DEVICES.filter(d => d.petId === petId),
+    [],
   ),
 
   getAppointments: async (): Promise<Appointment[]> => fallback(
@@ -466,7 +651,7 @@ export const api = {
       if (error) throw error
       return data.map(mapAppointment)
     },
-    MOCK_APPOINTMENTS,
+    [],
   ),
 
   cancelAppointment: async (id: string) => fallback(
@@ -514,7 +699,7 @@ export const api = {
       if (error) throw error
       return data.map(mapOrder)
     },
-    MOCK_ORDERS,
+    [],
   ),
 
   getOrder: async (id: string): Promise<Order> => fallback(
@@ -576,6 +761,26 @@ export const api = {
       const { error: itemError } = await getSupabase()!.from('order_items').insert(orderItems)
       if (itemError) throw itemError
 
+      // Decrement stock per item (non-blocking — RPC may not exist yet)
+      await Promise.all(data.items.map(item =>
+        getSupabase()!.rpc('decrement_stock', {
+          p_product_id: item.product.id,
+          p_qty: item.qty,
+        }).then(({ error }) => {
+          if (error) console.warn('[stock:decrement]', error)
+        })
+      ))
+
+      // Notify member
+      await getSupabase()!.from('notifications').insert({
+        member_id:  memberId,
+        type:       'order_update',
+        title:      '訂單已成立',
+        body:       `訂單 #${order.id.slice(-6).toUpperCase()} 已收到，感謝您的購買！`,
+        action_url: `/shop/orders/${order.id}`,
+        is_read:    false,
+      })
+
       return { id: order.id, success: true }
     },
     { id: 'ORD_NEW', success: true },
@@ -609,7 +814,7 @@ export const api = {
       if (error) throw error
       return data.map(mapDocument)
     },
-    MOCK_DOCUMENTS,
+    [],
   ),
 
   markDocRead: async (id: string) => fallback(
@@ -632,7 +837,7 @@ export const api = {
       if (error) throw error
       return data.map(mapNotification)
     },
-    MOCK_NOTIFICATIONS,
+    [],
   ),
 
   markAllRead: async () => fallback(
@@ -646,5 +851,295 @@ export const api = {
       return { success: true }
     },
     { success: true },
+  ),
+
+  getMemberEvents: async (): Promise<MemberEvent[]> => fallback(
+    async () => {
+      const memberId = await getActiveMemberId()
+      const { data, error } = await getSupabase()!
+        .from('member_events')
+        .select('*')
+        .eq('member_id', memberId)
+        .order('date', { ascending: false })
+      if (error) throw error
+      return data.map(mapMemberEvent)
+    },
+    [],
+  ),
+
+  createMemberEvent: async (
+    payload: Omit<MemberEvent, 'id' | 'memberId' | 'createdAt'>,
+  ): Promise<MemberEvent> => fallback(
+    async () => {
+      const memberId = await getActiveMemberId()
+      const { data, error } = await getSupabase()!
+        .from('member_events')
+        .insert({
+          member_id: memberId,
+          pet_id: payload.petId ?? null,
+          title: payload.title,
+          date: payload.date,
+          time: payload.time ?? null,
+          notes: payload.notes ?? null,
+        })
+        .select('*')
+        .single()
+      if (error) throw error
+      return mapMemberEvent(data)
+    },
+    () => ({
+      id: `EVT_${Date.now()}`,
+      memberId: MOCK_MEMBER.id,
+      petId: payload.petId,
+      title: payload.title,
+      date: payload.date,
+      time: payload.time,
+      notes: payload.notes,
+      createdAt: new Date().toISOString(),
+    }),
+  ),
+
+  uploadPetPhoto: async (file: File): Promise<string> => {
+    const supabase = getSupabase()
+    if (!supabase) return URL.createObjectURL(file)
+    const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg'
+    const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+    const { error } = await supabase.storage.from('pet-photos').upload(path, file, { upsert: true })
+    if (error) throw error
+    return supabase.storage.from('pet-photos').getPublicUrl(path).data.publicUrl
+  },
+
+  addHealthData: async (
+    petId: string,
+    payload: { metric: string; value: number; unit: string; note?: string },
+  ): Promise<void> => fallback(
+    async () => {
+      const { error } = await getSupabase()!.from('health_data').insert({
+        pet_id: petId,
+        metric: payload.metric,
+        value: payload.value,
+        unit: payload.unit,
+        note: payload.note ?? null,
+        recorded_at: new Date().toISOString(),
+      })
+      if (error) throw error
+    },
+    () => {},
+  ),
+
+  getEmergencyContacts: async (petId: string): Promise<EmergencyContact[]> => fallback(
+    async () => {
+      const { data, error } = await getSupabase()!
+        .from('pet_emergency_contacts')
+        .select('*')
+        .eq('pet_id', petId)
+        .order('sort_order', { ascending: true })
+      if (error) throw error
+      return data.map(r => ({
+        id: stringValue(r.id),
+        petId: stringValue(r.pet_id),
+        name: stringValue(r.name),
+        phone: stringValue(r.phone),
+        relation: stringValue(r.relation),
+      }))
+    },
+    () => _mockEmergencyContacts[petId] ?? [],
+  ),
+
+  addEmergencyContact: async (
+    petId: string,
+    data: { name: string; phone: string; relation: string },
+  ): Promise<EmergencyContact> => fallback(
+    async () => {
+      const { data: row, error } = await getSupabase()!
+        .from('pet_emergency_contacts')
+        .insert({ pet_id: petId, name: data.name, phone: data.phone, relation: data.relation })
+        .select('*')
+        .single()
+      if (error) throw error
+      return { id: stringValue(row.id), petId, name: data.name, phone: data.phone, relation: data.relation }
+    },
+    () => {
+      const contact: EmergencyContact = { id: `EC_${Date.now()}`, petId, ...data }
+      _mockEmergencyContacts[petId] = [...(_mockEmergencyContacts[petId] ?? []), contact]
+      return contact
+    },
+  ),
+
+  removeEmergencyContact: async (id: string): Promise<{ success: boolean }> => fallback(
+    async () => {
+      const { error } = await getSupabase()!.from('pet_emergency_contacts').delete().eq('id', id)
+      if (error) throw error
+      return { success: true }
+    },
+    () => {
+      for (const petId of Object.keys(_mockEmergencyContacts)) {
+        _mockEmergencyContacts[petId] = _mockEmergencyContacts[petId].filter(c => c.id !== id)
+      }
+      return { success: true }
+    },
+  ),
+
+  getCaregivers: async (petId: string): Promise<PetCaregiver[]> => fallback(
+    async () => {
+      const { data, error } = await getSupabase()!
+        .from('pet_caregivers')
+        .select('*, members(name, handle, avatar_url)')
+        .eq('pet_id', petId)
+        .order('created_at', { ascending: true })
+      if (error) throw error
+      return data.map(r => {
+        const m = recordValue(r.members)
+        return {
+          id: stringValue(r.id),
+          petId: stringValue(r.pet_id),
+          memberId: optionalString(r.member_id),
+          memberName: optionalString(m.name),
+          memberHandle: optionalString(m.handle),
+          memberAvatarUrl: optionalString(m.avatar_url),
+          inviteContact: optionalString(r.invited_contact),
+          status: stringValue(r.status, 'pending') as PetCaregiver['status'],
+          permissions: (r.permissions as CaregiverPermissions) ?? { ...DEFAULT_CAREGIVER_PERMISSIONS },
+          inviteExpiresAt: optionalString(r.invite_expires_at),
+        }
+      })
+    },
+    () => _mockCaregivers[petId] ?? [],
+  ),
+
+  searchMemberForInvite: async (query: string): Promise<{
+    found: boolean
+    member?: { id: string; name: string; handle?: string; avatarUrl?: string }
+  }> => fallback(
+    async () => {
+      const q = query.trim().toLowerCase()
+      const isHandle = q.startsWith('@')
+      let dbQuery = getSupabase()!.from('members').select('id, name, handle, avatar_url').limit(1)
+      if (isHandle) dbQuery = dbQuery.eq('handle', q.slice(1))
+      else if (q.includes('@')) dbQuery = dbQuery.eq('email', q)
+      else dbQuery = dbQuery.eq('phone', q)
+      const { data } = await dbQuery.maybeSingle()
+      if (!data) return { found: false }
+      return {
+        found: true,
+        member: {
+          id: stringValue(data.id),
+          name: stringValue(data.name),
+          handle: optionalString(data.handle),
+          avatarUrl: optionalString(data.avatar_url),
+        },
+      }
+    },
+    () => {
+      const q = query.trim().toLowerCase()
+      const mock = MOCK_MEMBER
+      const matches =
+        mock.phone === q ||
+        (mock.email?.toLowerCase() === q) ||
+        (q.startsWith('@') ? mock.handle === q.slice(1) : mock.handle === q)
+      if (!matches) return { found: false }
+      return { found: true, member: { id: mock.id, name: mock.name, handle: mock.handle } }
+    },
+  ),
+
+  inviteCaregiver: async (
+    petId: string,
+    data: { memberId?: string; memberName?: string; memberHandle?: string; memberAvatarUrl?: string; inviteContact?: string },
+  ): Promise<PetCaregiver> => fallback(
+    async () => {
+      const token = crypto.randomUUID().slice(0, 8)
+      const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString()
+      const { data: row, error } = await getSupabase()!
+        .from('pet_caregivers')
+        .insert({
+          pet_id: petId,
+          member_id: data.memberId ?? null,
+          invited_contact: data.inviteContact ?? null,
+          status: 'pending',
+          permissions: { ...DEFAULT_CAREGIVER_PERMISSIONS },
+          invite_token: token,
+          invite_expires_at: expiresAt,
+        })
+        .select('*')
+        .single()
+      if (error) throw error
+      return {
+        id: stringValue(row.id),
+        petId,
+        memberId: data.memberId,
+        memberName: data.memberName,
+        memberHandle: data.memberHandle,
+        memberAvatarUrl: data.memberAvatarUrl,
+        inviteContact: data.inviteContact,
+        status: 'pending',
+        permissions: { ...DEFAULT_CAREGIVER_PERMISSIONS },
+        inviteExpiresAt: expiresAt,
+      }
+    },
+    () => {
+      const caregiver: PetCaregiver = {
+        id: `CG_${Date.now()}`,
+        petId,
+        ...data,
+        status: 'pending',
+        permissions: { ...DEFAULT_CAREGIVER_PERMISSIONS },
+        inviteExpiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
+      }
+      _mockCaregivers[petId] = [...(_mockCaregivers[petId] ?? []), caregiver]
+      return caregiver
+    },
+  ),
+
+  generateInviteLink: async (petId: string): Promise<string> => fallback(
+    async () => {
+      const token = crypto.randomUUID().slice(0, 8)
+      const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString()
+      const { error } = await getSupabase()!.from('pet_caregivers').insert({
+        pet_id: petId,
+        status: 'pending',
+        permissions: { ...DEFAULT_CAREGIVER_PERMISSIONS },
+        invite_token: token,
+        invite_expires_at: expiresAt,
+      })
+      if (error) throw error
+      const base = typeof window !== 'undefined' ? window.location.origin : 'https://terrymon.app'
+      return `${base}/join?token=${token}`
+    },
+    () => `https://terrymon.app/join?token=${Math.random().toString(36).slice(2, 10)}`,
+  ),
+
+  updateCaregiverPermissions: async (
+    caregiverId: string,
+    permissions: CaregiverPermissions,
+  ): Promise<{ success: boolean }> => fallback(
+    async () => {
+      const { error } = await getSupabase()!
+        .from('pet_caregivers')
+        .update({ permissions })
+        .eq('id', caregiverId)
+      if (error) throw error
+      return { success: true }
+    },
+    () => {
+      for (const petId of Object.keys(_mockCaregivers)) {
+        const idx = _mockCaregivers[petId].findIndex(c => c.id === caregiverId)
+        if (idx !== -1) _mockCaregivers[petId][idx] = { ..._mockCaregivers[petId][idx], permissions }
+      }
+      return { success: true }
+    },
+  ),
+
+  removeCaregiver: async (caregiverId: string): Promise<{ success: boolean }> => fallback(
+    async () => {
+      const { error } = await getSupabase()!.from('pet_caregivers').delete().eq('id', caregiverId)
+      if (error) throw error
+      return { success: true }
+    },
+    () => {
+      for (const petId of Object.keys(_mockCaregivers)) {
+        _mockCaregivers[petId] = _mockCaregivers[petId].filter(c => c.id !== caregiverId)
+      }
+      return { success: true }
+    },
   ),
 }

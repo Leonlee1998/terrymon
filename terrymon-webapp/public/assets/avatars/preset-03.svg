@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <style>.toy{animation:bob 3.9s ease-in-out infinite;transform-origin:128px 140px}@keyframes bob{0%,100%{transform:translateY(0) rotate(.4deg)}50%{transform:translateY(-6px) rotate(-.4deg)}}</style>
+  <defs>
+    <radialGradient id="bg" cx="36%" cy="22%"><stop offset="0" stop-color="#f8fcff"/><stop offset="1" stop-color="#9ddcff"/></radialGradient>
+    <linearGradient id="dark" x1="63" y1="40" x2="184" y2="219"><stop stop-color="#68717b"/><stop offset=".65" stop-color="#2d343d"/><stop offset="1" stop-color="#171b21"/></linearGradient>
+    <linearGradient id="cream" x1="98" y1="92" x2="158" y2="206"><stop stop-color="#fffaf0"/><stop offset="1" stop-color="#eadfce"/></linearGradient>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="15" stdDeviation="10" flood-color="#2a4058" flood-opacity=".23"/></filter>
+  </defs>
+  <circle cx="128" cy="128" r="112" fill="url(#bg)"/><ellipse cx="128" cy="215" rx="62" ry="14" fill="#35516b" opacity=".13"/>
+  <g class="toy" filter="url(#soft)">
+    <path d="M62 92 82 35l42 50h8l42-50 20 57-17 53H79z" fill="url(#dark)"/>
+    <path d="M76 105c0-31 22-54 52-54s52 23 52 54v44c0 41-22 68-52 68s-52-27-52-68z" fill="url(#cream)"/>
+    <path d="M84 107c12-32 34-40 44-40v134c-28 0-44-22-44-56z" fill="url(#dark)"/>
+    <path d="m86 64-10 27 25-13zm84 0 10 27-25-13z" fill="#ffd5df"/>
+    <circle cx="106" cy="137" r="15" fill="#1c2025"/><circle cx="150" cy="137" r="15" fill="#1c2025"/>
+    <circle cx="101" cy="131" r="5" fill="#fff"/><circle cx="145" cy="131" r="5" fill="#fff"/>
+    <circle cx="91" cy="158" r="13" fill="#ffada3" opacity=".5"/><circle cx="165" cy="158" r="13" fill="#ffada3" opacity=".5"/>
+    <ellipse cx="128" cy="161" rx="19" ry="13" fill="#2b211d"/>
+    <path d="M110 181c13 11 23 11 36 0" fill="none" stroke="#2b211d" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="157" cy="111" r="11" fill="#fff" opacity=".18"/>
+  </g>
+</svg>

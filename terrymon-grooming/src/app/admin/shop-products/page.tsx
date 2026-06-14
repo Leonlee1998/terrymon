@@ -1,54 +1,61 @@
 'use client'
-import { useState } from 'react'
-import { Plus } from 'lucide-react'
-import { useAdminStore } from '@/stores/adminStore'
+import { useState, useEffect, useCallback } from 'react'
+import { toast } from 'sonner'
+import AdminPageHeader from '@/components/admin/AdminPageHeader'
+import ShopProductTable from '@/components/admin/ShopProductTable'
+import ShopProductEditDialog from '@/components/admin/ShopProductEditDialog'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Switch } from '@/components/ui/switch'
-import { toast } from 'sonner'
-import { formatPrice } from '@/lib/utils'
-import AdminPageHeader from '@/components/admin/AdminPageHeader'
+import { adminApi, posApi } from '@/services/api'
 import type { ShopProduct } from '@/types'
 
 export default function AdminShopProducts() {
-  const { shopProducts, addProduct, updateProduct, toggleProduct } = useAdminStore()
-  const [editTarget, setEditTarget] = useState<ShopProduct | null>(null)
-  const [isNew, setIsNew] = useState(false)
-  const [filterCat, setFilterCat] = useState('全部')
+  const [products,    setProducts]    = useState<ShopProduct[]>([])
+  const [filterCat,   setFilterCat]   = useState('全部')
+  const [editTarget,  setEditTarget]  = useState<ShopProduct | null>(null)
+  const [sellTarget,  setSellTarget]  = useState<ShopProduct | null>(null)
+  const [sellQty,     setSellQty]     = useState(1)
+  const [selling,     setSelling]     = useState(false)
 
-  const [form, setForm] = useState({
-    name: '', category: '', price: 0, memberPrice: 0, stock: 0, barcode: '',
-  })
+  const load = useCallback(() => {
+    adminApi.getProducts().then(setProducts)
+  }, [])
 
-  const categories = ['全部', ...Array.from(new Set(shopProducts.map(p => p.category)))]
+  useEffect(() => { load() }, [load])
 
-  const displayed = filterCat === '全部'
-    ? shopProducts
-    : shopProducts.filter(p => p.category === filterCat)
+  const categories = ['全部', ...Array.from(new Set(products.map(p => p.category).filter(Boolean)))]
+  const displayed  = filterCat === '全部' ? products : products.filter(p => p.category === filterCat)
 
-  function openNew() {
-    setForm({ name: '', category: '', price: 0, memberPrice: 0, stock: 0, barcode: '' })
-    setEditTarget(null)
-    setIsNew(true)
+  async function handleToggle(p: ShopProduct) {
+    const next = !p.isActive
+    setProducts(ps => ps.map(x => x.id === p.id ? { ...x, isActive: next } : x))
+    try {
+      await adminApi.updateInventoryItem(p.id, { isActive: next })
+    } catch {
+      setProducts(ps => ps.map(x => x.id === p.id ? { ...x, isActive: p.isActive } : x))
+      toast.error('更新失敗，請稍後再試')
+    }
   }
 
-  function openEdit(p: ShopProduct) {
-    setForm({ name: p.name, category: p.category, price: p.price, memberPrice: p.memberPrice, stock: p.stock, barcode: p.barcode ?? '' })
-    setEditTarget(p)
-    setIsNew(false)
+  async function handleSave(id: string, retailPrice: number, memberPrice: number, stock: number) {
+    await adminApi.updateInventoryItem(id, { retailPrice, memberPrice, stock })
+    setProducts(ps => ps.map(p => p.id === id ? { ...p, price: retailPrice, memberPrice, stock } : p))
+    toast.success('商品已更新')
   }
 
-  function onSave() {
-    if (!form.name.trim()) return
-    if (editTarget) {
-      updateProduct({ ...editTarget, ...form, price: Number(form.price), memberPrice: Number(form.memberPrice), stock: Number(form.stock) })
-      toast.success('商品已更新')
-      setEditTarget(null)
-    } else {
-      addProduct({ id: `SP${Date.now()}`, storeId: 'S001', isActive: true, ...form, price: Number(form.price), memberPrice: Number(form.memberPrice), stock: Number(form.stock) })
-      toast.success('商品已新增')
-      setIsNew(false)
+  async function handleSell() {
+    if (!sellTarget || sellQty < 1) return
+    setSelling(true)
+    try {
+      const { remainingStock } = await posApi.deductStock(sellTarget.id, sellQty)
+      setProducts(ps => ps.map(p => p.id === sellTarget.id ? { ...p, stock: remainingStock } : p))
+      toast.success(`已售出 ${sellQty} 件「${sellTarget.name}」，剩餘 ${remainingStock} 件`)
+      setSellTarget(null)
+    } catch (e) {
+      toast.error((e as Error).message || '售出失敗')
+    } finally {
+      setSelling(false)
     }
   }
 
@@ -56,21 +63,12 @@ export default function AdminShopProducts() {
     <div className="p-6">
       <AdminPageHeader
         title="現場商品"
-        subtitle="管理 POS 機可銷售的現場商品"
-        action={
-          <Button onClick={openNew} className="bg-primary text-white">
-            <Plus size={16} className="mr-2" />
-            新增商品
-          </Button>
-        }
+        subtitle="管理 POS 機可銷售的現場商品（來源：品牌商品 Push）"
       />
 
-      {/* Category filter */}
       <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
         {categories.map(cat => (
-          <button
-            key={cat}
-            onClick={() => setFilterCat(cat)}
+          <button key={cat} onClick={() => setFilterCat(cat)}
             className={`flex-shrink-0 px-3 py-1.5 rounded-full text-sm border transition-colors ${
               filterCat === cat
                 ? 'bg-primary text-white border-primary'
@@ -82,83 +80,39 @@ export default function AdminShopProducts() {
         ))}
       </div>
 
-      {/* Product table */}
-      <div className="bg-white rounded-2xl border border-border-t overflow-hidden">
-        <div className="grid grid-cols-6 gap-4 px-5 py-3 bg-surface text-xs font-semibold text-slate-t uppercase">
-          <span className="col-span-2">商品名稱</span>
-          <span>分類</span>
-          <span>一般價 / 會員價</span>
-          <span>庫存</span>
-          <span className="text-center">啟用</span>
-        </div>
-        <div className="divide-y divide-border-t">
-          {displayed.map(p => (
-            <div key={p.id} className="grid grid-cols-6 gap-4 px-5 py-3 items-center">
-              <div className="col-span-2">
-                <p className="font-medium text-ink text-sm">{p.name}</p>
-                {p.barcode && <p className="text-xs text-slate-t font-mono">{p.barcode}</p>}
-              </div>
-              <p className="text-sm text-slate-t">{p.category}</p>
-              <div>
-                <p className="text-sm font-semibold text-ink">{formatPrice(p.price)}</p>
-                <p className="text-xs text-primary">{formatPrice(p.memberPrice)}</p>
-              </div>
-              <div className={`text-sm font-medium ${p.stock === 0 ? 'text-red-500' : p.stock <= 5 ? 'text-amber-500' : 'text-ink'}`}>
-                {p.stock} 件
-                {p.stock === 0 && <span className="text-xs ml-1">售完</span>}
-                {p.stock > 0 && p.stock <= 5 && <span className="text-xs ml-1">低庫存</span>}
-              </div>
-              <div className="flex items-center justify-center gap-2">
-                <Switch checked={p.isActive} onCheckedChange={() => toggleProduct(p.id)} />
-                <button onClick={() => openEdit(p)} className="text-xs text-primary hover:underline">
-                  編輯
-                </button>
-              </div>
-            </div>
-          ))}
-          {displayed.length === 0 && (
-            <p className="text-center text-slate-t py-8 text-sm">此分類尚無商品</p>
-          )}
-        </div>
-      </div>
+      <ShopProductTable
+        products={displayed}
+        onToggle={handleToggle}
+        onEdit={setEditTarget}
+        onSell={p => { setSellTarget(p); setSellQty(1) }}
+      />
 
-      {/* Edit/Add dialog */}
-      <Dialog open={!!editTarget || isNew} onOpenChange={() => { setEditTarget(null); setIsNew(false) }}>
+      <ShopProductEditDialog
+        product={editTarget} open={!!editTarget}
+        onClose={() => setEditTarget(null)} onSave={handleSave}
+      />
+
+      {/* 售出 Dialog */}
+      <Dialog open={!!sellTarget} onOpenChange={v => !v && setSellTarget(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editTarget ? '編輯商品' : '新增商品'}</DialogTitle>
+            <DialogTitle>售出商品</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 mt-2">
-            <div>
-              <label className="text-sm font-medium text-ink">商品名稱 *</label>
-              <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="mt-1" />
+          {sellTarget && (
+            <div className="space-y-4 mt-2">
+              <p className="text-sm text-ink font-medium">{sellTarget.name}</p>
+              <p className="text-xs text-slate-t">現有庫存：{sellTarget.stock} 件</p>
+              <div>
+                <label className="text-xs font-medium text-slate-t">售出數量</label>
+                <Input type="number" value={sellQty} min={1} max={sellTarget.stock}
+                  onChange={e => setSellQty(Number(e.target.value))} className="mt-1" />
+              </div>
+              <Button onClick={handleSell} disabled={selling || sellQty < 1 || sellQty > sellTarget.stock}
+                className="w-full bg-amber-500 hover:bg-amber-600 text-white">
+                {selling ? '處理中...' : `確認售出 ${sellQty} 件`}
+              </Button>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-sm font-medium text-ink">分類</label>
-                <Input value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} className="mt-1" placeholder="清潔 / 護理 / 保健" />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-ink">條碼（選填）</label>
-                <Input value={form.barcode} onChange={e => setForm(f => ({ ...f, barcode: e.target.value }))} className="mt-1" />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-ink">一般售價</label>
-                <Input type="number" value={form.price} onChange={e => setForm(f => ({ ...f, price: Number(e.target.value) }))} className="mt-1" />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-ink">會員價</label>
-                <Input type="number" value={form.memberPrice} onChange={e => setForm(f => ({ ...f, memberPrice: Number(e.target.value) }))} className="mt-1" />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-ink">現有庫存</label>
-                <Input type="number" value={form.stock} onChange={e => setForm(f => ({ ...f, stock: Number(e.target.value) }))} className="mt-1" />
-              </div>
-            </div>
-            <Button onClick={onSave} className="w-full bg-primary text-white">
-              {editTarget ? '儲存修改' : '新增商品'}
-            </Button>
-          </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

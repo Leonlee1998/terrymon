@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <style>.toy{animation:bob 3.9s ease-in-out infinite;transform-origin:128px 140px}@keyframes bob{0%,100%{transform:translateY(0) rotate(-.6deg)}50%{transform:translateY(-7px) rotate(.6deg)}}</style>
+  <defs>
+    <radialGradient id="bg" cx="36%" cy="22%"><stop offset="0" stop-color="#fbf6ff"/><stop offset="1" stop-color="#c7adff"/></radialGradient>
+    <linearGradient id="feather" x1="71" y1="49" x2="184" y2="217"><stop stop-color="#aa7848"/><stop offset=".62" stop-color="#7b4d2d"/><stop offset="1" stop-color="#51311e"/></linearGradient>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="15" stdDeviation="10" flood-color="#4f3565" flood-opacity=".23"/></filter>
+  </defs>
+  <circle cx="128" cy="128" r="112" fill="url(#bg)"/><ellipse cx="128" cy="215" rx="62" ry="14" fill="#5b3d72" opacity=".13"/>
+  <g class="toy" filter="url(#soft)">
+    <path d="M68 92c16-29 104-29 120 0 16 28 6 95-60 124C62 187 52 120 68 92z" fill="url(#feather)"/>
+    <path d="M74 86 97 45l18 39zm108 0-23-41-18 39z" fill="#5f3a24"/>
+    <circle cx="103" cy="128" r="34" fill="#f8d85a"/><circle cx="153" cy="128" r="34" fill="#f8d85a"/>
+    <circle cx="103" cy="128" r="16" fill="#2a1a12"/><circle cx="153" cy="128" r="16" fill="#2a1a12"/>
+    <circle cx="98" cy="122" r="5" fill="#fff"/><circle cx="148" cy="122" r="5" fill="#fff"/>
+    <circle cx="91" cy="156" r="12" fill="#ff9b8d" opacity=".35"/><circle cx="165" cy="156" r="12" fill="#ff9b8d" opacity=".35"/>
+    <path d="M128 142 113 165h30z" fill="#ea8d2b"/>
+    <path d="M90 96c11-9 24-12 38-6 14-6 27-3 38 6" fill="none" stroke="#55331e" stroke-width="8" stroke-linecap="round"/>
+    <path d="M92 178c18 14 54 22 72 0" fill="none" stroke="#6a4227" stroke-width="8" stroke-linecap="round"/>
+    <circle cx="91" cy="91" r="13" fill="#fff" opacity=".16"/>
+  </g>
+</svg>

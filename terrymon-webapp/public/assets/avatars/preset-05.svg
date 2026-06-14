@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <style>.toy{animation:bob 3.9s ease-in-out infinite;transform-origin:128px 140px}@keyframes bob{0%,100%{transform:translateY(0) rotate(-.4deg)}50%{transform:translateY(-7px) rotate(.4deg)}}</style>
+  <defs>
+    <radialGradient id="bg" cx="36%" cy="22%"><stop offset="0" stop-color="#fff9e2"/><stop offset="1" stop-color="#f3c64e"/></radialGradient>
+    <linearGradient id="fur" x1="61" y1="40" x2="194" y2="221"><stop stop-color="#f8cf73"/><stop offset=".58" stop-color="#d99d35"/><stop offset="1" stop-color="#a96323"/></linearGradient>
+    <linearGradient id="cream" x1="95" y1="98" x2="160" y2="210"><stop stop-color="#fff8ea"/><stop offset="1" stop-color="#ffe4bf"/></linearGradient>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="15" stdDeviation="10" flood-color="#8e5a19" flood-opacity=".24"/></filter>
+  </defs>
+  <circle cx="128" cy="128" r="112" fill="url(#bg)"/><ellipse cx="128" cy="215" rx="68" ry="15" fill="#8f5a1d" opacity=".14"/>
+  <g class="toy" filter="url(#soft)">
+    <path d="M59 110c0-42 30-70 69-70s69 28 69 70v39c0 44-27 72-69 72s-69-28-69-72z" fill="url(#fur)"/>
+    <path d="M57 113c-18 24-15 65 9 84 19 14 32-8 25-37zm142 0c18 24 15 65-9 84-19 14-32-8-25-37z" fill="#ad6a25"/>
+    <path d="M82 123c13-22 79-22 92 0v36c0 31-20 51-46 51s-46-20-46-51z" fill="url(#cream)"/>
+    <circle cx="108" cy="141" r="15" fill="#4b2d20"/><circle cx="148" cy="141" r="15" fill="#4b2d20"/>
+    <circle cx="103" cy="135" r="5" fill="#fff"/><circle cx="143" cy="135" r="5" fill="#fff"/>
+    <circle cx="91" cy="158" r="14" fill="#ff9b8d" opacity=".52"/><circle cx="165" cy="158" r="14" fill="#ff9b8d" opacity=".52"/>
+    <ellipse cx="128" cy="163" rx="18" ry="12" fill="#40281b"/>
+    <path d="M104 181c15 17 33 17 48 0" fill="none" stroke="#40281b" stroke-width="7" stroke-linecap="round"/>
+    <path d="M128 181c5 16 21 22 31 8" fill="#ef7e8b"/>
+    <path d="M88 91c11-11 24-17 40-17s29 6 40 17" fill="none" stroke="#bd7428" stroke-width="7" stroke-linecap="round" opacity=".35"/>
+  </g>
+</svg>

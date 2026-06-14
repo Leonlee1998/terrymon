@@ -10,18 +10,35 @@ import { Textarea } from '@/components/ui/textarea'
 
 type RegisterForm = {
   storeName: string; ownerName: string; email: string; phone: string
+  password: string; confirmPassword: string
   taxId: string; bankAccount: string; description: string; agreed: boolean
 }
 
 export default function VendorRegister() {
   const router = useRouter()
-  const { register, handleSubmit, formState: { errors } } = useForm<RegisterForm>({
+  const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<RegisterForm>({
     defaultValues: { agreed: false },
   })
+  const password = watch('password')
 
-  function onSubmit() {
-    toast.success('申請已送出，審核時間約 3-5 個工作天')
-    router.push('/login')
+  async function onSubmit(data: RegisterForm) {
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          storeName: data.storeName, ownerName: data.ownerName,
+          email: data.email, phone: data.phone, password: data.password,
+          taxId: data.taxId, bankAccount: data.bankAccount, description: data.description,
+        }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error)
+      toast.success('申請已送出，審核時間約 3–5 個工作天')
+      router.push('/login')
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : '申請失敗，請稍後再試')
+    }
   }
 
   return (
@@ -59,10 +76,22 @@ export default function VendorRegister() {
             <label className="text-sm font-medium text-ink mb-1 block">電子信箱 *</label>
             <Input {...register('email', { required: true })} type="email" placeholder="vendor@example.com" />
           </div>
-
           <div>
             <label className="text-sm font-medium text-ink mb-1 block">聯絡電話 *</label>
             <Input {...register('phone', { required: true })} placeholder="0912-111-222" />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-ink mb-1 block">密碼 *</label>
+              <Input {...register('password', { required: true, minLength: 8 })} type="password" placeholder="至少 8 碼" />
+              {errors.password && <p className="text-xs text-error mt-1">至少 8 碼</p>}
+            </div>
+            <div>
+              <label className="text-sm font-medium text-ink mb-1 block">確認密碼 *</label>
+              <Input {...register('confirmPassword', { required: true, validate: v => v === password || '密碼不一致' })} type="password" placeholder="再輸入一次" />
+              {errors.confirmPassword && <p className="text-xs text-error mt-1">{errors.confirmPassword.message}</p>}
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -78,7 +107,7 @@ export default function VendorRegister() {
 
           <div>
             <label className="text-sm font-medium text-ink mb-1 block">店家介紹</label>
-            <Textarea {...register('description')} placeholder="介紹您的商店特色、主要商品..." rows={4} />
+            <Textarea {...register('description')} placeholder="介紹您的商店特色、主要商品..." rows={3} />
           </div>
 
           <label className="flex items-start gap-3 cursor-pointer">
@@ -92,8 +121,8 @@ export default function VendorRegister() {
           </label>
           {errors.agreed && <p className="text-xs text-error">請同意服務條款</p>}
 
-          <Button type="submit" className="w-full h-12 bg-primary hover:bg-primary-hover text-white font-bold mt-2">
-            送出申請
+          <Button type="submit" disabled={isSubmitting} className="w-full h-12 bg-primary hover:bg-primary-hover text-white font-bold mt-2">
+            {isSubmitting ? '送出中...' : '送出申請'}
           </Button>
         </form>
       </div>

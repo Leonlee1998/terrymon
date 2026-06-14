@@ -6,39 +6,37 @@ import SignatureCanvas from 'react-signature-canvas'
 import { useKioskStore } from '@/stores/kioskStore'
 import { useAdminStore } from '@/stores/adminStore'
 import { posApi } from '@/services/api'
-import { fillContract } from '@/lib/mock'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { formatPrice } from '@/lib/utils'
-import ContractDocument from '@/components/kiosk/ContractDocument'
 import {
-  generateContractPdf,
-  uploadContractToStorage,
-  saveContractToFirestore,
-  notifyLineContract,
-} from '@/lib/generate-contract'
+  STORE_OWNER, STORE_TAX_ID,
+  CONTRACT_CANCEL_PCT, CONTRACT_TERMINATE_PCT,
+  CONTRACT_REFUND_PRE, CONTRACT_REFUND_POST, CONTRACT_COURT,
+} from '@/lib/constants'
+import type { ContractData } from '@/lib/contract/types'
 
-type Phase = 'idle' | 'signing' | 'generating' | 'uploading' | 'done'
+type Phase = 'idle' | 'signing' | 'uploading' | 'generating' | 'submitting' | 'done'
 
 const PHASE_LABEL: Record<Phase, string> = {
   idle:       '確認簽名 →',
-  signing:    '確認簽名 →',
+  signing:    '處理簽名...',
+  uploading:  '上傳簽名...',
   generating: '產生合約 PDF...',
-  uploading:  '上傳並發送...',
+  submitting: '送出紀錄...',
   done:       '完成',
 }
 
 export default function KioskSignature() {
   const router = useRouter()
   const sigRef = useRef<SignatureCanvas>(null)
-  const contractRef = useRef<HTMLDivElement>(null)
   const [hasSignature, setHasSignature] = useState(false)
   const [phase, setPhase] = useState<Phase>('idle')
-  const [sigData, setSigData] = useState('')
 
   const {
     member, selectedPet, selectedMain, selectedAddons,
     setSignature, setContractUrl, totalPrice, serviceNames,
+    paymentMode, balanceToUse, cardAmount, appointmentId, selectedGroomer,
   } = useKioskStore()
   const { shopName, shopPhone, shopAddress } = useAdminStore()
 
@@ -51,7 +49,6 @@ export default function KioskSignature() {
   function handleClear() {
     sigRef.current?.clear()
     setHasSignature(false)
-    setSigData('')
   }
 
   async function handleConfirm() {
@@ -59,99 +56,103 @@ export default function KioskSignature() {
       toast.error('請先完成簽名')
       return
     }
-
-    const capturedSig = sigRef.current.toDataURL('image/png')
-    setSigData(capturedSig)
-    setSignature(capturedSig)
     setPhase('signing')
 
-    // Wait for ContractDocument to re-render with signature before capture
-    await new Promise<void>(r => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(r, 150))))
-
     try {
-      // 1. Generate PDF
-      setPhase('generating')
-      const pdfBlob = await generateContractPdf(contractRef)
+      // 1. Get signature as base64 + upload via existing storage API
+      const signatureDataUrl = sigRef.current.toDataURL('image/png')
+      setSignature(signatureDataUrl)
 
-      // 2. Upload to Firebase Storage
       setPhase('uploading')
-      const documentId = `DOC_${Date.now()}`
-      const contractUrl = await uploadContractToStorage(pdfBlob, documentId)
+      const sigBlob = await fetch(signatureDataUrl).then(r => r.blob())
+      const form = new FormData()
+      form.append('signature', sigBlob, 'signature.png')
+      const uploadRes = await fetch('/api/storage/upload', { method: 'POST', body: form })
+      if (!uploadRes.ok) throw new Error('簽名上傳失敗')
+      const { signatureUrl } = await uploadRes.json() as { signatureUrl: string; contractUrl: string | null }
+
+      // 2. Build contract data
+      const svcList = serviceNames()
+      const contractData: ContractData = {
+        memberName:    member!.name,
+        memberId:      member!.id,
+        memberPhone:   member!.phone,
+        memberAddress: '',
+        memberBirth:   '',
+        memberLegal:   '',
+        storeName:     shopName,
+        storeOwner:    STORE_OWNER,
+        storePhone:    shopPhone,
+        storeAddress:  shopAddress,
+        storeTaxId:    STORE_TAX_ID,
+        groomerName:   selectedGroomer ?? '',
+        signLocation:  shopName,
+        petName:       selectedPet!.name,
+        petBreed:      selectedPet!.breed,
+        petWeight:     selectedPet!.weight,
+        petAllergies:  selectedPet!.allergies,
+        services: svcList.map((name, i) => ({
+          name,
+          price:  i === 0 ? (selectedMain?.price ?? 0) : (selectedAddons[i - 1]?.price ?? 0),
+          qty:    1,
+          period: '當日',
+        })),
+        totalPrice:    totalPrice(),
+        paymentMethod: paymentMode === 'balance' ? '儲值餘額折抵'
+                     : paymentMode === 'card'    ? '信用卡'
+                     : `儲值折抵 NT$${balanceToUse.toLocaleString()} + 信用卡 NT$${cardAmount().toLocaleString()}`,
+        balanceUsed:   balanceToUse,
+        cardAmount:    cardAmount(),
+        memberFee:     0,
+        cancelPct:     CONTRACT_CANCEL_PCT,
+        terminatePct:  CONTRACT_TERMINATE_PCT,
+        refundDaysPre:  CONTRACT_REFUND_PRE,
+        refundDaysPost: CONTRACT_REFUND_POST,
+        court:          CONTRACT_COURT,
+        specialNotes:  selectedPet!.notes,
+        signatureUrl,
+        signedAt:      new Date().toISOString(),
+      }
+
+      // 3. Generate contract PDF via API route
+      setPhase('generating')
+      const contractRes = await fetch('/api/contract', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(contractData),
+      })
+      const { success, url: contractUrl, error } = await contractRes.json() as { success: boolean; url: string; error?: string }
+      if (!success) throw new Error(error ?? '合約 PDF 產生失敗')
       setContractUrl(contractUrl)
 
-      // 3. Save to Firestore
-      await saveContractToFirestore({
-        memberId:    member!.id,
-        petId:       selectedPet!.id,
-        services:    serviceNames(),
-        totalPrice:  totalPrice(),
-        contractUrl,
-        documentId,
-        createdAt:   new Date().toISOString(),
-      })
-
-      // 4. LINE Notify
-      await notifyLineContract({
-        memberName:  member!.name,
-        petName:     selectedPet!.name,
-        services:    serviceNames(),
-        totalPrice:  totalPrice(),
-        contractUrl,
-      })
-
-      // 5. Complete service record
+      // 4. Submit service record
+      setPhase('submitting')
       await posApi.completeService({
-        memberId:         member!.id,
-        petId:            selectedPet!.id,
-        mainServiceId:    selectedMain!.id,
-        addonServiceIds:  selectedAddons.map(a => a.id),
-        totalPrice:       totalPrice(),
-        signatureData:    capturedSig,
-        contractHtml:     fillContract({
-          memberName:   member!.name,
-          memberPhone:  member!.phone,
-          petName:      selectedPet!.name,
-          petBreed:     selectedPet!.breed,
-          petWeight:    selectedPet!.weight,
-          petAllergies: selectedPet!.allergies,
-          services:     serviceNames(),
-          totalPrice:   totalPrice(),
-        }),
+        memberId:        member!.id,
+        petId:           selectedPet!.id,
+        mainServiceId:   selectedMain!.id,
+        addonServiceIds: selectedAddons.map(a => a.id),
+        totalPrice:      totalPrice(),
+        balanceUsed:     balanceToUse,
+        signatureUrl,
+        contractUrl,
+        appointmentId:   appointmentId ?? undefined,
+        groomerId:       selectedGroomer ?? undefined,
       })
 
       setPhase('done')
       router.push('/kiosk/complete')
     } catch (err) {
       console.error(err)
-      toast.error('處理失敗，請重試')
+      toast.error('處理失敗：' + (err as Error).message)
       setPhase('idle')
     }
   }
 
-  const submitting = phase !== 'idle' && phase !== 'signing'
+  const submitting = phase !== 'idle' && phase !== 'done'
 
   return (
     <div className="flex-1 flex flex-col bg-white">
-      {/* Hidden contract document for PDF capture — left: -9999px keeps it off-screen but rendered */}
-      <div style={{ position: 'fixed', top: 0, left: '-9999px', pointerEvents: 'none', zIndex: -1, width: '794px' }}>
-        <ContractDocument
-          ref={contractRef}
-          memberName={member.name}
-          memberPhone={member.phone}
-          memberId={member.id}
-          petName={selectedPet.name}
-          petBreed={selectedPet.breed}
-          petWeight={selectedPet.weight}
-          petAllergies={selectedPet.allergies}
-          services={[selectedMain, ...selectedAddons]}
-          totalPrice={totalPrice()}
-          shopName={shopName}
-          shopPhone={shopPhone}
-          shopAddress={shopAddress}
-          signatureData={sigData}
-        />
-      </div>
-
       {/* Header */}
       <div className="bg-primary px-6 py-5 flex-shrink-0">
         <button onClick={() => router.back()} className="text-white/70 hover:text-white mb-3">
@@ -199,12 +200,10 @@ export default function KioskSignature() {
           )}
         </div>
 
-        {/* Progress label */}
-        {phase !== 'idle' && phase !== 'signing' && (
+        {submitting && (
           <p className="text-xs text-primary mt-3 animate-pulse">{PHASE_LABEL[phase]}</p>
         )}
 
-        {/* Actions */}
         <div className="flex gap-3 w-full mt-4">
           <Button
             variant="outline"

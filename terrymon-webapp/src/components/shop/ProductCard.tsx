@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Plus, Star } from 'lucide-react'
 import { toast } from 'sonner'
 import { useCartStore } from '@/stores/cartStore'
+import { categoryLabel, speciesLabel } from '@/lib/shopFilters'
 import { formatPrice } from '@/lib/utils'
 import type { Product } from '@/types'
 
@@ -42,7 +43,9 @@ export default function ProductCard({ product }: { product: Product }) {
         </div>
 
         <div className="space-y-2 p-3">
-          <p className="truncate text-xs font-medium text-[#8d7f71]">{product.vendorName}</p>
+          <p className="truncate text-xs font-medium text-[#8d7f71]">
+            {speciesLabel(product.petSpecies ?? 'all')} · {categoryLabel(product.category)}
+          </p>
           <p className="line-clamp-2 min-h-10 text-sm font-bold leading-5 text-ink">
             {product.name}
           </p>

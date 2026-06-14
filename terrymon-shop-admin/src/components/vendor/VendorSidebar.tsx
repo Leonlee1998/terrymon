@@ -1,21 +1,23 @@
 'use client'
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, Package, ShoppingBag,
-  Tag, BarChart2, Settings, LogOut, Store
+  Tag, BarChart2, Settings, LogOut, Store, MapPin
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useVendorStore } from '@/stores/vendorStore'
 import { toast } from 'sonner'
 
 const NAV = [
-  { href: '/dashboard',  icon: LayoutDashboard, label: '數據總覽' },
-  { href: '/products',   icon: Package,         label: '商品管理' },
-  { href: '/orders',     icon: ShoppingBag,     label: '訂單管理' },
-  { href: '/promotions', icon: Tag,             label: '行銷活動' },
-  { href: '/reports',    icon: BarChart2,       label: '銷售報表' },
-  { href: '/settings',   icon: Settings,        label: '商家設定' },
+  { href: '/dashboard',        icon: LayoutDashboard, label: '數據總覽' },
+  { href: '/products',         icon: Package,         label: '商品管理' },
+  { href: '/orders',           icon: ShoppingBag,     label: '訂單管理' },
+  { href: '/promotions',       icon: Tag,             label: '行銷活動' },
+  { href: '/store-placements', icon: MapPin,          label: '實體進駐' },
+  { href: '/reports',          icon: BarChart2,       label: '銷售報表' },
+  { href: '/settings',         icon: Settings,        label: '商家設定' },
 ]
 
 export default function VendorSidebar() {
@@ -23,18 +25,13 @@ export default function VendorSidebar() {
   const router = useRouter()
   const { vendor, logout } = useVendorStore()
 
-  function handleLogout() { logout(); toast.success('已登出'); router.push('/login') }
+  async function handleLogout() { await logout(); toast.success('已登出'); router.push('/login') }
 
   return (
     <aside className="flex flex-col bg-white border-r border-border-t h-full">
-      <div className="p-6 border-b border-border-t">
-        <div className="flex items-center gap-2">
-          <Store size={20} className="text-primary" />
-          <div>
-            <p className="font-black text-primary">TerryMon 商城</p>
-            <p className="text-xs text-slate-t">{vendor?.storeName}</p>
-          </div>
-        </div>
+      <div className="px-6 py-4 border-b border-border-t">
+        <Image src="/assets/logo.png" alt="TerryMon 預約怪獸" width={132} height={44} className="object-contain" priority />
+        <p className="text-xs text-slate-t mt-2">{vendor?.storeName}</p>
       </div>
 
       <nav className="flex-1 p-3 space-y-0.5">

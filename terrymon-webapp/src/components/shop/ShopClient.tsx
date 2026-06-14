@@ -4,10 +4,12 @@ import { useMemo, useState } from 'react'
 import Image from 'next/image'
 import { SlidersHorizontal } from 'lucide-react'
 import type { Product } from '@/types'
+import { CATEGORY_OPTIONS, PET_SPECIES_OPTIONS, type ProductPetSpecies } from '@/lib/shopFilters'
 import SearchBar from './SearchBar'
 import CategoryTabs from './CategoryTabs'
 import ProductCard from './ProductCard'
 import CartFAB from './CartFAB'
+import ShopHeader from './ShopHeader'
 
 type SortBy = 'default' | 'price_asc' | 'price_desc' | 'rating'
 
@@ -24,13 +26,22 @@ interface Props {
 
 export default function ShopClient({ initialProducts }: Props) {
   const [search, setSearch] = useState('')
-  const [category, setCategory] = useState('全部')
+  const [petSpecies, setPetSpecies] = useState<ProductPetSpecies>('all')
+  const [category, setCategory] = useState('all')
   const [sortBy, setSortBy] = useState<SortBy>('default')
+  const categoryOptions = CATEGORY_OPTIONS[petSpecies]
 
   const filtered = useMemo(() => {
     let result = initialProducts
 
-    if (category !== '全部') {
+    if (petSpecies !== 'all') {
+      result = result.filter(product => {
+        const species = product.petSpecies ?? 'all'
+        return species === petSpecies || species === 'all'
+      })
+    }
+
+    if (category !== 'all') {
       result = result.filter(product => product.category === category)
     }
 
@@ -48,19 +59,20 @@ export default function ShopClient({ initialProducts }: Props) {
     if (sortBy === 'rating') result = [...result].sort((a, b) => b.rating - a.rating)
 
     return result
-  }, [initialProducts, category, search, sortBy])
+  }, [initialProducts, petSpecies, category, search, sortBy])
 
   return (
     <div className="min-h-screen pb-32">
+      <ShopHeader />
       <section className="relative overflow-hidden bg-[#fff4df] px-4 pb-5 pt-4 md:px-6 md:pt-6">
         <div className="mx-auto flex max-w-6xl items-center gap-4 rounded-[28px] border border-white/70 bg-white/70 p-4 shadow-sm shadow-[#e6b980]/20 backdrop-blur md:p-6">
           <div className="min-w-0 flex-1">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-accent">TerryMon Shop</p>
             <h1 className="mt-1 text-2xl font-black leading-tight text-ink md:text-4xl">
-              幫毛孩挑一點健康和快樂
+              依照毛孩需要挑選商品
             </h1>
             <p className="mt-2 max-w-xl text-sm leading-6 text-[#6d6258] md:text-base">
-              鮮食、保健、清潔與玩具都整理好了，依照需求快速找到適合的用品。
+              先選寵物種類，再看主食、保健、清潔或用品分類，幫店家商品和會員購物流程對齊。
             </p>
           </div>
           <div className="hidden shrink-0 sm:block">
@@ -84,7 +96,7 @@ export default function ShopClient({ initialProducts }: Props) {
               <SlidersHorizontal size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-primary" />
               <select
                 value={sortBy}
-                onChange={e => setSortBy(e.target.value as SortBy)}
+                onChange={event => setSortBy(event.target.value as SortBy)}
                 className="h-12 w-full appearance-none rounded-2xl border border-[#e9ded2] bg-white/95 pl-10 pr-4 text-sm font-semibold text-[#6d6258] shadow-sm outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10"
               >
                 {SORT_OPTIONS.map(option => (
@@ -93,7 +105,15 @@ export default function ShopClient({ initialProducts }: Props) {
               </select>
             </label>
           </div>
-          <CategoryTabs active={category} onChange={setCategory} />
+          <CategoryTabs
+            active={petSpecies}
+            options={PET_SPECIES_OPTIONS}
+            onChange={(next) => {
+              setPetSpecies(next as ProductPetSpecies)
+              setCategory('all')
+            }}
+          />
+          <CategoryTabs active={category} options={categoryOptions} onChange={setCategory} />
         </div>
       </div>
 
@@ -107,8 +127,8 @@ export default function ShopClient({ initialProducts }: Props) {
               height={150}
               className="size-32 rounded-[30px] object-cover"
             />
-            <p className="mt-4 font-bold text-ink">找不到符合的商品</p>
-            <p className="mt-1 text-sm leading-6 text-slate-t">換個關鍵字或分類看看，我們再一起幫毛孩挑。</p>
+            <p className="mt-4 font-bold text-ink">目前沒有符合條件的商品</p>
+            <p className="mt-1 text-sm leading-6 text-slate-t">可以換個寵物種類、分類或搜尋關鍵字再試一次。</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">

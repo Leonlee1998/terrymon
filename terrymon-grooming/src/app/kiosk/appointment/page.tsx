@@ -1,48 +1,37 @@
 'use client'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronLeft, CalendarDays, Clock, Scissors, PawPrint } from 'lucide-react'
+import { ChevronLeft, CalendarDays, Clock, PawPrint } from 'lucide-react'
 import { useKioskStore } from '@/stores/kioskStore'
-import { MOCK_MAIN_SERVICES, MOCK_ADDON_SERVICES } from '@/lib/mock'
+import { posApi } from '@/services/api'
 import { Button } from '@/components/ui/button'
 
-// Mock 預約資料（後期從 Supabase 查）
-const MOCK_APPOINTMENT = {
-  id: 'APT001',
-  time: '14:00',
-  groomer: '小美',
-  service: '洗澡＋剪毛',
-  addons: ['香氛深層護毛'] as string[],
-  petName: '小怪獸',
-  duration: 90,
-  note: '需特別注意耳朵清潔',
+type ApptDetail = {
+  id: string
+  time: string
+  petName: string
+  petId: string
+  notes: string
 }
 
 export default function KioskAppointment() {
   const router = useRouter()
-  const { member, setGroomer, setTime, setMainService, toggleAddon } = useKioskStore()
+  const { member, appointmentId, setTime } = useKioskStore()
+  const [apptData, setApptData] = useState<ApptDetail | null>(null)
 
   useEffect(() => {
     if (!member) router.replace('/kiosk')
   }, [member, router])
 
+  useEffect(() => {
+    if (!appointmentId) return
+    posApi.getAppointmentById(appointmentId).then(setApptData)
+  }, [appointmentId])
+
   if (!member) return null
 
-  const appt = MOCK_APPOINTMENT
-
   function handleConfirm() {
-    setGroomer(appt.groomer)
-    setTime(appt.time)
-
-    // Pre-populate services from appointment so contract page has data
-    const allServices = [...MOCK_MAIN_SERVICES, ...MOCK_ADDON_SERVICES]
-    const mainService = allServices.find(s => !s.isAddon && s.name === appt.service)
-    if (mainService) setMainService(mainService)
-    appt.addons?.forEach(addonName => {
-      const addon = allServices.find(s => s.isAddon && s.name === addonName)
-      if (addon) toggleAddon(addon)
-    })
-
+    if (apptData) setTime(apptData.time)
     router.push('/kiosk/pet')
   }
 
@@ -57,49 +46,44 @@ export default function KioskAppointment() {
       </div>
 
       <div className="flex-1 p-6 space-y-4">
-        {/* Appointment card */}
         <div className="bg-primary-bg border-2 border-primary/30 rounded-3xl p-6 space-y-4">
           <div className="flex items-center gap-2">
             <CalendarDays size={18} className="text-primary" />
             <span className="font-bold text-primary">今日預約單</span>
-            <span className="ml-auto text-xs text-slate-t bg-white rounded-full px-2 py-0.5">#{appt.id}</span>
+            {apptData && (
+              <span className="ml-auto text-xs text-slate-t bg-white rounded-full px-2 py-0.5">
+                #{apptData.id.slice(0, 8).toUpperCase()}
+              </span>
+            )}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white rounded-2xl p-4">
-              <div className="flex items-center gap-1.5 mb-1">
-                <Clock size={13} className="text-slate-t" />
-                <p className="text-xs text-slate-t">預約時間</p>
-              </div>
-              <p className="font-black text-ink text-2xl">{appt.time}</p>
-              <p className="text-xs text-slate-t mt-0.5">約 {appt.duration} 分鐘</p>
+          <div className="bg-white rounded-2xl p-4">
+            <div className="flex items-center gap-1.5 mb-1">
+              <Clock size={13} className="text-slate-t" />
+              <p className="text-xs text-slate-t">預約時間</p>
             </div>
-            <div className="bg-white rounded-2xl p-4">
-              <div className="flex items-center gap-1.5 mb-1">
-                <Scissors size={13} className="text-slate-t" />
-                <p className="text-xs text-slate-t">負責美容師</p>
-              </div>
-              <p className="font-black text-ink text-xl">{appt.groomer}</p>
-            </div>
+            <p className="font-black text-ink text-2xl">
+              {apptData ? apptData.time || '—' : '讀取中...'}
+            </p>
           </div>
 
           <div className="bg-white rounded-2xl p-4">
             <div className="flex items-center gap-1.5 mb-2">
               <PawPrint size={13} className="text-slate-t" />
-              <p className="text-xs text-slate-t">寵物 / 服務</p>
+              <p className="text-xs text-slate-t">寵物</p>
             </div>
-            <p className="font-bold text-ink">{appt.petName}</p>
-            <p className="text-slate-t text-sm">{appt.service}</p>
+            <p className="font-bold text-ink">
+              {apptData ? apptData.petName || '—' : '讀取中...'}
+            </p>
           </div>
 
-          {appt.note && (
+          {apptData?.notes && (
             <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5">
-              <p className="text-xs text-amber-700 font-medium">備註：{appt.note}</p>
+              <p className="text-xs text-amber-700 font-medium">備註：{apptData.notes}</p>
             </div>
           )}
         </div>
 
-        {/* Cancel option */}
         <div className="border border-border-t rounded-2xl p-4 flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-ink">不是這個預約？</p>

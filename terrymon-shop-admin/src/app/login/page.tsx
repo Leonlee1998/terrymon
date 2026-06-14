@@ -9,23 +9,25 @@ import { useVendorStore } from '@/stores/vendorStore'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
+type F = { email: string; password: string }
+
 export default function VendorLogin() {
   const router = useRouter()
   const { login, isLoggedIn } = useVendorStore()
 
   useEffect(() => { if (isLoggedIn) router.replace('/dashboard') }, [isLoggedIn, router])
 
-  const { register, handleSubmit, formState: { isSubmitting } } = useForm({
-    defaultValues: { email: 'vendor@example.com', password: 'vendor1234' },
+  const { register, handleSubmit, formState: { isSubmitting } } = useForm<F>({
+    defaultValues: { email: '', password: '' },
   })
 
-  async function onSubmit() {
+  async function onSubmit(data: F) {
     try {
-      await login()
+      await login(data.email, data.password)
       toast.success('登入成功')
       router.replace('/dashboard')
-    } catch {
-      toast.error('登入失敗，請稍後再試')
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : '登入失敗，請稍後再試')
     }
   }
 
@@ -50,7 +52,6 @@ export default function VendorLogin() {
           還沒有商家帳號？
           <Link href="/register" className="text-primary font-medium ml-1">申請進駐</Link>
         </p>
-        <p className="text-center text-xs text-slate-t mt-2">Demo: vendor@example.com / vendor1234</p>
       </div>
     </div>
   )

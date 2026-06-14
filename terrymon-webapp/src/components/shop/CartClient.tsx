@@ -46,7 +46,6 @@ export default function CartClient() {
       {/* Content */}
       <div className="flex-1 max-w-2xl mx-auto w-full">
         {items.length === 0 ? (
-          /* Empty state */
           <div className="flex flex-col items-center justify-center py-24 px-8 gap-4">
             <span className="text-6xl">🛒</span>
             <p className="text-lg font-semibold text-ink">購物車是空的</p>
@@ -59,14 +58,12 @@ export default function CartClient() {
           </div>
         ) : (
           <div className="pb-52">
-            {/* Item list */}
             <div className="bg-white divide-y divide-border-t">
               {items.map(item => (
                 <CartItemRow key={item.product.id} item={item} />
               ))}
             </div>
 
-            {/* Shipping note */}
             <div className="mx-4 mt-3 p-3 bg-primary-bg rounded-xl border border-primary/20">
               {shippingFee === 0 ? (
                 <p className="text-xs text-primary font-medium">🎉 已達免運門檻，享免運費！</p>
@@ -80,9 +77,9 @@ export default function CartClient() {
         )}
       </div>
 
-      {/* Sticky bottom summary */}
+      {/* Sticky bottom summary — sits above BottomNav on mobile */}
       {items.length > 0 && (
-        <div className="fixed bottom-0 inset-x-0 z-30 bg-white border-t border-border-t safe-bottom shadow-lg">
+        <div className="fixed bottom-16 md:bottom-0 left-0 right-0 md:left-60 z-40 bg-white border-t border-border-t shadow-lg">
           <div className="px-4 pt-3 pb-2 max-w-2xl mx-auto w-full space-y-1.5">
             <div className="flex justify-between text-sm text-slate-t">
               <span>商品小計</span>
@@ -97,12 +94,12 @@ export default function CartClient() {
               <span className="text-primary">{formatPrice(grandTotal)}</span>
             </div>
           </div>
-          <div className="px-4 pb-3 max-w-2xl mx-auto w-full">
+          <div className="px-4 pb-4 max-w-2xl mx-auto w-full">
             <Button
               onClick={handleCheckout}
               className="w-full h-11 bg-primary hover:bg-primary-hover text-white font-semibold"
             >
-              前���結帳
+              前往結帳
             </Button>
           </div>
         </div>

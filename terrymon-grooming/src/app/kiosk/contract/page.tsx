@@ -3,31 +3,37 @@ import { useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { ChevronLeft } from 'lucide-react'
 import { useKioskStore } from '@/stores/kioskStore'
-import { fillContract } from '@/lib/mock'
+import { useAdminStore } from '@/stores/adminStore'
+import { generateContractHtml } from '@/lib/contract'
 import { formatPrice } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 
 export default function KioskContract() {
   const router = useRouter()
   const { member, selectedPet, selectedMain, selectedAddons, totalPrice, serviceNames } = useKioskStore()
+  const { shopName, shopPhone, shopAddress } = useAdminStore()
 
   useEffect(() => {
     if (!selectedMain) router.replace('/kiosk')
   }, [selectedMain, router])
 
-  const contractText = useMemo(() => {
+  const contractHtml = useMemo(() => {
     if (!member || !selectedPet || !selectedMain) return ''
-    return fillContract({
-      memberName: member.name,
-      memberPhone: member.phone,
-      petName: selectedPet.name,
-      petBreed: selectedPet.breed,
-      petWeight: selectedPet.weight,
+    return generateContractHtml({
+      memberName:   member.name,
+      memberPhone:  member.phone,
+      memberId:     member.id,
+      petName:      selectedPet.name,
+      petBreed:     selectedPet.breed,
+      petWeight:    selectedPet.weight,
       petAllergies: selectedPet.allergies,
-      services: serviceNames(),
-      totalPrice: totalPrice(),
+      services:     [selectedMain, ...selectedAddons].map(s => ({ name: s.name, price: s.price })),
+      totalPrice:   totalPrice(),
+      shopName,
+      shopPhone,
+      shopAddress,
     })
-  }, [member, selectedPet, selectedMain, selectedAddons]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [member, selectedPet, selectedMain, selectedAddons, shopName, shopPhone, shopAddress]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!member || !selectedPet || !selectedMain) return null
 
@@ -41,7 +47,6 @@ export default function KioskContract() {
         <p className="text-white/70 mt-1">請仔細閱讀後點選「同意並簽名」</p>
       </div>
 
-      {/* Service summary bar */}
       <div className="bg-primary-bg border-b border-border-t px-6 py-3 flex items-center justify-between">
         <div>
           <p className="text-xs text-slate-t">服務項目</p>
@@ -54,23 +59,10 @@ export default function KioskContract() {
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        <div className="p-6">
-          <pre className="whitespace-pre-wrap font-sans text-sm text-ink leading-relaxed">
-            {contractText.split('\n').map((line, i) => {
-              const isDynamic =
-                line.includes(member.name) ||
-                line.includes(selectedPet.name) ||
-                line.includes(selectedPet.breed) ||
-                line.includes('NT$') ||
-                line.includes('過敏')
-              return (
-                <span key={i} className={isDynamic ? 'font-semibold text-primary' : 'text-ink'}>
-                  {line}{'\n'}
-                </span>
-              )
-            })}
-          </pre>
-        </div>
+        <div
+          className="p-6"
+          dangerouslySetInnerHTML={{ __html: contractHtml }}
+        />
       </div>
 
       <div className="border-t border-border-t p-6 flex-shrink-0">

@@ -6,7 +6,10 @@ type RegisterBody = {
   phone?: string
   email?: string
   password?: string
+  handle?: string
 }
+
+const HANDLE_RE = /^[a-z0-9][a-z0-9-]{2,18}[a-z0-9]$/
 
 function getAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim().replace(/^\uFEFF/, '')
@@ -31,12 +34,27 @@ export async function POST(request: Request) {
     const phone = body.phone?.trim()
     const email = body.email?.trim().toLowerCase()
     const password = body.password
+    const handle = body.handle?.trim().toLowerCase()
 
-    if (!name || !phone || !email || !password || password.length < 6) {
+    if (!name || !phone || !email || !password || password.length < 6 || !handle) {
       return NextResponse.json({ error: 'Invalid registration payload' }, { status: 400 })
     }
 
+    if (!HANDLE_RE.test(handle)) {
+      return NextResponse.json({ error: 'Invalid member ID format' }, { status: 400 })
+    }
+
     const supabase = getAdminClient()
+    const { data: existingHandle } = await supabase
+      .from('members')
+      .select('id')
+      .eq('handle', handle)
+      .maybeSingle()
+
+    if (existingHandle) {
+      return NextResponse.json({ error: 'Member ID is already taken' }, { status: 409 })
+    }
+
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email,
       password,
@@ -58,6 +76,7 @@ export async function POST(request: Request) {
         name,
         phone,
         email,
+        handle,
       })
       .select('*')
       .single()
@@ -73,6 +92,7 @@ export async function POST(request: Request) {
       phone: member.phone,
       email: member.email,
       avatarUrl: member.avatar_url ?? undefined,
+      handle: member.handle ?? undefined,
       qrCode: `TERRYMON-${member.id}`,
       memberSince: member.created_at,
       balance: member.platform_balance ?? 0,

@@ -1,9 +1,9 @@
 'use client'
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Home, ShoppingCart, PawPrint, CalendarDays, User, LogOut, Bell } from 'lucide-react'
+import { Home, ShoppingCart, PawPrint, CalendarDays, User, LogOut } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
-import { useNotifStore } from '@/stores/notificationStore'
 import { useCartStore } from '@/stores/cartStore'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -21,7 +21,6 @@ export default function SideNav() {
   const pathname = usePathname()
   const router = useRouter()
   const { member, logout } = useAuthStore()
-  const unreadCount = useNotifStore(s => s.unreadCount)
   const totalItems = useCartStore(s => s.totalItems())
 
   async function handleLogout() {
@@ -34,9 +33,8 @@ export default function SideNav() {
   return (
     <aside className="flex flex-col bg-white border-r border-border-t h-full">
       {/* Logo */}
-      <div className="p-6 border-b border-border-t">
-        <span className="text-primary font-black text-xl tracking-tight">🐾 TerryMon</span>
-        <p className="text-xs text-slate-t mt-0.5">預約怪獸</p>
+      <div className="px-6 py-4 border-b border-border-t">
+        <Image src="/assets/logo.png" alt="TerryMon 預約怪獸" width={132} height={44} className="object-contain" priority />
       </div>
 
       {/* Nav items */}
@@ -76,14 +74,6 @@ export default function SideNav() {
               <p className="text-sm font-medium text-ink truncate">{member.name}</p>
               <p className="text-xs text-slate-t truncate">{member.email}</p>
             </div>
-            {unreadCount > 0 && (
-              <div className="relative">
-                <Bell size={16} className="text-slate-t" />
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] rounded-full w-3.5 h-3.5 flex items-center justify-center">
-                  {unreadCount}
-                </span>
-              </div>
-            )}
           </div>
           <button
             onClick={handleLogout}

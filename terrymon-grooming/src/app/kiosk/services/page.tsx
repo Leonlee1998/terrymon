@@ -34,8 +34,13 @@ export default function KioskServices() {
   }, [])
 
   if (!selectedPet) return null
-  const mainServices = services.filter(service => !service.isAddon && service.enabled)
-  const addonServices = services.filter(service => service.isAddon && service.enabled)
+  const petSpecies = selectedPet.species
+  const mainServices = services.filter(s =>
+    !s.isAddon && s.enabled && (!s.applicableSpecies?.length || s.applicableSpecies.includes(petSpecies))
+  )
+  const addonServices = services.filter(s =>
+    s.isAddon && s.enabled && (!s.applicableSpecies?.length || s.applicableSpecies.includes(petSpecies))
+  )
 
   return (
     <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-[#fff8ed]">

@@ -86,6 +86,7 @@ export interface KioskService {
   description: string
   isAddon: boolean
   enabled: boolean
+  applicableSpecies?: string[]
 }
 
 // ── 美容師階級 ────────────────────────────────────────
@@ -116,6 +117,25 @@ export interface Breed {
   defaultWeightRangeId: string
   tags: string[]
   isCustom: boolean
+}
+
+export type BreedLegalStatusTw = 'allowed' | 'restricted' | 'prohibited' | 'legacy_only' | 'unknown'
+
+export interface BreedOption {
+  id: string
+  species: SpeciesType
+  nameZh: string
+  nameEn: string
+  aliases: string[]
+  registrySources: string[]
+  group: string
+  size: 'toy' | 'small' | 'medium' | 'large' | 'giant' | 'unknown'
+  coatType: string[]
+  groomingTags: string[]
+  vetRiskTags: string[]
+  legalStatusTw: BreedLegalStatusTw
+  legalNote: string | null
+  sortOrder: number
 }
 
 export interface WeightRange {
@@ -293,6 +313,67 @@ export interface CompleteServicePayload {
   mainServiceId: string
   addonServiceIds: string[]
   totalPrice: number
-  signatureData: string
-  contractHtml: string
+  signatureUrl: string
+  contractUrl: string | null
+}
+
+// ── 品牌與 POS 庫存 ───────────────────────────────────
+export type BrandStatus = 'pending' | 'active' | 'suspended'
+
+export interface Brand {
+  id: string
+  name: string
+  contactName?: string
+  contactPhone?: string
+  contactEmail?: string
+  status: BrandStatus
+  createdAt: string
+}
+
+export interface BrandProduct {
+  id: string
+  brandId: string
+  brandName?: string
+  name: string
+  category: string
+  description?: string
+  costPrice: number
+  suggestedPrice: number
+  barcode?: string
+  imageUrl?: string
+  isActive: boolean
+  createdAt: string
+}
+
+export interface PosInventoryItem {
+  id: string
+  storeId: string
+  brandId: string
+  brandProductId: string
+  productName?: string
+  brandName?: string
+  retailPrice: number
+  memberPrice?: number
+  stock: number
+  isActive: boolean
+  pushedAt: string
+}
+
+export interface Store {
+  id: string
+  name: string
+  type: string
+  address?: string
+  isActive: boolean
+}
+
+export interface PushInventoryPayload {
+  brandId: string
+  storeId: string
+  items: {
+    brandProductId: string
+    retailPrice: number
+    memberPrice?: number
+    stock: number
+  }[]
 }

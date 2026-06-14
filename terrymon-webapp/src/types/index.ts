@@ -1,4 +1,4 @@
-// ── 基本列舉 ──────────────────────────────────────────
+﻿// ?? ?箸?? ??????????????????????????????????????????
 export type Species           = 'dog' | 'cat' | 'other'
 export type AppointmentStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled'
 export type DocumentType      = 'prescription' | 'receipt' | 'contract' | 'report'
@@ -6,38 +6,75 @@ export type ServiceType       = 'vet' | 'grooming' | 'other'
 export type OrderStatus       = 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled'
 export type QueueStatus       = 'waiting' | 'in-progress' | 'done'
 
-// ── 會員 ─────────────────────────────────────────────
+// ?? ? ?????????????????????????????????????????????
+export interface ShippingAddress {
+  recipientName: string
+  phone: string
+  zipCode: string
+  city: string
+  district: string
+  address: string
+}
+
 export interface Member {
   id: string
   name: string
   phone: string
   email: string
   avatarUrl?: string
+  handle?: string
+  isPhoneVerified?: boolean
+  isEmailVerified?: boolean
+  shippingAddress?: ShippingAddress
   qrCode: string
   memberSince: string
-  balance: number          // 美容儲值
+  balance: number
   points: number
   tier: 'basic' | 'silver' | 'gold'
   pets: Pet[]
 }
 
-// ── 寵物 ─────────────────────────────────────────────
+// ?? 撖萇 ?????????????????????????????????????????????
 export interface Pet {
   id: string
   memberId: string
   name: string
   species: Species
+  breedId?: string
   breed: string
   birthDate: string
-  weight: number           // kg，最新紀錄
+  weight: number
   photoUrl: string
   allergies: string[]
   chipId?: string
+  gender?: 'male' | 'female'
+  isNeutered?: boolean
+  bloodType?: string
+  caregiver?: string
   notes: string
   isActive: boolean
 }
 
-// ── 醫療 ─────────────────────────────────────────────
+export type BreedLegalStatusTw = 'allowed' | 'restricted' | 'prohibited' | 'legacy_only' | 'unknown'
+
+export interface BreedOption {
+  id: string
+  species: 'dog' | 'cat'
+  nameZh: string
+  nameEn: string
+  aliases: string[]
+  registrySources: string[]
+  group: string
+  size: 'toy' | 'small' | 'medium' | 'large' | 'giant' | 'unknown'
+  coatType: string[]
+  groomingTags: string[]
+  vetRiskTags: string[]
+  legalStatusTw: BreedLegalStatusTw
+  legalNote: string | null
+  sortOrder: number
+}
+
+// ?? ?怎? ?????????????????????????????????????????????
 export interface MedicalRecord {
   id: string
   petId: string
@@ -62,7 +99,7 @@ export interface PrescriptionItem {
   notes?: string
 }
 
-// ── 美容 ─────────────────────────────────────────────
+// ?? 蝢捆 ?????????????????????????????????????????????
 export interface GroomingRecord {
   id: string
   petId: string
@@ -73,11 +110,11 @@ export interface GroomingRecord {
   price: number
   contractUrl: string | null
   receiptUrl: string | null
-  photos: string[]          // 美容前後照片
+  photos: string[]          // 蝢捆???抒?
   notes: string
 }
 
-// ── 健康數據（AIoT）─────────────────────────────────
+// ?? ?亙熒?豢?嚗IoT嚗?????????????????????????????????
 export interface HealthDataPoint {
   timestamp: string         // ISO
   value: number
@@ -104,10 +141,10 @@ export interface AIoTDevice {
   status: 'online' | 'offline' | 'error'
   lastSeen: string
   batteryLevel?: number
-  streamUrl?: string        // 攝影機 stream（MVP 用假 URL）
+  streamUrl?: string
 }
 
-// ── 預約 ─────────────────────────────────────────────
+// ?? ?? ?????????????????????????????????????????????
 export interface Appointment {
   id: string
   memberId: string
@@ -123,16 +160,17 @@ export interface Appointment {
   reminderSent: boolean
 }
 
-// ── 商城 ─────────────────────────────────────────────
+// ?? ?? ?????????????????????????????????????????????
 export interface Product {
   id: string
   vendorId: string
   vendorName: string
   name: string
+  petSpecies?: 'all' | 'dog' | 'cat' | 'small_pet' | 'bird' | 'fish'
   category: string
   subcategory?: string
   price: number
-  originalPrice?: number   // 原價（促銷用）
+  originalPrice?: number
   stock: number
   imageUrl: string
   images: string[]
@@ -171,7 +209,7 @@ export interface OrderItem {
   imageUrl: string
 }
 
-// ── 文件 ─────────────────────────────────────────────
+// ?? ?辣 ?????????????????????????????????????????????
 export interface DocItem {
   id: string
   memberId: string
@@ -184,7 +222,7 @@ export interface DocItem {
   isRead: boolean
 }
 
-// ── 通知 ─────────────────────────────────────────────
+// ?? ? ?????????????????????????????????????????????
 export interface Notification {
   id: string
   memberId: string
@@ -196,7 +234,7 @@ export interface Notification {
   actionUrl?: string
 }
 
-// ── 美容服務（診所管理端）────────────────────────────
+// ?? 蝢捆??嚗那?蝞∠?蝡荔?????????????????????????????
 export interface GroomingService {
   id: string
   name: string
@@ -207,7 +245,7 @@ export interface GroomingService {
   enabled: boolean
 }
 
-// ── 候診隊列 ─────────────────────────────────────────
+// ?? ?那?? ?????????????????????????????????????????
 export interface QueueItem {
   queueNum: string
   petId: string
@@ -220,3 +258,55 @@ export interface QueueItem {
   petBreed: string
   allergies: string[]
 }
+
+// ── 飼主自訂事件 ──────────────────────────────────────
+export interface MemberEvent {
+  id: string
+  memberId: string
+  petId?: string
+  title: string
+  date: string      // YYYY-MM-DD
+  time?: string     // HH:MM
+  notes?: string
+  createdAt: string
+}
+
+// ── 緊急聯絡人 ────────────────────────────────────────
+export interface EmergencyContact {
+  id: string
+  petId: string
+  name: string
+  phone: string
+  relation: string
+}
+
+// ── 共同照護者 ────────────────────────────────────────
+export interface CaregiverPermissions {
+  viewHealth: boolean
+  viewAiot: boolean
+  addHealth: boolean
+  bookAppointment: boolean
+  receiveNotifications: boolean
+}
+
+export const DEFAULT_CAREGIVER_PERMISSIONS: CaregiverPermissions = {
+  viewHealth: false,
+  viewAiot: false,
+  addHealth: false,
+  bookAppointment: false,
+  receiveNotifications: false,
+}
+
+export interface PetCaregiver {
+  id: string
+  petId: string
+  memberId?: string
+  memberName?: string
+  memberHandle?: string
+  memberAvatarUrl?: string
+  inviteContact?: string
+  status: 'pending' | 'active'
+  permissions: CaregiverPermissions
+  inviteExpiresAt?: string
+}
+

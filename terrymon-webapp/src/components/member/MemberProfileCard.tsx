@@ -1,13 +1,12 @@
 'use client'
 import { useState } from 'react'
-import { Edit2 } from 'lucide-react'
+import Image from 'next/image'
+import { Camera, CheckCircle2, Edit2, Mail, MapPin, PawPrint, Phone } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
-import { toast } from 'sonner'
 import type { Member } from '@/types'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { useAuthStore } from '@/stores/authStore'
+import AvatarPickerDialog from './AvatarPickerDialog'
+import MemberEditDialog from './MemberEditDialog'
 
 const TIER_CONFIG = {
   basic:  { label: '普通會員', emoji: '🎖️' },
@@ -15,101 +14,99 @@ const TIER_CONFIG = {
   gold:   { label: '金卡會員', emoji: '🥇' },
 }
 
+function VerifiedBadge({ verified }: { verified?: boolean }) {
+  if (verified) return <CheckCircle2 size={13} className="shrink-0 text-green-300" />
+  return <span className="shrink-0 text-[10px] px-1.5 py-0.5 rounded-full bg-white/20 text-white/60">未認證</span>
+}
+
 export default function MemberProfileCard({ member }: { member: Member }) {
-  const { updateMember } = useAuthStore()
-  const [open, setOpen] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [form, setForm] = useState({ name: '', phone: '', email: '' })
-  const tier = TIER_CONFIG[member.tier]
-
-  function handleOpenEdit() {
-    setForm({ name: member.name, phone: member.phone, email: member.email })
-    setOpen(true)
-  }
-
-  async function onSave() {
-    if (!form.name.trim()) return
-    setSaving(true)
-    await new Promise(r => setTimeout(r, 400))
-    updateMember({ name: form.name.trim(), phone: form.phone.trim(), email: form.email.trim() })
-    setSaving(false)
-    setOpen(false)
-    toast.success('資料已更新')
-  }
+  const { member: storeMember } = useAuthStore()
+  const m = storeMember ?? member
+  const [avatarOpen, setAvatarOpen] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
+  const tier = TIER_CONFIG[m.tier]
+  const sa = m.shippingAddress
 
   return (
     <>
+      {/* ── 個人資訊 ── */}
       <div className="bg-gradient-to-br from-primary to-primary-light rounded-2xl p-5 text-white">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center text-3xl font-black">
-              {member.name[0]}
+        <div className="flex items-start gap-3">
+          {/* Avatar */}
+          <button
+            type="button"
+            onClick={() => setAvatarOpen(true)}
+            className="relative size-16 rounded-full overflow-hidden bg-white/20 shrink-0 ring-2 ring-white/40 group"
+          >
+            {m.avatarUrl ? (
+              <Image src={m.avatarUrl} alt={m.name} fill className="object-cover" unoptimized={m.avatarUrl.startsWith('data:')} />
+            ) : (
+              <span className="flex size-full items-center justify-center text-2xl font-black">{m.name[0]}</span>
+            )}
+            <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <Camera size={16} className="text-white" />
             </div>
-            <div>
-              <h2 className="text-xl font-black">{member.name}</h2>
-              <p className="text-white/70 text-sm">{member.phone}</p>
-              <p className="text-white/70 text-xs">{member.email}</p>
+          </button>
+
+          {/* Info */}
+          <div className="flex-1 min-w-0">
+            <h2 className="text-xl font-black leading-tight">{m.name}</h2>
+            <div className="flex items-center gap-1.5 mt-1.5">
+              <Phone size={11} className="text-white/50 shrink-0" />
+              <span className="text-sm text-white/80">{m.phone}</span>
+              <VerifiedBadge verified={m.isPhoneVerified} />
+            </div>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <Mail size={11} className="text-white/50 shrink-0" />
+              <span className="text-xs text-white/70 truncate">{m.email}</span>
+              <VerifiedBadge verified={m.isEmailVerified} />
             </div>
           </div>
+
           <button
-            onClick={handleOpenEdit}
-            className="p-2 bg-white/20 rounded-xl hover:bg-white/30 transition-colors"
+            onClick={() => setEditOpen(true)}
+            className="p-2 bg-white/20 rounded-xl hover:bg-white/30 transition-colors shrink-0"
           >
             <Edit2 size={16} />
           </button>
         </div>
 
-        <div className="flex items-center gap-3 mt-4">
+        {/* Badges */}
+        <div className="flex items-center gap-2 mt-4 flex-wrap">
           <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full bg-white/20">
             {tier.emoji} {tier.label}
           </span>
-          <span className="text-xs text-white/60">
-            加入於 {formatDate(member.memberSince)}
+          <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full bg-white/20">
+            <PawPrint size={11} /> {m.pets.length} 隻寵物
           </span>
+          <span className="text-xs text-white/50 ml-auto">加入於 {formatDate(m.memberSince)}</span>
         </div>
       </div>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>編輯會員資料</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 mt-2">
-            <div>
-              <label className="text-sm font-medium text-ink block mb-1">姓名</label>
-              <Input
-                value={form.name}
-                onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                placeholder="王小明"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-ink block mb-1">手機號碼</label>
-              <Input
-                value={form.phone}
-                onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-                placeholder="0912-345-678"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-ink block mb-1">電子信箱</label>
-              <Input
-                type="email"
-                value={form.email}
-                onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                placeholder="name@email.com"
-              />
-            </div>
-            <Button
-              onClick={onSave}
-              disabled={saving || !form.name.trim()}
-              className="w-full bg-primary hover:bg-primary-hover text-white"
-            >
-              {saving ? '儲存中…' : '儲存'}
-            </Button>
+      {/* ── 寄件資訊 ── */}
+      <div className="bg-white rounded-2xl border border-border-t p-4">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-1.5">
+            <MapPin size={14} className="text-primary" />
+            <h3 className="text-sm font-bold text-ink">寄件資訊</h3>
           </div>
-        </DialogContent>
-      </Dialog>
+          <button onClick={() => setEditOpen(true)} className="text-xs text-primary font-medium hover:underline">
+            {sa ? '編輯' : '新增'}
+          </button>
+        </div>
+        {sa ? (
+          <div className="space-y-0.5">
+            <p className="text-sm font-medium text-ink">{sa.recipientName} · {sa.phone}</p>
+            <p className="text-xs text-slate-t">{sa.zipCode} {sa.city}{sa.district}</p>
+            <p className="text-xs text-slate-t">{sa.address}</p>
+          </div>
+        ) : (
+          <p className="text-sm text-slate-t">尚未設定，商城結帳時可快速填入</p>
+        )}
+      </div>
+
+      <AvatarPickerDialog open={avatarOpen} onOpenChange={setAvatarOpen} currentAvatarUrl={m.avatarUrl} />
+      <MemberEditDialog open={editOpen} onOpenChange={setEditOpen} member={m} />
     </>
   )
 }

@@ -17,6 +17,12 @@ export interface ContractParams {
   services: { name: string; price: number }[]
   totalPrice: number
   signatureDataUrl?: string
+  // Shop overrides — fall back to SHOP constant if omitted
+  shopName?: string
+  shopPhone?: string
+  shopAddress?: string
+  shopTaxId?: string
+  shopRepresentative?: string
 }
 
 const ARTICLES = `
@@ -41,6 +47,14 @@ const TD = 'padding:5px 8px;border:1px solid #ddd'
 const TH = `${TD};background:#f5f5f5;font-weight:bold`
 
 export function generateContractHtml(p: ContractParams): string {
+  const shop = {
+    name:           p.shopName           ?? SHOP.name,
+    taxId:          p.shopTaxId          ?? SHOP.taxId,
+    phone:          p.shopPhone          ?? SHOP.phone,
+    address:        p.shopAddress        ?? SHOP.address,
+    representative: p.shopRepresentative ?? SHOP.representative,
+  }
+
   const now = new Date()
   const roc = now.getFullYear() - 1911
   const m = now.getMonth() + 1
@@ -60,8 +74,8 @@ export function generateContractHtml(p: ContractParams): string {
 <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px">
   <tr><td style="${TH};width:14%;vertical-align:middle" rowspan="2">消費者<br>(甲方)</td><td style="${TD}">姓名：${p.memberName}</td><td style="${TD}">會員編號：${p.memberId}</td><td style="${TD}">電話：${p.memberPhone}</td></tr>
   <tr><td colspan="3" style="${TD}">服務寵物：${p.petName}（${p.petBreed}）・體重 ${p.petWeight} kg・過敏記錄：${allergies}</td></tr>
-  <tr><td style="${TH};vertical-align:middle" rowspan="2">美容業者<br>(乙方)</td><td style="${TD}">名稱：${SHOP.name}</td><td style="${TD}">統一編號：${SHOP.taxId}</td><td style="${TD}">電話：${SHOP.phone}</td></tr>
-  <tr><td colspan="3" style="${TD}">代表人：${SHOP.representative}・地址：${SHOP.address}</td></tr>
+  <tr><td style="${TH};vertical-align:middle" rowspan="2">美容業者<br>(乙方)</td><td style="${TD}">名稱：${shop.name}</td><td style="${TD}">統一編號：${shop.taxId}</td><td style="${TD}">電話：${shop.phone}</td></tr>
+  <tr><td colspan="3" style="${TD}">代表人：${shop.representative}・地址：${shop.address}</td></tr>
 </table>
 <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px">
   <tr><th style="${TH}" colspan="5">服務內容</th></tr>
@@ -77,7 +91,7 @@ ${ARTICLES}
 <table style="width:100%;margin-top:20px;border-collapse:collapse">
   <tr>
     <td style="padding:8px;vertical-align:top;width:50%"><p style="font-weight:bold;margin-bottom:8px">甲方（消費者）簽章：</p>${sig}<p style="margin-top:4px;font-size:11px;color:#666">姓名：${p.memberName}</p></td>
-    <td style="padding:8px;vertical-align:top;width:50%"><p style="font-weight:bold;margin-bottom:8px">乙方（美容業者）：</p><p style="font-size:12px">${SHOP.name}</p><p style="font-size:11px;color:#666">代表人：${SHOP.representative}</p></td>
+    <td style="padding:8px;vertical-align:top;width:50%"><p style="font-weight:bold;margin-bottom:8px">乙方（美容業者）：</p><p style="font-size:12px">${shop.name}</p><p style="font-size:11px;color:#666">代表人：${shop.representative}</p></td>
   </tr>
 </table>
 <p style="text-align:center;margin-top:16px;font-size:12px;color:#666">中華民國 ${roc} 年 ${m} 月 ${d} 日</p>

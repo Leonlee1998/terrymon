@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <style>.toy{animation:bob 3.8s ease-in-out infinite;transform-origin:128px 140px}@keyframes bob{0%,100%{transform:translateY(0) rotate(-.6deg)}50%{transform:translateY(-7px) rotate(.6deg)}}</style>
+  <defs>
+    <radialGradient id="bg" cx="35%" cy="22%"><stop offset="0" stop-color="#fff8ed"/><stop offset="1" stop-color="#ffd58d"/></radialGradient>
+    <linearGradient id="orange" x1="62" y1="45" x2="184" y2="218"><stop stop-color="#ffbd55"/><stop offset=".55" stop-color="#ff942e"/><stop offset="1" stop-color="#df6d1e"/></linearGradient>
+    <linearGradient id="cream" x1="98" y1="85" x2="157" y2="193"><stop stop-color="#fffaf0"/><stop offset="1" stop-color="#ffe3bd"/></linearGradient>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="15" stdDeviation="10" flood-color="#a35b20" flood-opacity=".25"/></filter>
+  </defs>
+  <circle cx="128" cy="128" r="112" fill="url(#bg)"/>
+  <circle cx="50" cy="104" r="9" fill="#fff" opacity=".38"/><circle cx="205" cy="84" r="15" fill="#fff" opacity=".32"/>
+  <ellipse cx="128" cy="214" rx="63" ry="14" fill="#a65b20" opacity=".14"/>
+  <g class="toy" filter="url(#soft)">
+    <path d="M71 96 92 42l34 43h5l34-43 20 54v54c0 43-24 69-57 69s-57-26-57-69z" fill="url(#orange)"/>
+    <path d="m94 72-7 20 19-10zm68 0 7 20-19-10z" fill="#ffe8ce"/>
+    <path d="M85 126c8-29 34-39 43-39s35 10 43 39v34c0 31-19 51-43 51s-43-20-43-51z" fill="url(#cream)"/>
+    <path d="M88 125c9-9 24-14 40-14s31 5 40 14c-9-22-24-34-40-34s-31 12-40 34z" fill="#fff6e7"/>
+    <circle cx="107" cy="141" r="15" fill="#4b2d20"/><circle cx="149" cy="141" r="15" fill="#4b2d20"/>
+    <circle cx="102" cy="136" r="18" fill="#fff" opacity=".9"/><circle cx="144" cy="136" r="18" fill="#fff" opacity=".9"/>
+    <circle cx="107" cy="141" r="12" fill="#4b2d20"/><circle cx="149" cy="141" r="12" fill="#4b2d20"/>
+    <circle cx="102" cy="134" r="5" fill="#fff"/><circle cx="144" cy="134" r="5" fill="#fff"/>
+    <circle cx="92" cy="158" r="14" fill="#ff9b8d" opacity=".58"/><circle cx="164" cy="158" r="14" fill="#ff9b8d" opacity=".58"/>
+    <path d="M118 157c4-5 16-5 20 0-2 9-18 9-20 0z" fill="#30211a"/>
+    <path d="M111 174c13 14 21 14 34 0" fill="none" stroke="#4a2a1b" stroke-width="6" stroke-linecap="round"/>
+    <path d="M81 130H52m32 15H59m113-15h29m-32 15h25" stroke="#d86f25" stroke-width="5" stroke-linecap="round" opacity=".65"/>
+    <circle cx="102" cy="118" r="9" fill="#fff" opacity=".28"/>
+  </g>
+</svg>

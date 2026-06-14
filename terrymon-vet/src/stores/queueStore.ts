@@ -37,7 +37,6 @@ export const useQueueStore = create<QueueStore>()((set, get) => ({
   completeCurrent: (result: ConsultationResult) => {
     const { inProgress, done } = get()
     if (!inProgress) return
-    posApi.completeConsultation(inProgress.queueNum, inProgress, result)
     set({
       inProgress: null,
       done: [...done, { ...inProgress, status: 'done', consultation: result }],

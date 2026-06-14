@@ -1,5 +1,7 @@
+'use client'
 import Image from 'next/image'
 import type { Appointment, Member } from '@/types'
+import { useAuthStore } from '@/stores/authStore'
 
 interface Props {
   member: Member
@@ -7,10 +9,13 @@ interface Props {
 }
 
 export default function WelcomeCard({ member, appointment }: Props) {
-  const pet = member.pets[0]
+  const { member: storeMember } = useAuthStore()
+  // storeMember has live client-side updates (e.g. avatarUrl); server prop is the SSR fallback
+  const m = storeMember ?? member
+  const pet = m.pets[0]
   const hour = new Date().getHours()
   const greeting = hour < 12 ? '早安' : hour < 18 ? '午安' : '晚安'
-  const tierLabel = member.tier === 'gold' ? '金卡會員' : member.tier === 'silver' ? '銀卡會員' : '一般會員'
+  const tierLabel = m.tier === 'gold' ? '金卡會員' : m.tier === 'silver' ? '銀卡會員' : '一般會員'
 
   return (
     <section className="relative overflow-hidden rounded-[28px] border border-white/70 bg-[#fff4df] p-5 shadow-sm shadow-[#e8b56e]/20 md:p-6">
@@ -19,7 +24,7 @@ export default function WelcomeCard({ member, appointment }: Props) {
 
       <div className="relative flex items-center gap-4">
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold text-accent">{greeting}，{member.name}</p>
+          <p className="text-sm font-bold text-accent">{greeting}，{m.name}</p>
           <h2 className="mt-1 text-2xl font-black leading-tight text-ink md:text-3xl">
             今天也一起照顧好 {pet?.name ?? '毛孩'}
           </h2>
@@ -36,18 +41,21 @@ export default function WelcomeCard({ member, appointment }: Props) {
           <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1.5 text-xs font-bold text-primary shadow-sm">
             {tierLabel}
             <span className="h-3 w-px bg-[#eadfd2]" />
-            {member.points} 點
+            {m.points} 點
           </div>
         </div>
 
-        <Image
-          src="/assets/terrymon-mascot.png"
-          alt="TerryMon mascot"
-          width={132}
-          height={132}
-          className="hidden size-28 shrink-0 rounded-[28px] object-cover sm:block md:size-32"
-          priority
-        />
+        <div className="hidden size-28 shrink-0 rounded-full overflow-hidden ring-4 ring-white/60 sm:block md:size-32">
+          <Image
+            src={m.avatarUrl ?? '/assets/terrymon-mascot.png'}
+            alt={m.name}
+            width={132}
+            height={132}
+            className="size-full object-cover"
+            priority
+            unoptimized={m.avatarUrl?.startsWith('data:')}
+          />
+        </div>
       </div>
     </section>
   )

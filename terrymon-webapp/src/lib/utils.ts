@@ -6,28 +6,51 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function calcAge(birthDate: string): string {
+  if (!birthDate) return '年齡未填'
+
   const birth = new Date(birthDate)
+  if (Number.isNaN(birth.getTime())) return '年齡未填'
+
   const now = new Date()
-  const years = now.getFullYear() - birth.getFullYear()
-  const months = now.getMonth() - birth.getMonth() +
-    (now.getDate() < birth.getDate() ? -1 : 0)
-  if (years === 0) return `${((months + 12) % 12)} 個月`
-  if (months < 0) return `${years - 1} 歲 ${months + 12} 個月`
-  return months === 0 ? `${years} 歲` : `${years} 歲 ${months} 個月`
+  let years = now.getFullYear() - birth.getFullYear()
+  let months = now.getMonth() - birth.getMonth()
+
+  if (now.getDate() < birth.getDate()) months -= 1
+  if (months < 0) {
+    years -= 1
+    months += 12
+  }
+
+  if (years <= 0) return `${Math.max(months, 0)} 個月`
+  if (months === 0) return `${years} 歲`
+  return `${years} 歲 ${months} 個月`
 }
 
 export function formatDate(dateStr: string, format: 'short' | 'full' = 'short'): string {
+  if (!dateStr) return '未設定'
   const d = new Date(dateStr)
+  if (Number.isNaN(d.getTime())) return dateStr
+
   if (format === 'full') {
     return d.toLocaleDateString('zh-TW', {
-      year: 'numeric', month: 'long', day: 'numeric', weekday: 'short',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      weekday: 'short',
     })
   }
-  return d.toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' })
+
+  return d.toLocaleDateString('zh-TW', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  })
 }
 
 export function formatTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })
+  const d = new Date(dateStr)
+  if (Number.isNaN(d.getTime())) return '--:--'
+  return d.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })
 }
 
 export function formatPrice(price: number): string {
@@ -38,24 +61,39 @@ export function formatFileSize(size: string): string {
   return size
 }
 
+export function getSpeciesLabel(species: string): string {
+  const map: Record<string, string> = {
+    dog: '狗狗',
+    cat: '貓咪',
+    other: '其他',
+  }
+  return map[species] ?? '其他'
+}
+
 export function getSpeciesEmoji(species: string): string {
-  return species === 'dog' ? '🐕' : species === 'cat' ? '🐈' : '🐾'
+  return species === 'dog' ? '犬' : species === 'cat' ? '貓' : '寵'
 }
 
 export function getDeviceIcon(type: string): string {
   const map: Record<string, string> = {
-    camera: '📷', glucose: '🩸', bp_monitor: '💓',
-    thermometer: '🌡️', scale: '⚖️',
+    camera: '攝影機',
+    glucose: '血糖機',
+    bp_monitor: '血壓計',
+    thermometer: '溫度計',
+    scale: '體重計',
   }
-  return map[type] ?? '📡'
+  return map[type] ?? '裝置'
 }
 
 export function getDeviceLabel(type: string): string {
   const map: Record<string, string> = {
-    camera: '攝影機', glucose: '血糖機', bp_monitor: '血壓計',
-    thermometer: '體溫計', scale: '體重秤',
+    camera: '攝影機',
+    glucose: '血糖機',
+    bp_monitor: '血壓計',
+    thermometer: '溫度計',
+    scale: '體重計',
   }
-  return map[type] ?? '裝置'
+  return map[type] ?? '智慧裝置'
 }
 
 export function getTrend(data: { value: number }[]): '↑' | '↓' | '→' {

@@ -1,15 +1,23 @@
 'use client'
 
 import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import AdminSidebar from '@/components/admin/AdminSidebar'
 import { useAdminStore } from '@/stores/adminStore'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const load = useAdminStore(s => s.load)
+  const router  = useRouter()
+  const { isLoggedIn, load } = useAdminStore()
 
   useEffect(() => {
+    if (!isLoggedIn) {
+      router.replace('/admin/login')
+      return
+    }
     load()
-  }, [load])
+  }, [isLoggedIn, load, router])
+
+  if (!isLoggedIn) return null
 
   return (
     <div className="flex min-h-screen bg-surface">

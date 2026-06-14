@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <style>.toy{animation:bob 3.6s ease-in-out infinite;transform-origin:128px 140px}@keyframes bob{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-6px) scale(1.015)}}</style>
+  <defs>
+    <radialGradient id="bg" cx="36%" cy="22%"><stop offset="0" stop-color="#fff1df"/><stop offset="1" stop-color="#d89b5b"/></radialGradient>
+    <linearGradient id="fur" x1="70" y1="53" x2="185" y2="220"><stop stop-color="#cf8f56"/><stop offset=".62" stop-color="#a56538"/><stop offset="1" stop-color="#75401f"/></linearGradient>
+    <linearGradient id="cream" x1="92" y1="102" x2="166" y2="212"><stop stop-color="#ffe9cf"/><stop offset="1" stop-color="#f3c49b"/></linearGradient>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="15" stdDeviation="10" flood-color="#75401f" flood-opacity=".23"/></filter>
+  </defs>
+  <circle cx="128" cy="128" r="112" fill="url(#bg)"/><ellipse cx="128" cy="215" rx="62" ry="14" fill="#78431f" opacity=".13"/>
+  <g class="toy" filter="url(#soft)">
+    <circle cx="84" cy="91" r="26" fill="#8f562e"/><circle cx="172" cy="91" r="26" fill="#8f562e"/>
+    <circle cx="84" cy="91" r="13" fill="#f0b58f"/><circle cx="172" cy="91" r="13" fill="#f0b58f"/>
+    <path d="M65 132c0-44 29-74 63-74s63 30 63 74v20c0 39-25 64-63 64s-63-25-63-64z" fill="url(#fur)"/>
+    <path d="M85 142c0-27 20-45 43-45s43 18 43 45v22c0 29-18 48-43 48s-43-19-43-48z" fill="url(#cream)"/>
+    <circle cx="108" cy="134" r="14" fill="#2f1d14"/><circle cx="148" cy="134" r="14" fill="#2f1d14"/>
+    <circle cx="103" cy="129" r="5" fill="#fff"/><circle cx="143" cy="129" r="5" fill="#fff"/>
+    <ellipse cx="101" cy="164" rx="22" ry="18" fill="#f8dac1"/><ellipse cx="155" cy="164" rx="22" ry="18" fill="#f8dac1"/>
+    <path d="M120 151h16l-8 9z" fill="#7b3e2a"/>
+    <path d="M116 175c9 7 15 7 24 0" fill="none" stroke="#7b3e2a" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="98" cy="111" r="12" fill="#fff" opacity=".18"/>
+  </g>
+</svg>

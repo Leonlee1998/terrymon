@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <style>.toy{animation:bob 3.7s ease-in-out infinite;transform-origin:128px 140px}@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}</style>
+  <defs>
+    <radialGradient id="bg" cx="36%" cy="22%"><stop offset="0" stop-color="#f4fff1"/><stop offset="1" stop-color="#aee8a6"/></radialGradient>
+    <linearGradient id="fur" x1="67" y1="42" x2="186" y2="220"><stop stop-color="#d7dbd7"/><stop offset=".6" stop-color="#8f9996"/><stop offset="1" stop-color="#596460"/></linearGradient>
+    <linearGradient id="cream" x1="95" y1="99" x2="158" y2="208"><stop stop-color="#fffaf0"/><stop offset="1" stop-color="#e9e5da"/></linearGradient>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="15" stdDeviation="10" flood-color="#39513e" flood-opacity=".22"/></filter>
+  </defs>
+  <circle cx="128" cy="128" r="112" fill="url(#bg)"/><ellipse cx="128" cy="215" rx="62" ry="14" fill="#3f5f43" opacity=".13"/>
+  <g class="toy" filter="url(#soft)">
+    <path d="M70 97 91 42l34 43h6l34-43 21 55v55c0 42-25 68-58 68s-58-26-58-68z" fill="url(#fur)"/>
+    <path d="M84 124c10-23 34-33 44-33s34 10 44 33v36c0 30-19 50-44 50s-44-20-44-50z" fill="url(#cream)"/>
+    <path d="m98 78-6 17 18-9zm60 0 6 17-18-9z" fill="#ead1d1"/>
+    <path d="M101 121h54m-27-7v24m-16-5-11-13m43 13 11-13" stroke="#6a7471" stroke-width="6" stroke-linecap="round" opacity=".72"/>
+    <ellipse cx="107" cy="147" rx="12" ry="15" fill="#67bd64"/><ellipse cx="149" cy="147" rx="12" ry="15" fill="#67bd64"/>
+    <circle cx="106" cy="142" r="4" fill="#fff"/><circle cx="148" cy="142" r="4" fill="#fff"/>
+    <circle cx="92" cy="159" r="13" fill="#ffada3" opacity=".42"/><circle cx="164" cy="159" r="13" fill="#ffada3" opacity=".42"/>
+    <path d="M118 163h20l-10 9z" fill="#e9878d"/>
+    <path d="M108 181c13 10 27 10 40 0" fill="none" stroke="#4c5552" stroke-width="6" stroke-linecap="round"/>
+  </g>
+</svg>

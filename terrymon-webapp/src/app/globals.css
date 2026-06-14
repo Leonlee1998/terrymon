@@ -56,6 +56,12 @@
   --color-slate-t: #5C6B5E;
   --color-border-t: #f1deca;
   --color-surface: #fff8ed;
+  /* ── Pet card teal (back card) ── */
+  --color-card-teal: #4aaab5;
+  --color-card-teal-light: #e3f3f5;
+  /* ── Pet card front (v1) ── */
+  --color-card-front: #fcf4ec;
+  --color-card-orange: #f28400;
   /* ── Custom animations ── */
   --animate-fade-in: fade-in 0.3s ease-out;
   --animate-pop: pop 0.4s ease-out;

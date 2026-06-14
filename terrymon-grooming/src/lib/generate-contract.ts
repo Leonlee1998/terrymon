@@ -1,6 +1,7 @@
 'use client'
 import type { RefObject } from 'react'
 
+// Capture the contract HTML block (single scrollable div) and slice into A4 pages.
 export async function generateContractPdf(containerRef: RefObject<HTMLDivElement | null>): Promise<Blob> {
   const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
     import('html2canvas'),
@@ -10,57 +11,35 @@ export async function generateContractPdf(containerRef: RefObject<HTMLDivElement
   const container = containerRef.current
   if (!container) throw new Error('Contract container not found')
 
-  // Array.from(children) — querySelectorAll('& > div') is invalid in DOM API
-  const pages = Array.from(container.children) as HTMLElement[]
-  if (pages.length === 0) throw new Error('No pages found in contract')
+  const canvas = await html2canvas(container, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: '#ffffff',
+    logging: false,
+    windowWidth: 794,
+  })
+
+  const A4_W_MM = 210
+  const A4_H_MM = 297
+  // pixels per A4 page at scale=2: canvas.width corresponds to 210mm
+  const pageHeightPx = Math.round((A4_H_MM * canvas.width) / A4_W_MM)
+  const pageCount = Math.ceil(canvas.height / pageHeightPx)
 
   const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' })
 
-  for (let i = 0; i < pages.length; i++) {
+  for (let i = 0; i < pageCount; i++) {
     if (i > 0) pdf.addPage()
-    const canvas = await html2canvas(pages[i], {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: '#ffffff',
-      logging: false,
-      windowWidth: 794,
-    })
-    const imgData = canvas.toDataURL('image/jpeg', 0.9)
-    pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297)
+    const sliceCanvas = document.createElement('canvas')
+    sliceCanvas.width = canvas.width
+    sliceCanvas.height = pageHeightPx
+    const ctx = sliceCanvas.getContext('2d')!
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height)
+    ctx.drawImage(canvas, 0, i * pageHeightPx, canvas.width, pageHeightPx, 0, 0, canvas.width, pageHeightPx)
+    pdf.addImage(sliceCanvas.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, A4_W_MM, A4_H_MM)
   }
 
   return pdf.output('blob')
-}
-
-export async function uploadContractToStorage(blob: Blob, documentId: string): Promise<string> {
-  try {
-    const { ref: storageRef, uploadBytes, getDownloadURL } = await import('firebase/storage')
-    const { storage } = await import('./firebase')
-    const r = storageRef(storage, `contracts/${documentId}.pdf`)
-    await uploadBytes(r, blob, { contentType: 'application/pdf' })
-    return getDownloadURL(r)
-  } catch {
-    // Firebase not configured — return a local object URL as fallback
-    return URL.createObjectURL(blob)
-  }
-}
-
-export async function saveContractToFirestore(data: {
-  memberId: string
-  petId: string
-  services: string[]
-  totalPrice: number
-  contractUrl: string
-  documentId: string
-  createdAt: string
-}): Promise<void> {
-  try {
-    const { collection, addDoc } = await import('firebase/firestore')
-    const { db } = await import('./firebase')
-    await addDoc(collection(db, 'contracts'), data)
-  } catch {
-    console.log('[Firestore mock] contract saved:', data.documentId)
-  }
 }
 
 export async function notifyLineContract(params: {

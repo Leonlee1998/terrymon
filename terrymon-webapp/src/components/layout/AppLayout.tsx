@@ -6,16 +6,47 @@ import SideNav from '@/components/layout/SideNav'
 import { useAuthStore } from '@/stores/authStore'
 import { useNotifStore } from '@/stores/notificationStore'
 import { api } from '@/services/api'
+import { createClient } from '@/lib/supabase/client'
+import type { Notification } from '@/types'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const { isLoggedIn } = useAuthStore()
-  const { setNotifications } = useNotifStore()
+  const { isLoggedIn, member } = useAuthStore()
+  const { setNotifications, addNotification } = useNotifStore()
   const router = useRouter()
 
   useEffect(() => {
     if (!isLoggedIn) { router.replace('/login'); return }
     api.getNotifications().then(setNotifications)
-  }, [isLoggedIn, router, setNotifications])
+  }, [isLoggedIn, member, router, setNotifications])
+
+  useEffect(() => {
+    if (!isLoggedIn || !member?.id) return
+    const supabase = createClient()
+    const channel = supabase
+      .channel(`notifications:${member.id}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'notifications',
+        filter: `member_id=eq.${member.id}`,
+      }, (payload) => {
+        const row = payload.new as Record<string, unknown>
+        addNotification({
+          id:        String(row.id ?? ''),
+          memberId:  String(row.member_id ?? ''),
+          type:      String(row.type ?? 'info') as Notification['type'],
+          title:     String(row.title ?? ''),
+          body:      String(row.body ?? ''),
+          isRead:    Boolean(row.is_read),
+          createdAt: String(row.created_at ?? ''),
+          actionUrl: typeof row.action_url === 'string' ? row.action_url : undefined,
+        })
+        // Refresh page data when grooming/vet service completion docs arrive
+        if (row.type === 'doc_received') router.refresh()
+      })
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [isLoggedIn, member?.id, addNotification])
 
   if (!isLoggedIn) return null
 

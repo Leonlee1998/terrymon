@@ -3,6 +3,7 @@ import type {
   Appointment, KioskService, QueueItem, DocItem, Product,
   Groomer, Breed, WeightRange, CoatLength, GroomingService, ServicePriceMatrix,
   ShopProduct, GroomerShift, StoreHours, GroomingRecord,
+  Brand, BrandProduct, Store,
 } from '@/types'
 
 export const MOCK_MEMBER: Member = {
@@ -507,6 +508,27 @@ export const SCANNABLE_MEMBER = {
   phone: '0912-345-678',
   qrPrefix: 'TERRYMON-M001',
 }
+
+// ── Stage 4：品牌商品 & POS 庫存 Mock ─────────────────
+export const MOCK_BRANDS: Brand[] = [
+  { id: 'BR001', name: '毛孩自然坊', status: 'active', contactName: '王品樺', contactPhone: '04-2211-3344', contactEmail: 'brand1@example.com', createdAt: '2025-01-10' },
+  { id: 'BR002', name: 'PetFresh 鮮食工坊', status: 'active', contactName: '李育成', contactPhone: '02-8765-4321', contactEmail: 'brand2@example.com', createdAt: '2025-03-01' },
+  { id: 'BR003', name: '犬貓醫研社', status: 'suspended', contactName: '張惠玲', contactPhone: '03-9988-7766', createdAt: '2025-06-01' },
+]
+
+export const MOCK_BRAND_PRODUCTS: BrandProduct[] = [
+  { id: 'BP001', brandId: 'BR001', name: '植物酵素沐浴乳 500ml', category: '清潔', suggestedPrice: 320, costPrice: 150, isActive: true, createdAt: '2025-01-15' },
+  { id: 'BP002', brandId: 'BR001', name: '護毛精華噴霧 200ml',   category: '護理', suggestedPrice: 280, costPrice: 120, isActive: true, createdAt: '2025-01-15' },
+  { id: 'BP003', brandId: 'BR001', name: '益生菌保健粉 30包',   category: '保健', suggestedPrice: 580, costPrice: 260, isActive: true, createdAt: '2025-02-01' },
+  { id: 'BP004', brandId: 'BR002', name: '鮮食主食罐 雞肉 180g', category: '食品', suggestedPrice: 95,  costPrice: 45,  isActive: true, createdAt: '2025-03-10' },
+  { id: 'BP005', brandId: 'BR002', name: '凍乾零食 鮭魚 50g',   category: '食品', suggestedPrice: 260, costPrice: 110, isActive: true, createdAt: '2025-03-10' },
+  { id: 'BP006', brandId: 'BR002', name: '關節保健膠囊 60顆',   category: '保健', suggestedPrice: 680, costPrice: 300, isActive: true, createdAt: '2025-04-01' },
+]
+
+export const MOCK_STORES: Store[] = [
+  { id: 'S001', name: 'TerryMon 台中西區店', type: 'grooming', address: '台中市西區精誠路88號',     isActive: true },
+  { id: 'S002', name: 'TerryMon 台北大安店', type: 'grooming', address: '台北市大安區復興南路200號', isActive: true },
+]
 
 export const SHOP_INFO = {
   name: 'TerryMon 寵物美容',

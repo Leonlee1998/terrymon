@@ -1,160 +1,158 @@
 'use client'
+
+import Image from 'next/image'
 import { useState } from 'react'
-import { Edit2, AlertTriangle } from 'lucide-react'
-import { calcAge, getSpeciesEmoji } from '@/lib/utils'
-import { toast } from 'sonner'
+import { AlertTriangle, ChevronRight, Edit2, Eye, PawPrint, Users } from 'lucide-react'
 import type { Pet } from '@/types'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { useAuthStore } from '@/stores/authStore'
+import PetFormDialog from './PetFormDialog'
+import PetCardPreviewDialog from './PetCardPreviewDialog'
+import CareInfoSheet from './CareInfoSheet'
+
+function shortMonsterId(id: string) {
+  const clean = id.replace(/-/g, '').toUpperCase()
+  return `${clean.slice(0, 2)}-${clean.slice(2, 6)}-${clean.slice(6, 10)}`
+}
+
+function fmtBirth(date: string) {
+  if (!date) return '—'
+  const [y, m, d] = date.split('-')
+  return `${y} - ${m} - ${d}`
+}
+
+function genderText(pet: Pet) {
+  if (!pet.gender) return '—'
+  const g = pet.gender === 'male' ? '公' : '母'
+  const n = pet.isNeutered === true ? '已結紮' : pet.isNeutered === false ? '未結紮' : ''
+  return n ? `${g} • ${n}` : g
+}
 
 export default function PetProfileCard({ pet }: { pet: Pet }) {
-  const { updatePet } = useAuthStore()
-  const [open, setOpen] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [form, setForm] = useState({
-    name: '', breed: '', weight: '', birthDate: '',
-    allergies: '', notes: '', chipId: '',
-  })
-
-  function handleOpenEdit() {
-    setForm({
-      name: pet.name, breed: pet.breed, weight: pet.weight.toString(),
-      birthDate: pet.birthDate, allergies: pet.allergies.join('、'),
-      notes: pet.notes, chipId: pet.chipId ?? '',
-    })
-    setOpen(true)
-  }
-
-  async function onSave() {
-    if (!form.name.trim()) return
-    setSaving(true)
-    await new Promise(r => setTimeout(r, 400))
-    updatePet({
-      ...pet,
-      name: form.name.trim(),
-      breed: form.breed.trim(),
-      weight: parseFloat(form.weight) || pet.weight,
-      birthDate: form.birthDate,
-      allergies: form.allergies
-        ? form.allergies.split(/[、,]/).map(s => s.trim()).filter(Boolean)
-        : [],
-      notes: form.notes.trim(),
-      chipId: form.chipId.trim() || undefined,
-    })
-    setSaving(false)
-    setOpen(false)
-    toast.success('寵物資料已更新')
-  }
+  const [editOpen, setEditOpen] = useState(false)
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [careOpen, setCareOpen] = useState(false)
 
   return (
     <>
-      <div className="bg-white rounded-2xl border border-border-t p-4">
-        <div className="flex gap-4">
-          <div className="relative flex-shrink-0">
-            <img
-              src={pet.photoUrl}
-              alt={pet.name}
-              className="w-20 h-20 rounded-2xl object-cover"
-            />
-            <span className="absolute -bottom-1 -right-1 text-lg bg-white rounded-full p-0.5 shadow-sm">
-              {getSpeciesEmoji(pet.species)}
-            </span>
+      <section className="relative overflow-hidden rounded-3xl bg-white shadow-[0_0_25px_10px_rgba(74,170,181,0.1)]">
+        {/* Decorative paw – top right */}
+        <PawPrint
+          size={90}
+          className="pointer-events-none absolute -right-4 -top-4 rotate-[24deg] text-card-teal opacity-10"
+          fill="currentColor"
+          strokeWidth={0}
+        />
+
+        {/* ── Header ── */}
+        <div className="flex items-start gap-5 p-6 pb-4">
+          <div className="relative h-24 w-24 shrink-0">
+            <div className="absolute inset-0 rounded-full border-2 border-card-teal" />
+            {pet.photoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={pet.photoUrl} alt={pet.name} className="h-full w-full rounded-full object-cover p-0.5" />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center rounded-full bg-card-teal-light p-0.5">
+                <PawPrint size={32} className="text-card-teal" />
+              </div>
+            )}
           </div>
 
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between">
-              <h2 className="text-xl font-black text-ink">{pet.name}</h2>
-              <button
-                onClick={handleOpenEdit}
-                className="p-1.5 text-slate-t hover:text-primary transition-colors"
-              >
-                <Edit2 size={16} />
-              </button>
+          <div className="min-w-0 flex-1 pt-1">
+            <h2 className="text-2xl font-black tracking-wider text-card-teal">{pet.name}</h2>
+            <p className="mt-2 text-[11px] font-medium tracking-widest text-gray-400">MONSTER ID</p>
+            <p className="text-base font-bold tracking-wider text-card-teal">{shortMonsterId(pet.id)}</p>
+            {pet.chipId && (
+              <>
+                <p className="mt-1.5 text-[11px] font-medium tracking-widest text-gray-400">MICROCHIP</p>
+                <p className="text-sm font-bold tracking-wide text-ink">{pet.chipId}</p>
+              </>
+            )}
+          </div>
+
+          <div className="flex shrink-0 flex-col gap-1 pt-1">
+            <button
+              onClick={() => setEditOpen(true)}
+              className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-card-teal-light hover:text-card-teal"
+              aria-label="編輯寵物資料"
+            >
+              <Edit2 size={16} />
+            </button>
+            <button
+              onClick={() => setPreviewOpen(true)}
+              className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-card-teal-light hover:text-card-teal"
+              aria-label="預覽卡片"
+            >
+              <Eye size={16} />
+            </button>
+          </div>
+        </div>
+
+        {/* ── Info grid ── */}
+        <div className="mx-5 rounded-2xl border border-card-teal px-4 py-4">
+          <div className="grid grid-cols-2 gap-x-4">
+            <div className="flex flex-col gap-5 border-r border-border-t pr-4">
+              <InfoItem label="生日 • BORN"   value={fmtBirth(pet.birthDate)} />
+              <InfoItem label="性別 • SEX"     value={genderText(pet)} />
+              <InfoItem label="照顧者"          value={pet.caregiver || '—'} />
             </div>
-            <p className="text-slate-t text-sm">{pet.breed}</p>
-            <div className="flex flex-wrap gap-2 mt-2">
-              <span className="bg-surface border border-border-t text-xs text-ink px-2 py-0.5 rounded-full">
-                {calcAge(pet.birthDate)}
-              </span>
-              <span className="bg-surface border border-border-t text-xs text-ink px-2 py-0.5 rounded-full">
-                {pet.weight} kg
-              </span>
-              {pet.chipId && (
-                <span className="bg-surface border border-border-t text-xs text-ink px-2 py-0.5 rounded-full">
-                  晶片 {pet.chipId}
-                </span>
-              )}
+            <div className="flex flex-col gap-5 pl-1">
+              <InfoItem label="體重 • WEIGHT"  value={pet.weight ? `${pet.weight} KG` : '—'} />
+              <InfoItem label="品種 • BREED"   value={pet.breed || '—'} />
+              <InfoItem label="血型 • BLOOD"   value={pet.bloodType || '—'} />
             </div>
           </div>
         </div>
 
-        {pet.allergies.length > 0 && (
-          <div className="mt-3 flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
-            <AlertTriangle size={16} className="text-red-600 flex-shrink-0" />
-            <div>
-              <p className="text-xs font-semibold text-red-700">過敏史</p>
-              <p className="text-xs text-red-600">{pet.allergies.join('、')}</p>
-            </div>
-          </div>
-        )}
-
+        {/* ── Notes ── */}
         {pet.notes && (
-          <p className="mt-3 text-xs text-slate-t bg-surface rounded-xl px-3 py-2">
-            💬 {pet.notes}
-          </p>
-        )}
-      </div>
-
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>編輯寵物資料</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3 mt-2">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-sm font-medium text-ink block mb-1">寵物姓名 *</label>
-                <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-ink block mb-1">品種</label>
-                <Input value={form.breed} onChange={e => setForm(f => ({ ...f, breed: e.target.value }))} />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-sm font-medium text-ink block mb-1">體重 (kg)</label>
-                <Input type="number" value={form.weight} onChange={e => setForm(f => ({ ...f, weight: e.target.value }))} />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-ink block mb-1">生日</label>
-                <Input type="date" value={form.birthDate} onChange={e => setForm(f => ({ ...f, birthDate: e.target.value }))} />
-              </div>
-            </div>
+          <div className="mx-5 mt-4 flex items-start gap-3 rounded-2xl border border-card-teal bg-card-teal-light px-4 py-3">
+            <AlertTriangle size={16} className="mt-0.5 shrink-0 text-red-500" />
             <div>
-              <label className="text-sm font-medium text-ink block mb-1">晶片號碼</label>
-              <Input value={form.chipId} onChange={e => setForm(f => ({ ...f, chipId: e.target.value }))} placeholder="選填" />
+              <p className="text-[11px] font-medium tracking-wide text-red-500">注意事項 • NOTES</p>
+              <p className="mt-1 text-sm font-bold text-gray-700">{pet.notes}</p>
             </div>
-            <div>
-              <label className="text-sm font-medium text-ink block mb-1">過敏史（以「、」分隔）</label>
-              <Input value={form.allergies} onChange={e => setForm(f => ({ ...f, allergies: e.target.value }))} placeholder="雞肉、牛奶" />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-ink block mb-1">備注</label>
-              <Input value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} />
-            </div>
-            <Button
-              onClick={onSave}
-              disabled={saving || !form.name.trim()}
-              className="w-full bg-primary hover:bg-primary-hover text-white"
-            >
-              {saving ? '儲存中…' : '儲存'}
-            </Button>
           </div>
-        </DialogContent>
-      </Dialog>
+        )}
+
+        {/* ── Care info entry ── */}
+        <button
+          onClick={() => setCareOpen(true)}
+          className="mx-5 mb-1 mt-4 flex w-[calc(100%-2.5rem)] items-center gap-2.5 rounded-2xl border border-card-teal px-4 py-3 transition-colors hover:bg-card-teal-light"
+        >
+          <Users size={15} className="shrink-0 text-card-teal" />
+          <span className="flex-1 text-left text-sm font-semibold text-card-teal">照護資訊</span>
+          <ChevronRight size={15} className="text-card-teal opacity-50" />
+        </button>
+
+        {/* ── Footer ── */}
+        <div className="relative mt-4 flex items-end justify-end px-6 pb-6">
+          <PawPrint
+            size={90}
+            className="pointer-events-none absolute bottom-4 left-4 -rotate-[25deg] text-card-teal opacity-10"
+            fill="currentColor"
+            strokeWidth={0}
+          />
+          <Image
+            src="/assets/logo.png"
+            alt="TerryMon 預約怪獸"
+            width={108}
+            height={36}
+            className="relative z-10 object-contain"
+          />
+        </div>
+      </section>
+
+      <PetFormDialog open={editOpen} onOpenChange={setEditOpen} pet={pet} />
+      {previewOpen && <PetCardPreviewDialog pet={pet} onClose={() => setPreviewOpen(false)} />}
+      <CareInfoSheet pet={pet} open={careOpen} onOpenChange={setCareOpen} />
     </>
+  )
+}
+
+function InfoItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-[11px] font-medium tracking-wide text-card-teal">{label}</p>
+      <p className="mt-0.5 text-[15px] font-bold text-gray-700">{value}</p>
+    </div>
   )
 }

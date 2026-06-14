@@ -1,9 +1,10 @@
 'use client'
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, Scissors, CalendarDays,
-  Users, FileText, Settings, LogOut, Stethoscope, ShoppingBag
+  Users, FileText, Settings, LogOut, Stethoscope, ShoppingBag, PackagePlus, Boxes,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAdminStore } from '@/stores/adminStore'
@@ -12,7 +13,9 @@ import { toast } from 'sonner'
 const NAV = [
   { href: '/admin',               icon: LayoutDashboard, label: '儀表板' },
   { href: '/admin/services',      icon: Scissors,        label: '服務管理' },
-  { href: '/admin/shop-products', icon: ShoppingBag,     label: '現場商品' },
+  { href: '/admin/shop-products',  icon: ShoppingBag,  label: '現場商品' },
+  { href: '/admin/brands',         icon: Boxes,        label: '品牌管理' },
+  { href: '/admin/brand-products', icon: PackagePlus,  label: '品牌商品 Push' },
   { href: '/admin/schedule',      icon: CalendarDays,    label: '排班管理' },
   { href: '/admin/members',       icon: Users,           label: '會員查詢' },
   { href: '/admin/records',       icon: FileText,        label: '服務紀錄' },
@@ -33,13 +36,9 @@ export default function AdminSidebar() {
   return (
     <aside className="flex flex-col bg-gray-900 h-full">
       {/* Logo */}
-      <div className="p-6 border-b border-gray-700">
-        <div className="flex items-center gap-2">
-          <Scissors size={20} className="text-primary" />
-          <div>
-            <p className="text-white font-black text-base leading-tight">TerryMon</p>
-            <p className="text-gray-400 text-xs">美容管理系統</p>
-          </div>
+      <div className="px-6 py-4 border-b border-gray-700">
+        <div className="bg-white rounded-xl px-3 py-2 inline-block">
+          <Image src="/assets/logo.png" alt="TerryMon 預約怪獸" width={120} height={40} className="object-contain" priority />
         </div>
         <p className="text-gray-500 text-xs mt-3 truncate">{shopName}</p>
       </div>

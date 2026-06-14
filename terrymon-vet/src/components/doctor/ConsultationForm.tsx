@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Plus, Trash2, ChevronLeft } from 'lucide-react'
 import { useQueueStore } from '@/stores/queueStore'
+import { posApi } from '@/services/api'
 import { COMMON_MEDICINES, COMMON_DIAGNOSES } from '@/lib/mock'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -70,18 +71,28 @@ export default function ConsultationForm() {
   }
 
   async function onSubmit(data: FormValues) {
+    if (!inProgress) return
     setSubmitting(true)
-    const result: ConsultationResult = {
-      diagnosis: data.diagnosis,
-      prescriptions: data.prescriptions as PrescriptionItem[],
-      notes: data.notes ?? '',
-      fee: data.fee,
-      followUpDate: data.needsFollowUp && data.followUpDate ? data.followUpDate : null,
+    try {
+      const result: ConsultationResult = {
+        diagnosis:    data.diagnosis,
+        prescriptions: data.prescriptions as PrescriptionItem[],
+        notes:        data.notes ?? '',
+        fee:          data.fee,
+        followUpDate: data.needsFollowUp && data.followUpDate ? data.followUpDate : null,
+      }
+      await posApi.completeConsultation(inProgress.queueNum, inProgress, {
+        ...result,
+        chiefComplaint:   data.chiefComplaint,
+        clinicalFindings: data.clinicalFindings ?? '',
+      })
+      completeCurrent(result)
+      toast.success(`看診完成，已通知 ${inProgress.memberName} 取件`)
+      router.push('/doctor')
+    } catch (err) {
+      toast.error('提交失敗：' + (err as Error).message)
+      setSubmitting(false)
     }
-    await new Promise(r => setTimeout(r, 600))
-    completeCurrent(result)
-    toast.success(`看診完成，已通知 ${inProgress?.memberName} 取件`)
-    router.push('/doctor')
   }
 
   return (

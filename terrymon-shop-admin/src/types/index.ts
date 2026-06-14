@@ -1,4 +1,11 @@
 export type ProductStatus = 'active' | 'inactive' | 'sold_out' | 'review'
+export type ProductPetSpecies = 'all' | 'dog' | 'cat' | 'small_pet' | 'bird' | 'fish'
+
+export interface ProductFormData {
+  name: string; petSpecies: ProductPetSpecies; category: string; subcategory?: string
+  price: number; originalPrice?: number; cost: number; stock: number
+  description: string; tags: string[]; status: ProductStatus
+}
 export type OrderStatus   = 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled' | 'refunding'
 export type PromoType     = 'discount' | 'coupon' | 'bundle'
 
@@ -11,7 +18,7 @@ export interface Vendor {
 
 export interface Product {
   id: string; vendorId: string; name: string
-  category: string; subcategory?: string
+  petSpecies?: ProductPetSpecies; category: string; subcategory?: string
   price: number; originalPrice?: number; cost: number
   stock: number; imageUrl: string; images: string[]
   description: string; specs: Record<string, string>; tags: string[]
@@ -42,4 +49,17 @@ export interface Promotion {
 
 export interface SalesReport {
   date: string; revenue: number; orders: number; units: number
+}
+
+export interface GroomingStore {
+  id: string; name: string; address: string; city: string
+}
+
+export interface StorePlacement {
+  id: string; vendorId: string; storeId: string
+  status: 'pending' | 'approved' | 'rejected' | 'terminated'
+  note?: string; adminNote?: string
+  listingFee: number; commissionRate: number
+  approvedAt?: string; createdAt: string
+  store?: GroomingStore
 }

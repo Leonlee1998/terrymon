@@ -4,6 +4,8 @@ export type DocumentType = 'prescription' | 'receipt' | 'contract'
 export type QueueStatus = 'waiting' | 'in-progress' | 'done'
 export type ServiceType = 'vet' | 'grooming' | 'other'
 
+export type BreedLegalStatusTw = 'allowed' | 'restricted' | 'prohibited' | 'legacy_only' | 'unknown'
+
 export interface Member {
   id: string
   name: string
@@ -27,6 +29,23 @@ export interface Pet {
   photoUrl: string
   allergies: string[]
   notes: string
+}
+
+export interface BreedOption {
+  id: string
+  species: 'dog' | 'cat'
+  nameZh: string
+  nameEn: string
+  aliases: string[]
+  registrySources: string[]
+  group: string
+  size: 'toy' | 'small' | 'medium' | 'large' | 'giant' | 'unknown'
+  coatType: string[]
+  groomingTags: string[]
+  vetRiskTags: string[]
+  legalStatusTw: BreedLegalStatusTw
+  legalNote: string | null
+  sortOrder: number
 }
 
 export interface MedicalRecord {
@@ -84,6 +103,7 @@ export interface GroomingService {
 
 export interface QueueItem {
   queueNum: string
+  appointmentId?: string
   petId: string
   memberId: string
   memberName: string

@@ -19,21 +19,23 @@ interface KioskStore {
   contractUrl:     string | null
   weight:          string | null
   queueNum:        string | null
+  appointmentId:   string | null
 
-  setMember:       (m: Member) => void
-  setSelectedPet:  (p: Pet) => void
-  setCheckinMode:  (mode: CheckinMode) => void
-  setMainService:  (s: KioskService) => void
-  toggleAddon:     (s: KioskService) => void
-  setGroomer:      (name: string) => void
-  setTime:         (time: string) => void
-  setPaymentMode:  (mode: PaymentMode) => void
-  setBalanceToUse: (amount: number) => void
-  setSignature:    (data: string) => void
-  setContractUrl:  (url: string) => void
-  setWeight:       (w: string) => void
-  setQueueNum:     (q: string) => void
-  reset:           () => void
+  setMember:          (m: Member) => void
+  setSelectedPet:     (p: Pet) => void
+  setCheckinMode:     (mode: CheckinMode) => void
+  setMainService:     (s: KioskService) => void
+  toggleAddon:        (s: KioskService) => void
+  setGroomer:         (name: string) => void
+  setTime:            (time: string) => void
+  setPaymentMode:     (mode: PaymentMode) => void
+  setBalanceToUse:    (amount: number) => void
+  setSignature:       (data: string) => void
+  setContractUrl:     (url: string) => void
+  setWeight:          (w: string) => void
+  setQueueNum:        (q: string) => void
+  setAppointmentId:   (id: string | null) => void
+  reset:              () => void
 
   totalPrice:    () => number
   totalDuration: () => number
@@ -47,7 +49,7 @@ const INITIAL_STATE = {
   selectedGroomer: null, selectedTime: null,
   paymentMode: 'card' as PaymentMode, balanceToUse: 0,
   signatureData: null, contractUrl: null,
-  weight: null, queueNum: null,
+  weight: null, queueNum: null, appointmentId: null,
 }
 
 export function generateQueueNum(): string {
@@ -74,7 +76,8 @@ export const useKioskStore = create<KioskStore>()((set, get) => ({
   setSignature:    (data) => set({ signatureData: data }),
   setContractUrl:  (url)  => set({ contractUrl: url }),
   setWeight:       (w)    => set({ weight: w }),
-  setQueueNum:     (q)    => set({ queueNum: q }),
+  setQueueNum:        (q) => set({ queueNum: q }),
+  setAppointmentId:   (id) => set({ appointmentId: id }),
   reset: () => set(INITIAL_STATE),
 
   totalPrice: () => {
