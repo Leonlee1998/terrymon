@@ -8,5 +8,8 @@
     "build:webapp": "npm --prefix terrymon-webapp run build",
     "build:grooming": "npm --prefix terrymon-grooming run build",
     "build:vet": "npm --prefix terrymon-vet run build"
+  },
+  "devDependencies": {
+    "supabase": "^2.106.0"
   }
 }
