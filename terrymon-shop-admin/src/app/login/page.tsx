@@ -15,11 +15,19 @@ export default function VendorLogin() {
 
   useEffect(() => { if (isLoggedIn) router.replace('/dashboard') }, [isLoggedIn, router])
 
-  const { register, handleSubmit } = useForm({
+  const { register, handleSubmit, formState: { isSubmitting } } = useForm({
     defaultValues: { email: 'vendor@example.com', password: 'vendor1234' },
   })
 
-  function onSubmit() { login(); toast.success('登入成功'); router.replace('/dashboard') }
+  async function onSubmit() {
+    try {
+      await login()
+      toast.success('登入成功')
+      router.replace('/dashboard')
+    } catch {
+      toast.error('登入失敗，請稍後再試')
+    }
+  }
 
   return (
     <div className="min-h-screen bg-surface flex items-center justify-center p-6">
@@ -29,20 +37,20 @@ export default function VendorLogin() {
             <Store size={28} className="text-white" />
           </div>
           <h1 className="text-2xl font-black text-ink">商家登入</h1>
-          <p className="text-slate-t text-sm mt-1">TerryMon 商城管理後台</p>
+          <p className="text-slate-t text-sm mt-1">TerryMon 商家管理後台</p>
         </div>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <Input {...register('email')} type="email" placeholder="電子信箱" className="h-12" />
           <Input {...register('password')} type="password" placeholder="密碼" className="h-12" />
-          <Button type="submit" className="w-full h-12 bg-primary hover:bg-primary-hover text-white font-bold">
-            登入
+          <Button type="submit" disabled={isSubmitting} className="w-full h-12 bg-primary hover:bg-primary-hover text-white font-bold">
+            {isSubmitting ? '登入中...' : '登入'}
           </Button>
         </form>
         <p className="text-center text-xs text-slate-t mt-4">
-          還沒有帳號？
-          <Link href="/register" className="text-primary font-medium ml-1">申請入駐</Link>
+          還沒有商家帳號？
+          <Link href="/register" className="text-primary font-medium ml-1">申請進駐</Link>
         </p>
-        <p className="text-center text-xs text-slate-t mt-2">Demo：vendor@example.com / vendor1234</p>
+        <p className="text-center text-xs text-slate-t mt-2">Demo: vendor@example.com / vendor1234</p>
       </div>
     </div>
   )
