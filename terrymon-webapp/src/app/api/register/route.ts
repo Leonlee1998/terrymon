@@ -11,6 +11,39 @@ type RegisterBody = {
 
 const HANDLE_RE = /^[a-z0-9][a-z0-9-]{2,18}[a-z0-9]$/
 
+function normalizePhone(value: string) {
+  return value.replace(/\D/g, '')
+}
+
+function phoneVariants(value: string) {
+  const normalized = normalizePhone(value)
+  const variants = new Set([value.trim(), normalized])
+
+  if (normalized.length === 10) {
+    variants.add(`${normalized.slice(0, 4)}-${normalized.slice(4, 7)}-${normalized.slice(7)}`)
+  }
+
+  return [...variants].filter(Boolean)
+}
+
+function uniqueMemberError(message: string) {
+  const normalizedMessage = message.toLowerCase()
+
+  if (normalizedMessage.includes('members_phone_key') || normalizedMessage.includes('(phone)')) {
+    return '此手機號碼已註冊，請直接登入或改用另一支手機'
+  }
+
+  if (normalizedMessage.includes('members_email_key') || normalizedMessage.includes('(email)')) {
+    return '此 Email 已註冊，請直接登入'
+  }
+
+  if (normalizedMessage.includes('members_handle_key') || normalizedMessage.includes('(handle)')) {
+    return '此會員 ID 已被使用，請換一個'
+  }
+
+  return message
+}
+
 function getAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim().replace(/^\uFEFF/, '')
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim().replace(/^\uFEFF/, '')
@@ -31,7 +64,8 @@ export async function POST(request: Request) {
   try {
     const body = await request.json() as RegisterBody
     const name = body.name?.trim()
-    const phone = body.phone?.trim()
+    const phoneInput = body.phone?.trim()
+    const phone = phoneInput ? normalizePhone(phoneInput) : undefined
     const email = body.email?.trim().toLowerCase()
     const password = body.password
     const handle = body.handle?.trim().toLowerCase()
@@ -45,14 +79,37 @@ export async function POST(request: Request) {
     }
 
     const supabase = getAdminClient()
-    const { data: existingHandle } = await supabase
-      .from('members')
-      .select('id')
-      .eq('handle', handle)
-      .maybeSingle()
+    const phoneChecks = phoneVariants(phoneInput ?? '')
+      .map(value => supabase.from('members').select('id').eq('phone', value).maybeSingle())
+
+    const [
+      { data: existingHandle, error: handleError },
+      { data: existingEmail, error: emailError },
+      ...phoneResults
+    ] = await Promise.all([
+      supabase.from('members').select('id').eq('handle', handle).maybeSingle(),
+      supabase.from('members').select('id').eq('email', email).maybeSingle(),
+      ...phoneChecks,
+    ])
+
+    const phoneError = phoneResults.find(result => result.error)?.error
+    if (handleError || emailError || phoneError) {
+      return NextResponse.json(
+        { error: handleError?.message ?? emailError?.message ?? phoneError?.message ?? 'Could not validate registration' },
+        { status: 500 },
+      )
+    }
 
     if (existingHandle) {
-      return NextResponse.json({ error: 'Member ID is already taken' }, { status: 409 })
+      return NextResponse.json({ error: '此會員 ID 已被使用，請換一個' }, { status: 409 })
+    }
+
+    if (existingEmail) {
+      return NextResponse.json({ error: '此 Email 已註冊，請直接登入' }, { status: 409 })
+    }
+
+    if (phoneResults.some(result => result.data)) {
+      return NextResponse.json({ error: '此手機號碼已註冊，請直接登入或改用另一支手機' }, { status: 409 })
     }
 
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
@@ -63,8 +120,9 @@ export async function POST(request: Request) {
     })
 
     if (authError || !authData.user) {
+      const message = authError?.message ?? 'Could not create auth user'
       return NextResponse.json(
-        { error: authError?.message ?? 'Could not create auth user' },
+        { error: message.toLowerCase().includes('already') ? '此 Email 已註冊，請直接登入' : message },
         { status: 400 },
       )
     }
@@ -83,7 +141,7 @@ export async function POST(request: Request) {
 
     if (memberError) {
       await supabase.auth.admin.deleteUser(authData.user.id)
-      return NextResponse.json({ error: memberError.message }, { status: 400 })
+      return NextResponse.json({ error: uniqueMemberError(memberError.message) }, { status: 400 })
     }
 
     return NextResponse.json({
