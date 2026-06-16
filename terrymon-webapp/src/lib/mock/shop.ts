@@ -1,4 +1,31 @@
-import type { Order, Product } from '@/types'
+import type { Order, Product, Vendor } from '@/types'
+
+export const MOCK_VENDORS: Record<string, Vendor> = {
+  V001: {
+    id: 'V001', storeName: 'TerryMon Select',
+    description: 'TerryMon 官方精選通路，嚴選優質寵物食品與保健品。所有商品均通過獸醫師把關，讓毛孩吃得健康、吃得放心。',
+    storeDescription: 'TerryMon 官方精選通路，嚴選優質寵物食品與保健品。所有商品均通過獸醫師把關，讓毛孩吃得健康、吃得放心。',
+    phone: '04-2299-1234', rating: 4.9, reviewCount: 801, productCount: 24, isVerified: true, joinedAt: '2024-01-01',
+  },
+  V002: {
+    id: 'V002', storeName: 'Pet Daily Care',
+    description: '專注寵物保健品研發，獸醫師推薦配方。從關節、腸胃到皮膚，全方位守護毛孩每一天。',
+    storeDescription: '專注寵物保健品研發，獸醫師推薦配方。從關節、腸胃到皮膚，全方位守護毛孩每一天。',
+    phone: '02-2730-5566', rating: 4.7, reviewCount: 287, productCount: 18, isVerified: true, joinedAt: '2024-03-15',
+  },
+  V003: {
+    id: 'V003', storeName: 'Fur Clean',
+    description: '天然植物萃取清潔系列，溫和不刺激毛孩肌膚。無人工香料、無防腐劑，洗完鬆軟有光澤。',
+    storeDescription: '天然植物萃取清潔系列，溫和不刺激毛孩肌膚。無人工香料、無防腐劑，洗完鬆軟有光澤。',
+    phone: '06-2348-8899', rating: 4.6, reviewCount: 234, productCount: 12, isVerified: false, joinedAt: '2024-06-01',
+  },
+  V004: {
+    id: 'V004', storeName: 'Play Buddy',
+    description: '益智互動玩具設計品牌，讓毛孩每天都有趣。結合行為科學，幫助消耗精力、促進大腦發展。',
+    storeDescription: '益智互動玩具設計品牌，讓毛孩每天都有趣。結合行為科學，幫助消耗精力、促進大腦發展。',
+    phone: '03-4561-2277', rating: 4.8, reviewCount: 757, productCount: 31, isVerified: true, joinedAt: '2023-09-01',
+  },
+}
 
 export const MOCK_PRODUCTS: Product[] = [
   {
@@ -9,6 +36,7 @@ export const MOCK_PRODUCTS: Product[] = [
     name: '主食鮮食罐 雞肉南瓜 185g',
     category: '食品',
     subcategory: '主食罐',
+    storeSection: '鮮食主食',
     price: 89,
     originalPrice: 99,
     stock: 120,
@@ -29,6 +57,7 @@ export const MOCK_PRODUCTS: Product[] = [
     name: '關節保健膠囊 60 顆',
     category: '保健品',
     subcategory: '關節',
+    storeSection: '關節保養',
     price: 680,
     stock: 45,
     imageUrl: 'https://placehold.co/600x600/E8FAFD/00B8D9?text=Joint+Care',
@@ -48,6 +77,7 @@ export const MOCK_PRODUCTS: Product[] = [
     name: '寵物除臭沐浴乳 500ml',
     category: '清潔',
     subcategory: '沐浴',
+    storeSection: '清潔沐浴',
     price: 320,
     stock: 80,
     imageUrl: 'https://placehold.co/600x600/F0F9F3/2B7A4B?text=Bath',
@@ -67,6 +97,7 @@ export const MOCK_PRODUCTS: Product[] = [
     name: '益智互動玩具球 M 號',
     category: '玩具',
     subcategory: '益智',
+    storeSection: '益智玩具',
     price: 450,
     stock: 35,
     imageUrl: 'https://placehold.co/600x600/FFF0EB/FF6B35?text=Toy',
@@ -86,6 +117,7 @@ export const MOCK_PRODUCTS: Product[] = [
     name: '貓抓板窩兩用 L 號',
     category: '配件',
     subcategory: '貓用品',
+    storeSection: '生活配件',
     price: 890,
     stock: 25,
     imageUrl: 'https://placehold.co/600x600/FFF6E8/5C6B5E?text=Cat+Bed',
@@ -105,6 +137,7 @@ export const MOCK_PRODUCTS: Product[] = [
     name: '凍乾雞柳零食 100g',
     category: '食品',
     subcategory: '零食',
+    storeSection: '零食獎勵',
     price: 260,
     stock: 200,
     imageUrl: 'https://placehold.co/600x600/F0F9F3/F28C00?text=Snack',
@@ -124,6 +157,7 @@ export const MOCK_PRODUCTS: Product[] = [
     name: '益生菌粉 30 包入',
     category: '保健品',
     subcategory: '腸胃',
+    storeSection: '腸胃保健',
     price: 420,
     stock: 67,
     imageUrl: 'https://placehold.co/600x600/E8FAFD/2B7A4B?text=Probiotic',
@@ -143,6 +177,7 @@ export const MOCK_PRODUCTS: Product[] = [
     name: '寵物保濕身體噴霧 200ml',
     category: '清潔',
     subcategory: '護膚',
+    storeSection: '護膚保養',
     price: 240,
     stock: 90,
     imageUrl: 'https://placehold.co/600x600/FFF0EB/00B8D9?text=Spray',

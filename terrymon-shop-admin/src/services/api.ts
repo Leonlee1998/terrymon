@@ -53,6 +53,7 @@ function mapProduct(row: any): Product {
     petSpecies: row.pet_species ?? 'all',
     category: row.category,
     subcategory: row.subcategory ?? undefined,
+    storeSection: row.store_section ?? undefined,
     price: row.price,
     originalPrice: row.original_price ?? undefined,
     cost: row.cost ?? 0,

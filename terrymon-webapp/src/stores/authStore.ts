@@ -6,6 +6,7 @@ import type { Member, Pet } from '@/types'
 interface AuthStore {
   member: Member | null
   isLoggedIn: boolean
+  _hydrated: boolean
   setMember: (m: Member) => void
   updateMember: (fields: Partial<Omit<Member, 'id' | 'pets'>>) => void
   addPet: (pet: Pet) => void
@@ -19,6 +20,7 @@ export const useAuthStore = create<AuthStore>()(
     (set) => ({
       member: null,
       isLoggedIn: false,
+      _hydrated: false,
       setMember: (member) => set({ member, isLoggedIn: true }),
       updateMember: (fields) => set(state => ({
         member: state.member ? { ...state.member, ...fields } : null,
@@ -40,6 +42,11 @@ export const useAuthStore = create<AuthStore>()(
       })),
       logout: () => set({ member: null, isLoggedIn: false }),
     }),
-    { name: 'terrymon-auth' }
+    {
+      name: 'terrymon-auth',
+      onRehydrateStorage: () => (state) => {
+        if (state) state._hydrated = true
+      },
+    }
   )
 )

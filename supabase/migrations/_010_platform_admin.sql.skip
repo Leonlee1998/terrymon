@@ -1,0 +1,4 @@
+-- migration: 010_platform_admin (superseded)
+-- created: 2026-06-15
+-- description: 已移至 011_platform_admin.sql（與 010_add_member_handle.sql 衝突）
+-- no-op

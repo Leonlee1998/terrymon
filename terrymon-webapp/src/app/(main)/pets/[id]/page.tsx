@@ -4,16 +4,17 @@ import { api } from '@/services/api'
 
 export const dynamic = 'force-dynamic'
 
-export default async function PetDetailPage({ params }: { params: { id: string } }) {
+export default async function PetDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const pets = await api.getPets()
-  const pet = pets.find(p => p.id === params.id) ?? await api.getPet(params.id).catch(() => null)
+  const pet = pets.find(p => p.id === id) ?? await api.getPet(id).catch(() => null)
   if (!pet) notFound()
 
   const [medicalRecords, healthData, devices, groomingRecords] = await Promise.all([
-    api.getMedical(params.id),
-    api.getHealthData(params.id),
-    api.getDevices(params.id),
-    api.getGroomingRecords(params.id),
+    api.getMedical(id),
+    api.getHealthData(id),
+    api.getDevices(id),
+    api.getGroomingRecords(id),
   ])
 
   return (

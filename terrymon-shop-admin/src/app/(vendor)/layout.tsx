@@ -5,17 +5,18 @@ import { useVendorStore } from '@/stores/vendorStore'
 import VendorSidebar from '@/components/vendor/VendorSidebar'
 
 export default function VendorLayout({ children }: { children: React.ReactNode }) {
-  const { isLoggedIn, vendor, load } = useVendorStore()
+  const { isLoggedIn, _hydrated, vendor, load } = useVendorStore()
   const router = useRouter()
 
   useEffect(() => {
+    if (!_hydrated) return
     if (!isLoggedIn) { router.replace('/login'); return }
     if (vendor?.status === 'pending') { router.replace('/pending'); return }
     if (vendor?.status === 'suspended') { router.replace('/login?error=suspended'); return }
     load()
-  }, [isLoggedIn, vendor?.status, load, router])
+  }, [_hydrated, isLoggedIn, vendor?.status, load, router])
 
-  if (!isLoggedIn || vendor?.status !== 'approved') return null
+  if (!_hydrated || !isLoggedIn || vendor?.status !== 'approved') return null
 
   return (
     <div className="flex min-h-screen bg-surface">

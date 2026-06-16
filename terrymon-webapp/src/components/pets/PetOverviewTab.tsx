@@ -1,5 +1,9 @@
+'use client'
+
+import { useRouter } from 'next/navigation'
 import { FileText, HeartPulse, Scissors } from 'lucide-react'
 import HealthAlertCard from './HealthAlertCard'
+import PetOwnerSection from './PetOwnerSection'
 import type { AIoTDevice, GroomingRecord, MedicalRecord, Pet, PetHealthData } from '@/types'
 import { formatDate, formatPrice } from '@/lib/utils'
 
@@ -20,6 +24,7 @@ export default function PetOverviewTab({
   medicalRecords: MedicalRecord[]
   groomingRecords: GroomingRecord[]
 }) {
+  const router = useRouter()
   const latestMedical = latestDate(medicalRecords)
   const latestGrooming = groomingRecords[0]
   const latestWeight = healthData.weight.at(-1)
@@ -76,6 +81,10 @@ export default function PetOverviewTab({
           </div>
         </section>
       )}
+
+      <div className="rounded-xl border border-border-t bg-white p-4">
+        <PetOwnerSection pet={pet} onTransferSuccess={() => router.refresh()} />
+      </div>
     </div>
   )
 }

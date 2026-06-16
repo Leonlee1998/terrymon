@@ -15,6 +15,7 @@ export async function POST(req: Request) {
         pet_species: body.petSpecies ?? 'all',
         category: body.category,
         subcategory: body.subcategory ?? null,
+        store_section: body.storeSection ?? null,
         price: body.price,
         original_price: body.originalPrice ?? null,
         cost: body.cost,

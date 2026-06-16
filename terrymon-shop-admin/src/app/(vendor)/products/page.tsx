@@ -97,7 +97,7 @@ export default function ProductsPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border-t bg-surface">
-              {['商品', '寵物/分類', '售價', '成本', '庫存', '銷量', '評分', '狀態', '操作'].map(header => (
+              {['商品', '寵物/分類', '商家頁分類', '售價', '成本', '庫存', '銷量', '評分', '狀態', '操作'].map(header => (
                 <th key={header} className="px-4 py-3 text-left text-xs font-semibold text-slate-t">{header}</th>
               ))}
             </tr>
@@ -113,6 +113,12 @@ export default function ProductsPage() {
                 </td>
                 <td className="px-4 py-3 text-slate-t">
                   {speciesLabel(product.petSpecies ?? 'all')} · {categoryLabel(product.category)}
+                </td>
+                <td className="px-4 py-3">
+                  {product.storeSection
+                    ? <span className="rounded-full bg-primary-bg text-primary text-[11px] font-medium px-2 py-0.5">{product.storeSection}</span>
+                    : <span className="text-slate-t text-xs">—</span>
+                  }
                 </td>
                 <td className="px-4 py-3 font-medium">{formatPrice(product.price)}</td>
                 <td className="px-4 py-3 text-slate-t">{formatPrice(product.cost)}</td>

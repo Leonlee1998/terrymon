@@ -1,6 +1,6 @@
 'use client'
 import { useRouter } from 'next/navigation'
-import type { Member, DocItem, Order } from '@/types'
+import type { Member, DocItem, Order, Organization } from '@/types'
 import { useAuthStore } from '@/stores/authStore'
 import MemberProfileCard from './MemberProfileCard'
 import HandleCard from './HandleCard'
@@ -8,13 +8,14 @@ import QRCodeCard from './QRCodeCard'
 import BalanceCard from './BalanceCard'
 import DocumentsList from './DocumentsList'
 import OrderSummary from './OrderSummary'
+import OrgApplicationSection from './OrgApplicationSection'
 import { LogOut } from 'lucide-react'
 import { toast } from 'sonner'
 import { api } from '@/services/api'
 
-interface Props { member: Member; documents: DocItem[]; orders: Order[] }
+interface Props { member: Member; documents: DocItem[]; orders: Order[]; organization: Organization | null }
 
-export default function MemberClient({ member, documents, orders }: Props) {
+export default function MemberClient({ member, documents, orders, organization }: Props) {
   const { logout, member: storeMember } = useAuthStore()
   const effectiveMember = storeMember ?? member
   const router = useRouter()
@@ -40,6 +41,7 @@ export default function MemberClient({ member, documents, orders }: Props) {
         <BalanceCard member={effectiveMember} />
         <OrderSummary orders={orders} />
         <DocumentsList documents={documents} />
+        <OrgApplicationSection initialOrg={organization} />
 
         {/* Logout */}
         <button

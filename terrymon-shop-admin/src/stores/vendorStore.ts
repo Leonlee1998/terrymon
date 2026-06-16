@@ -7,6 +7,7 @@ import { vendorApi } from '@/services/api'
 
 interface VendorStore {
   isLoggedIn: boolean
+  _hydrated: boolean
   vendor: Vendor | null
   products: Product[]
   promotions: Promotion[]
@@ -27,6 +28,7 @@ export const useVendorStore = create<VendorStore>()(
   persist(
     (set, get) => ({
       isLoggedIn: false,
+      _hydrated: false,
       vendor: null,
       products: MOCK_PRODUCTS,
       promotions: MOCK_PROMOTIONS,
@@ -90,6 +92,11 @@ export const useVendorStore = create<VendorStore>()(
           ),
         })),
     }),
-    { name: 'terrymon-vendor' }
+    {
+      name: 'terrymon-vendor',
+      onRehydrateStorage: () => (state) => {
+        if (state) state._hydrated = true
+      },
+    }
   )
 )

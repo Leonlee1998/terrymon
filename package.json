@@ -5,9 +5,11 @@
     "webapp": "npm --prefix terrymon-webapp run dev -- --hostname 127.0.0.1 --port 3000",
     "grooming": "npm --prefix terrymon-grooming run dev -- --hostname 127.0.0.1 --port 3001",
     "vet": "npm --prefix terrymon-vet run dev -- --hostname 127.0.0.1 --port 3002",
+    "admin": "npm --prefix terrymon-admin run dev",
     "build:webapp": "npm --prefix terrymon-webapp run build",
     "build:grooming": "npm --prefix terrymon-grooming run build",
-    "build:vet": "npm --prefix terrymon-vet run build"
+    "build:vet": "npm --prefix terrymon-vet run build",
+    "build:admin": "npm --prefix terrymon-admin run build"
   },
   "devDependencies": {
     "supabase": "^2.106.0"

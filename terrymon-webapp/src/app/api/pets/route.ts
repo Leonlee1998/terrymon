@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient as createAdminClient } from '@supabase/supabase-js'
-import { createClient as createRouteClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 
 type PetBody = {
   name?: string
@@ -19,22 +18,6 @@ type PetBody = {
   notes?: string
 }
 
-function getAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim().replace(/^\uFEFF/, '')
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim().replace(/^\uFEFF/, '')
-
-  if (!url || !serviceRoleKey) {
-    throw new Error('Supabase server environment is not configured')
-  }
-
-  return createAdminClient(url, serviceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  })
-}
-
 function toPet(row: Record<string, unknown>) {
   return {
     id: String(row.id),
@@ -48,6 +31,7 @@ function toPet(row: Record<string, unknown>) {
     photoUrl: String(row.photo_url ?? ''),
     allergies: Array.isArray(row.allergies) ? row.allergies : [],
     chipId: typeof row.chip_id === 'string' ? row.chip_id : undefined,
+    primaryCaregiverId: typeof row.primary_caregiver_id === 'string' ? row.primary_caregiver_id : undefined,
     gender: (row.gender === 'male' || row.gender === 'female') ? row.gender : undefined,
     isNeutered: typeof row.is_neutered === 'boolean' ? row.is_neutered : undefined,
     bloodType: typeof row.blood_type === 'string' ? row.blood_type : undefined,
@@ -57,30 +41,27 @@ function toPet(row: Record<string, unknown>) {
   }
 }
 
-async function getMemberIdForSession() {
-  const routeClient = await createRouteClient()
-  const { data: userData, error: userError } = await routeClient.auth.getUser()
+async function getMemberId(supabase: Awaited<ReturnType<typeof createClient>>) {
+  const { data: { user }, error } = await supabase.auth.getUser()
+  if (error || !user) return null
 
-  if (userError || !userData.user) {
-    return null
-  }
-
-  const admin = getAdminClient()
-  const { data: member, error } = await admin
+  const { data: member } = await supabase
     .from('members')
     .select('id')
-    .eq('supabase_uid', userData.user.id)
+    .eq('supabase_uid', user.id)
     .single()
 
-  if (error || !member) {
-    return null
-  }
-
-  return String(member.id)
+  return member ? String(member.id) : null
 }
 
 export async function POST(request: Request) {
   try {
+    const supabase = await createClient()
+    const memberId = await getMemberId(supabase)
+    if (!memberId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const body = await request.json() as PetBody
     const name = body.name?.trim()
     const species = body.species ?? 'other'
@@ -89,13 +70,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid pet payload' }, { status: 400 })
     }
 
-    const memberId = await getMemberIdForSession()
-    if (!memberId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const admin = getAdminClient()
-    const { data, error } = await admin
+    const { data, error } = await supabase
       .from('pets')
       .insert({
         member_id: memberId,

@@ -1,162 +1,135 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Minus, Plus, Star } from 'lucide-react'
+import { ArrowLeft, Minus, Plus, ShoppingCart, Star } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { useCartStore } from '@/stores/cartStore'
 import { formatPrice } from '@/lib/utils'
-import type { Product } from '@/types'
+import ImageGallery from './ImageGallery'
+import VendorSection from './VendorSection'
+import ProductInfoTabs from './ProductInfoTabs'
+import type { Product, Vendor } from '@/types'
 
-interface Props { product: Product }
+interface Props {
+  product: Product
+  vendor: Vendor | null
+}
 
-export default function ProductDetail({ product }: Props) {
+export default function ProductDetail({ product, vendor }: Props) {
   const [qty, setQty] = useState(1)
   const addItem = useCartStore(s => s.addItem)
   const router = useRouter()
-
   const soldOut = product.stock <= 0
+  const discount = product.originalPrice
+    ? Math.round((1 - product.price / product.originalPrice) * 100)
+    : null
 
   function handleAdd() {
     addItem(product, qty)
     toast.success(`已加入購物車 ×${qty}`)
   }
 
+  function handleBuyNow() {
+    addItem(product, qty)
+    router.push('/shop/cart')
+  }
+
   return (
-    <div className="flex flex-col min-h-screen bg-white">
-      {/* Sticky back button */}
+    <div className="flex flex-col min-h-screen bg-surface">
       <div className="sticky top-0 z-20 bg-white/95 backdrop-blur border-b border-border-t">
         <div className="flex items-center h-14 px-4 max-w-2xl mx-auto w-full">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center gap-1 text-sm text-slate-t hover:text-ink transition-colors"
-          >
-            <ArrowLeft size={18} />
-            返回
+          <button onClick={() => router.back()} className="text-slate-t hover:text-ink transition-colors mr-3">
+            <ArrowLeft size={20} />
+          </button>
+          <span className="flex-1 font-semibold text-ink text-sm truncate">{product.name}</span>
+          <button onClick={() => router.push('/shop/cart')} className="text-slate-t hover:text-ink p-1">
+            <ShoppingCart size={20} />
           </button>
         </div>
       </div>
 
-      {/* Scrollable content */}
       <div className="flex-1 pb-32 max-w-2xl mx-auto w-full">
-        {/* Product image */}
-        <div className="aspect-square w-full bg-surface overflow-hidden">
-          <img
-            src={product.imageUrl}
-            alt={product.name}
-            className="w-full h-full object-cover"
-          />
-        </div>
+        <ImageGallery images={product.images.length ? product.images : [product.imageUrl]} alt={product.name} />
 
-        <div className="p-4 space-y-4">
-          {/* Vendor */}
-          <span className="inline-block bg-primary-bg text-primary text-xs font-medium px-2.5 py-1 rounded-full">
-            {product.vendorName}
-          </span>
-
-          {/* Name */}
-          <h1 className="text-xl font-bold text-ink leading-snug">{product.name}</h1>
-
-          {/* Rating */}
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-0.5">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Star
-                  key={i}
-                  size={14}
-                  className={i < Math.round(product.rating) ? 'fill-amber-400 text-amber-400' : 'text-gray-200 fill-gray-200'}
-                />
-              ))}
-            </div>
-            <span className="text-sm font-medium text-ink">{product.rating}</span>
-            <span className="text-xs text-slate-t">（{product.reviewCount} 則評論）</span>
+        {/* Price block */}
+        <div className="bg-white px-4 pt-3 pb-4 mb-2">
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <span className="text-2xl font-black text-accent">{formatPrice(product.price)}</span>
+            {product.originalPrice && (
+              <span className="text-sm text-slate-t line-through">{formatPrice(product.originalPrice)}</span>
+            )}
+            {discount && (
+              <span className="text-xs bg-accent text-white px-1.5 py-0.5 rounded font-bold">-{discount}%</span>
+            )}
           </div>
 
-          {/* Tags */}
+          <h1 className="text-base font-bold text-ink mt-2 leading-snug">{product.name}</h1>
+
+          <div className="flex items-center gap-3 mt-2 text-xs text-slate-t">
+            <span className="flex items-center gap-0.5">
+              <Star size={12} className="fill-amber-400 text-amber-400" />
+              <span className="font-medium text-ink">{product.rating}</span>
+            </span>
+            <span>{product.reviewCount.toLocaleString()} 評論</span>
+            {product.stock <= 10 && product.stock > 0 && (
+              <span className="text-amber-600 font-medium">僅剩 {product.stock} 件</span>
+            )}
+            {soldOut && <span className="text-red-500 font-medium">暫時缺貨</span>}
+          </div>
+
           {product.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-1.5 mt-2.5">
               {product.tags.map(tag => (
-                <span key={tag} className="bg-surface text-slate-t text-xs px-2.5 py-1 rounded-full border border-border-t">
-                  {tag}
+                <span key={tag} className="bg-surface text-slate-t text-xs px-2 py-0.5 rounded-full border border-border-t">
+                  #{tag}
                 </span>
               ))}
             </div>
           )}
-
-          {/* Price */}
-          <div className="flex items-baseline gap-3">
-            <span className="text-2xl font-black text-primary">{formatPrice(product.price)}</span>
-            {product.originalPrice && (
-              <span className="text-sm text-slate-t line-through">{formatPrice(product.originalPrice)}</span>
-            )}
-          </div>
-
-          {/* Low stock warning */}
-          {product.stock > 0 && product.stock <= 10 && (
-            <p className="text-xs text-amber-600 font-medium">⚠️ 僅剩 {product.stock} 件</p>
-          )}
-          {soldOut && (
-            <p className="text-xs text-red-500 font-medium">暫時缺貨</p>
-          )}
-
-          <hr className="border-border-t" />
-
-          {/* Specs */}
-          {Object.keys(product.specs).length > 0 && (
-            <div>
-              <h3 className="text-sm font-semibold text-ink mb-2">商品規格</h3>
-              <table className="w-full text-sm">
-                <tbody>
-                  {Object.entries(product.specs).map(([key, val]) => (
-                    <tr key={key} className="border-b border-border-t last:border-0">
-                      <td className="py-2 pr-4 text-slate-t w-1/3">{key}</td>
-                      <td className="py-2 text-ink font-medium">{val}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          <hr className="border-border-t" />
-
-          {/* Description */}
-          <div>
-            <h3 className="text-sm font-semibold text-ink mb-2">商品說明</h3>
-            <p className="text-sm text-slate-t leading-relaxed">{product.description}</p>
-          </div>
         </div>
+
+        {/* Vendor */}
+        {vendor && <div className="mb-2"><VendorSection vendor={vendor} /></div>}
+
+        {/* Tabs: description + specs */}
+        <div className="mb-2"><ProductInfoTabs product={product} /></div>
       </div>
 
       {/* Sticky bottom bar */}
-      <div className="fixed bottom-0 inset-x-0 z-30 bg-white border-t border-border-t safe-bottom">
-        <div className="flex items-center gap-3 px-4 py-3 max-w-2xl mx-auto w-full">
-          {/* Qty selector */}
-          <div className="flex items-center gap-2 border border-border-t rounded-xl overflow-hidden">
+      <div className="fixed bottom-16 left-0 right-0 z-30 border-t border-border-t bg-white md:bottom-0 md:left-60">
+        <div className="flex items-center gap-2 px-4 py-3 max-w-2xl mx-auto w-full">
+          <div className="flex items-center border border-border-t rounded-xl overflow-hidden shrink-0">
             <button
               onClick={() => setQty(q => Math.max(1, q - 1))}
               disabled={soldOut || qty <= 1}
-              className="w-10 h-10 flex items-center justify-center text-slate-t hover:text-ink disabled:opacity-30 transition-colors"
+              className="w-9 h-9 flex items-center justify-center text-slate-t hover:text-ink disabled:opacity-30"
             >
-              <Minus size={16} />
+              <Minus size={15} />
             </button>
             <span className="w-8 text-center font-semibold text-ink text-sm">{qty}</span>
             <button
               onClick={() => setQty(q => Math.min(product.stock, q + 1))}
               disabled={soldOut || qty >= product.stock}
-              className="w-10 h-10 flex items-center justify-center text-slate-t hover:text-ink disabled:opacity-30 transition-colors"
+              className="w-9 h-9 flex items-center justify-center text-slate-t hover:text-ink disabled:opacity-30"
             >
-              <Plus size={16} />
+              <Plus size={15} />
             </button>
           </div>
-
-          {/* Add to cart */}
           <Button
             onClick={handleAdd}
             disabled={soldOut}
-            className="flex-1 h-10 bg-primary hover:bg-primary-hover text-white font-semibold"
+            variant="outline"
+            className="flex-1 h-10 border-primary text-primary hover:bg-primary-bg font-semibold"
           >
-            {soldOut ? '暫時缺貨' : '加入購物車'}
+            加入購物車
+          </Button>
+          <Button
+            onClick={handleBuyNow}
+            disabled={soldOut}
+            className="flex-1 h-10 bg-accent hover:bg-accent-hover text-white font-semibold"
+          >
+            立即購買
           </Button>
         </div>
       </div>

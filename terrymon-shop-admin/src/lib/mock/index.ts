@@ -12,7 +12,7 @@ export const MOCK_VENDOR: Vendor = {
 export const MOCK_PRODUCTS: Product[] = [
   {
     id: 'PR001', vendorId: 'V001', name: '主食鮮食罐－雞肉口味 185g',
-    category: '食品', subcategory: '主食罐',
+    category: '食品', subcategory: '主食罐', storeSection: '鮮食主食',
     price: 89, originalPrice: 99, cost: 45, stock: 120,
     imageUrl: 'https://placehold.co/300x300/FFF6E8/F28C00?text=🥩',
     images: [], description: '嚴選台灣溯源雞肉，無防腐劑',
@@ -22,7 +22,7 @@ export const MOCK_PRODUCTS: Product[] = [
   },
   {
     id: 'PR006', vendorId: 'V001', name: '凍乾生骨肉零食 雞柳 100g',
-    category: '食品', subcategory: '零食',
+    category: '食品', subcategory: '零食', storeSection: '零食獎勵',
     price: 260, cost: 120, stock: 200,
     imageUrl: 'https://placehold.co/300x300/FFF6E8/F28C00?text=🦴',
     images: [], description: '低溫凍乾鎖住營養，單一蛋白',
@@ -32,7 +32,7 @@ export const MOCK_PRODUCTS: Product[] = [
   },
   {
     id: 'PR007', vendorId: 'V001', name: '益生菌粉 30包',
-    category: '保健', subcategory: '腸胃',
+    category: '保健', subcategory: '腸胃', storeSection: '腸胃保健',
     price: 420, cost: 180, stock: 0,
     imageUrl: 'https://placehold.co/300x300/FFF6E8/F28C00?text=🌿',
     images: [], description: '多菌種改善腸道菌叢',

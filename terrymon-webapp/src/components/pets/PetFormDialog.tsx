@@ -69,7 +69,7 @@ export default function PetFormDialog({ open, onOpenChange, pet }: Props) {
   )
 }
 
-function initialForm(pet?: Pet | null): PetForm {
+function initialForm(pet?: Pet | null, memberName?: string): PetForm {
   return pet ? {
       name: pet.name,
       species: pet.species,
@@ -85,13 +85,13 @@ function initialForm(pet?: Pet | null): PetForm {
     bloodType: pet.bloodType ?? '',
     caregiver: pet.caregiver ?? '',
     notes: pet.notes,
-  } : emptyForm
+  } : { ...emptyForm, caregiver: memberName ?? '' }
 }
 
 function PetFormContent({ pet, onOpenChange }: Pick<Props, 'pet' | 'onOpenChange'>) {
   const router = useRouter()
-  const { addPet, updatePet, removePet } = useAuthStore()
-  const [form, setForm] = useState<PetForm>(() => initialForm(pet))
+  const { addPet, updatePet, removePet, member } = useAuthStore()
+  const [form, setForm] = useState<PetForm>(() => initialForm(pet, member?.name))
   const [breeds, setBreeds] = useState<BreedOption[]>([])
   const [saving, setSaving] = useState(false)
   const isEdit = Boolean(pet)
@@ -152,7 +152,7 @@ function PetFormContent({ pet, onOpenChange }: Pick<Props, 'pet' | 'onOpenChange
 
       toast.success(pet ? '寵物資料已更新' : '已新增寵物')
       onOpenChange(false)
-      router.push(`/pets/${nextPet.id}`)
+      router.push('/pets')
       router.refresh()
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '儲存失敗')
@@ -171,7 +171,6 @@ function PetFormContent({ pet, onOpenChange }: Pick<Props, 'pet' | 'onOpenChange
       removePet(pet.id)
       toast.success('寵物已移除')
       onOpenChange(false)
-      router.push('/pets')
       router.refresh()
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '移除失敗')

@@ -10,14 +10,15 @@ import { createClient } from '@/lib/supabase/client'
 import type { Notification } from '@/types'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const { isLoggedIn, member } = useAuthStore()
+  const { isLoggedIn, member, _hydrated } = useAuthStore()
   const { setNotifications, addNotification } = useNotifStore()
   const router = useRouter()
 
   useEffect(() => {
+    if (!_hydrated) return
     if (!isLoggedIn) { router.replace('/login'); return }
     api.getNotifications().then(setNotifications)
-  }, [isLoggedIn, member, router, setNotifications])
+  }, [_hydrated, isLoggedIn, member, router, setNotifications])
 
   useEffect(() => {
     if (!isLoggedIn || !member?.id) return
@@ -48,7 +49,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     return () => { supabase.removeChannel(channel) }
   }, [isLoggedIn, member?.id, addNotification])
 
-  if (!isLoggedIn) return null
+  if (!_hydrated || !isLoggedIn) return null
 
   return (
     <div className="flex min-h-screen bg-[#fff8ed]">

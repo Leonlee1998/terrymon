@@ -37,7 +37,8 @@ export interface Member {
 // ?? 撖萇 ?????????????????????????????????????????????
 export interface Pet {
   id: string
-  memberId: string
+  memberId: string            // 原始登記飼主（不變）
+  primaryCaregiverId?: string // 當前主要照顧者（可轉移；未設定 = 同 memberId）
   name: string
   species: Species
   breedId?: string
@@ -53,6 +54,20 @@ export interface Pet {
   caregiver?: string
   notes: string
   isActive: boolean
+}
+
+export type TransferType = 'foster' | 'adoption' | 'surrender' | 'return'
+
+export interface PetTransfer {
+  id: string
+  petId: string
+  fromMemberId: string
+  toMemberId: string
+  fromMemberName?: string
+  toMemberName?: string
+  transferType: TransferType
+  reason?: string
+  transferredAt: string
 }
 
 export type BreedLegalStatusTw = 'allowed' | 'restricted' | 'prohibited' | 'legacy_only' | 'unknown'
@@ -161,6 +176,20 @@ export interface Appointment {
 }
 
 // ?? ?? ?????????????????????????????????????????????
+export interface Vendor {
+  id: string
+  storeName: string
+  description: string
+  storeDescription?: string
+  phone?: string
+  logoUrl?: string
+  rating: number
+  reviewCount: number
+  productCount: number
+  isVerified: boolean
+  joinedAt: string
+}
+
 export interface Product {
   id: string
   vendorId: string
@@ -169,6 +198,7 @@ export interface Product {
   petSpecies?: 'all' | 'dog' | 'cat' | 'small_pet' | 'bird' | 'fish'
   category: string
   subcategory?: string
+  storeSection?: string
   price: number
   originalPrice?: number
   stock: number
@@ -190,6 +220,8 @@ export interface CartItem {
 export interface Order {
   id: string
   memberId: string
+  vendorId?: string
+  vendorName?: string
   items: OrderItem[]
   status: OrderStatus
   totalPrice: number
@@ -276,8 +308,11 @@ export interface EmergencyContact {
   id: string
   petId: string
   name: string
-  phone: string
+  phone?: string
+  lineId?: string
+  email?: string
   relation: string
+  note?: string
 }
 
 // ── 共同照護者 ────────────────────────────────────────
@@ -308,5 +343,107 @@ export interface PetCaregiver {
   status: 'pending' | 'active'
   permissions: CaregiverPermissions
   inviteExpiresAt?: string
+}
+
+// ── 機構 / 中途 ───────────────────────────────────────
+export type OrgType   = 'individual' | 'shelter' | 'rescue'
+export type OrgStatus = 'pending' | 'approved' | 'suspended'
+
+export interface Organization {
+  id: string
+  memberId: string
+  name: string
+  type: OrgType
+  description: string
+  address?: string
+  phone?: string
+  logoUrl?: string
+  certUrl?: string
+  socialLinks: Record<string, string>
+  status: OrgStatus
+  appliedAt: string
+  approvedAt?: string
+}
+
+// ── 送養追蹤 ──────────────────────────────────────────
+export interface AdoptionCheckpointResponse {
+  q: string
+  a: string
+}
+
+export interface AdoptionCheckpoint {
+  id: string
+  planId: string
+  dueMonth: number
+  dueDate: string
+  status: 'pending' | 'submitted' | 'overdue'
+  submittedAt?: string
+  photoUrls: string[]
+  responses: AdoptionCheckpointResponse[]
+}
+
+export interface CheckpointDetail {
+  checkpoint: AdoptionCheckpoint
+  questions: string[]
+  orgName: string
+  pet: {
+    id: string
+    name: string
+    species: string
+    breed: string
+    photoUrl: string
+  }
+}
+
+// ── 日常紀錄 ──────────────────────────────────────────────
+export interface DietLogData {
+  mealTime: string        // 'morning' | 'noon' | 'evening' | custom
+  mealTimeLabel: string   // '早餐' | '午餐' | '晚餐' | 自訂文字
+  foodName: string
+  amount?: string
+}
+
+export interface PoopLogData {
+  consistency: 'normal' | 'soft' | 'loose' | 'constipated'
+  color: 'brown' | 'yellow' | 'black' | 'bloody'
+}
+
+export interface VomitLogData {
+  content: 'food' | 'bile' | 'blood' | 'hair' | 'other'
+  contentLabel: string
+}
+
+export interface PetDailyLog {
+  id: string
+  petId: string
+  logDate: string
+  type: 'diet' | 'poop' | 'vomit'
+  data: DietLogData | PoopLogData | VomitLogData
+  notes?: string
+  createdAt: string
+}
+
+export interface VaccineReminder {
+  id: string
+  petId: string
+  name: string
+  lastDoneDate?: string
+  nextDueDate?: string
+  notes?: string
+  createdAt: string
+}
+
+// ── 送養追蹤計畫 ──────────────────────────────────────────
+export interface AdoptionTrackingPlan {
+  id: string
+  organizationId: string
+  petId: string
+  petName: string
+  adopterMemberId: string
+  adoptionDate: string
+  scheduleMonths: number[]
+  reportQuestions: string[]
+  status: 'active' | 'completed' | 'cancelled'
+  createdAt: string
 }
 

@@ -2,7 +2,7 @@
 -- 與 appointments 分開：appointments 由 POS / 預約系統寫入，此表由飼主自行管理
 
 create table if not exists member_events (
-  id          uuid        primary key default uuid_generate_v4(),
+  id          uuid        primary key default gen_random_uuid(),
   member_id   uuid        not null references members(id) on delete cascade,
   pet_id      uuid        references pets(id) on delete set null,
   title       text        not null,

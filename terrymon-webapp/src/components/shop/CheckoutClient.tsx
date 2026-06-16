@@ -7,8 +7,19 @@ import { useCartStore } from '@/stores/cartStore'
 import { api } from '@/services/api'
 import CheckoutAddressStep, { type AddressValues } from './CheckoutAddressStep'
 import CheckoutConfirmStep from './CheckoutConfirmStep'
+import type { CartItem } from '@/types'
 
 type Step = 'address' | 'confirm'
+
+function groupByVendor(items: CartItem[]) {
+  const map = new Map<string, { vendorId: string; vendorName: string; items: CartItem[] }>()
+  for (const item of items) {
+    const key = item.product.vendorId
+    if (!map.has(key)) map.set(key, { vendorId: key, vendorName: item.product.vendorName, items: [] })
+    map.get(key)!.items.push(item)
+  }
+  return [...map.values()]
+}
 
 export default function CheckoutClient() {
   const router = useRouter()
@@ -26,25 +37,35 @@ export default function CheckoutClient() {
     if (!formData) return
     setLoading(true)
     try {
-      const order = await api.placeOrder({
-        items,
-        recipientName: formData.recipientName,
-        phone: formData.phone,
-        address: formData.address,
-        notes: formData.notes,
-      })
+      const groups = groupByVendor(items)
 
+      // 每個商家建立獨立訂單
+      const orders = await Promise.all(
+        groups.map(group =>
+          api.placeOrder({
+            items: group.items,
+            vendorId: group.vendorId,
+            vendorName: group.vendorName,
+            recipientName: formData.recipientName,
+            phone: formData.phone,
+            address: formData.address,
+            notes: formData.notes,
+          })
+        )
+      )
+
+      // 用第一筆訂單 ID 作為 ECPay 交易號（含商家數量）
+      const primaryOrderId = orders[0].id
       const res = await fetch('/api/ecpay/pay', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId: order.id, paymentMethod }),
+        body: JSON.stringify({ orderId: primaryOrderId, paymentMethod, orderCount: orders.length }),
       })
       const data = await res.json()
       if (!res.ok || !data.params) throw new Error(data.error ?? '付款系統錯誤')
 
       clear()
 
-      // Build hidden form and submit to ECPay payment page
       const form = document.createElement('form')
       form.method = 'POST'
       form.action = data.actionUrl

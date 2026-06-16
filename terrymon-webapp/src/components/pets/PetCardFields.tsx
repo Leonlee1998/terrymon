@@ -50,14 +50,12 @@ export default function PetCardFields({ form, onChange }: Props) {
             placeholder="例：DEA 1.1+、A型"
           />
         </label>
-        <label className="space-y-1.5">
-          <span className="text-sm font-medium text-ink">照顧者</span>
-          <Input
-            value={form.caregiver}
-            onChange={e => onChange({ caregiver: e.target.value })}
-            placeholder="例：王小明"
-          />
-        </label>
+        <div className="space-y-1.5">
+          <span className="text-sm font-medium text-ink">主要飼主</span>
+          <div className="flex h-10 items-center rounded-md border border-border-t bg-surface px-3 text-sm text-slate-t">
+            {form.caregiver || '（登記後自動帶入）'}
+          </div>
+        </div>
       </div>
     </>
   )

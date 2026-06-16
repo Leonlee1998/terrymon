@@ -18,6 +18,7 @@ const schema = z.object({
   petSpecies: z.enum(['all', 'dog', 'cat', 'small_pet', 'bird', 'fish']),
   category: z.string().min(1, '請選擇商品分類'),
   subcategory: z.string().optional(),
+  storeSection: z.string().optional(),
   price: z.number().min(1, '售價必須大於 0'),
   originalPrice: z.number().optional(),
   cost: z.number().min(0),
@@ -45,6 +46,7 @@ export default function ProductEdit() {
       petSpecies: product.petSpecies ?? 'all',
       category: product.category,
       subcategory: product.subcategory,
+      storeSection: product.storeSection,
       price: product.price,
       originalPrice: product.originalPrice,
       cost: product.cost,
@@ -87,6 +89,7 @@ export default function ProductEdit() {
         petSpecies: data.petSpecies,
         category: data.category,
         subcategory: data.subcategory,
+        storeSection: data.storeSection || undefined,
         price: data.price,
         originalPrice: data.originalPrice,
         cost: data.cost,
@@ -140,6 +143,11 @@ export default function ProductEdit() {
             <div className="col-span-2">
               <label className="mb-1 block text-sm font-medium text-ink">子分類</label>
               <Input {...register('subcategory')} />
+            </div>
+            <div className="col-span-2">
+              <label className="mb-1 block text-sm font-medium text-ink">商家頁分類</label>
+              <Input {...register('storeSection')} placeholder="例如：熱銷推薦、新品上市、本月特惠" />
+              <p className="mt-1 text-xs text-slate-t">顯示在商家頁面的自訂分類，方便買家瀏覽</p>
             </div>
           </div>
           <div>

@@ -3,14 +3,17 @@ import {
   MOCK_HEALTH_DATA, MOCK_DEVICES, MOCK_PRODUCTS, MOCK_ORDERS,
   MOCK_DOCUMENTS, MOCK_NOTIFICATIONS, MOCK_GROOMING_RECORDS,
 } from '@/lib/mock'
+import { MOCK_VENDORS } from '@/lib/mock/shop'
 import { getMockBreeds } from '@/lib/breeds'
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase'
 import type { ProductPetSpecies } from '@/lib/shopFilters'
 import type {
   Member, Pet, MedicalRecord, Appointment, AppointmentStatus,
-  PetHealthData, AIoTDevice, Product, Order, OrderItem,
+  PetHealthData, AIoTDevice, Product, Vendor, Order, OrderItem,
   DocItem, Notification, GroomingRecord, CartItem, PrescriptionItem, BreedOption,
-  MemberEvent, EmergencyContact, CaregiverPermissions, PetCaregiver,
+  MemberEvent, EmergencyContact, CaregiverPermissions, PetCaregiver, PetTransfer, TransferType,
+  Organization, OrgType, OrgStatus, AdoptionCheckpoint, CheckpointDetail,
+  AdoptionTrackingPlan, PetDailyLog, VaccineReminder,
 } from '@/types'
 import { DEFAULT_CAREGIVER_PERMISSIONS } from '@/types'
 
@@ -95,6 +98,7 @@ function mapPet(row: DbRow): Pet {
   return {
     id: stringValue(row.id),
     memberId: stringValue(row.member_id),
+    primaryCaregiverId: optionalString(row.primary_caregiver_id),
     name: stringValue(row.name),
     species: stringValue(row.species, 'other') as Pet['species'],
     breedId: optionalString(row.breed_id),
@@ -267,6 +271,7 @@ function mapProduct(row: DbRow): Product {
     description: stringValue(row.description),
     specs: stringRecord(row.specs),
     tags: stringArray(row.tags),
+    storeSection: optionalString(row.store_section),
     rating: numberValue(row.rating),
     reviewCount: numberValue(row.review_count),
     isActive: stringValue(row.status) === 'active',
@@ -287,6 +292,8 @@ function mapOrder(row: DbRow): Order {
   return {
     id: stringValue(row.id),
     memberId: stringValue(row.member_id),
+    vendorId: optionalString(row.vendor_id),
+    vendorName: optionalString(row.vendor_name),
     items: recordArray(row.order_items).map(mapOrderItem),
     status: stringValue(row.status, 'pending') as Order['status'],
     totalPrice: numberValue(row.subtotal, numberValue(row.total_price)),
@@ -295,6 +302,22 @@ function mapOrder(row: DbRow): Order {
     createdAt: stringValue(row.created_at),
     shippedAt: optionalString(row.shipped_at),
     trackingNumber: optionalString(row.tracking_number),
+  }
+}
+
+function mapVendor(row: DbRow): Vendor {
+  return {
+    id: stringValue(row.id),
+    storeName: stringValue(row.store_name),
+    description: stringValue(row.description),
+    storeDescription: optionalString(row.description),
+    phone: optionalString(row.phone),
+    logoUrl: optionalString(row.logo_url),
+    rating: numberValue(row.rating, 5),
+    reviewCount: numberValue(row.review_count),
+    productCount: numberValue(row.product_count),
+    isVerified: booleanValue(row.is_verified),
+    joinedAt: stringValue(row.created_at),
   }
 }
 
@@ -322,6 +345,55 @@ function mapMemberEvent(row: DbRow): MemberEvent {
     time: optionalString(row.time)?.slice(0, 5),
     notes: optionalString(row.notes),
     createdAt: stringValue(row.created_at),
+  }
+}
+
+function mapOrganization(row: DbRow): Organization {
+  return {
+    id: stringValue(row.id),
+    memberId: stringValue(row.member_id),
+    name: stringValue(row.name),
+    type: stringValue(row.type) as OrgType,
+    description: stringValue(row.description),
+    address: optionalString(row.address),
+    phone: optionalString(row.phone),
+    logoUrl: optionalString(row.logo_url),
+    certUrl: optionalString(row.cert_url),
+    socialLinks: typeof row.social_links === 'object' && row.social_links !== null && !Array.isArray(row.social_links)
+      ? row.social_links as Record<string, string>
+      : {},
+    status: stringValue(row.status, 'pending') as OrgStatus,
+    appliedAt: stringValue(row.applied_at),
+    approvedAt: optionalString(row.approved_at),
+  }
+}
+
+function mapCheckpointDetail(row: DbRow): CheckpointDetail {
+  const plan = recordValue(row.adoption_tracking_plans)
+  const org  = recordValue(plan.organizations)
+  const pet  = recordValue(plan.pets)
+  return {
+    checkpoint: {
+      id: stringValue(row.id),
+      planId: stringValue(row.plan_id),
+      dueMonth: numberValue(row.due_month),
+      dueDate: stringValue(row.due_date),
+      status: stringValue(row.status, 'pending') as AdoptionCheckpoint['status'],
+      submittedAt: optionalString(row.submitted_at),
+      photoUrls: stringArray(row.photo_urls),
+      responses: Array.isArray(row.responses)
+        ? row.responses as { q: string; a: string }[]
+        : [],
+    },
+    questions: Array.isArray(plan.report_questions) ? plan.report_questions as string[] : [],
+    orgName: stringValue(org.name),
+    pet: {
+      id: stringValue(pet.id),
+      name: stringValue(pet.name),
+      species: stringValue(pet.species),
+      breed: stringValue(pet.breed),
+      photoUrl: stringValue(pet.photo_url),
+    },
   }
 }
 
@@ -520,6 +592,10 @@ export const api = {
       photoUrl: data.photoUrl ?? '',
       allergies: data.allergies ?? [],
       chipId: data.chipId || undefined,
+      gender: data.gender,
+      isNeutered: data.isNeutered,
+      bloodType: data.bloodType,
+      caregiver: data.caregiver,
       notes: data.notes ?? '',
       isActive: true,
     }),
@@ -554,6 +630,10 @@ export const api = {
         photoUrl: data.photoUrl ?? '',
         allergies: data.allergies ?? [],
         chipId: data.chipId || undefined,
+        gender: data.gender,
+        isNeutered: data.isNeutered,
+        bloodType: data.bloodType,
+        caregiver: data.caregiver,
         notes: data.notes ?? '',
       } as Pet
     },
@@ -721,6 +801,8 @@ export const api = {
 
   placeOrder: async (data: {
     items: CartItem[]
+    vendorId?: string
+    vendorName?: string
     recipientName?: string
     phone?: string
     address?: string
@@ -735,6 +817,8 @@ export const api = {
         .from('orders')
         .insert({
           member_id: memberId,
+          vendor_id: data.vendorId ?? null,
+          vendor_name: data.vendorName ?? null,
           recipient_name: data.recipientName ?? '',
           recipient_phone: data.phone ?? '',
           address: data.address ?? '',
@@ -786,6 +870,19 @@ export const api = {
     { id: 'ORD_NEW', success: true },
   ),
 
+  getVendor: async (id: string): Promise<Vendor> => fallback(
+    async () => {
+      const { data, error } = await getSupabase()!.from('vendors').select('*').eq('id', id).single()
+      if (error) throw error
+      return mapVendor(data)
+    },
+    () => {
+      const vendor = MOCK_VENDORS[id]
+      if (!vendor) return { id, storeName: '未知商家', description: '', rating: 5, reviewCount: 0, productCount: 0, isVerified: false, joinedAt: '' }
+      return vendor
+    },
+  ),
+
   getProduct: async (id: string): Promise<Product> => fallback(
     async () => {
       const { data, error } = await getSupabase()!
@@ -801,6 +898,20 @@ export const api = {
       if (!product) throw new Error('Product not found')
       return product
     },
+  ),
+
+  getVendorProducts: async (vendorId: string): Promise<Product[]> => fallback(
+    async () => {
+      const { data, error } = await getSupabase()!
+        .from('products')
+        .select('*, vendors(store_name)')
+        .eq('vendor_id', vendorId)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+      if (error) throw error
+      return data.map(mapProduct)
+    },
+    () => MOCK_PRODUCTS.filter(p => p.vendorId === vendorId && p.isActive),
   ),
 
   getDocuments: async (): Promise<DocItem[]> => fallback(
@@ -933,14 +1044,17 @@ export const api = {
         .from('pet_emergency_contacts')
         .select('*')
         .eq('pet_id', petId)
-        .order('sort_order', { ascending: true })
+        .order('created_at', { ascending: true })
       if (error) throw error
       return data.map(r => ({
         id: stringValue(r.id),
         petId: stringValue(r.pet_id),
         name: stringValue(r.name),
-        phone: stringValue(r.phone),
+        phone: optionalString(r.phone),
+        lineId: optionalString(r.line_id),
+        email: optionalString(r.email),
         relation: stringValue(r.relation),
+        note: optionalString(r.note),
       }))
     },
     () => _mockEmergencyContacts[petId] ?? [],
@@ -948,16 +1062,33 @@ export const api = {
 
   addEmergencyContact: async (
     petId: string,
-    data: { name: string; phone: string; relation: string },
+    data: { name: string; phone?: string; lineId?: string; email?: string; relation: string; note?: string },
   ): Promise<EmergencyContact> => fallback(
     async () => {
       const { data: row, error } = await getSupabase()!
         .from('pet_emergency_contacts')
-        .insert({ pet_id: petId, name: data.name, phone: data.phone, relation: data.relation })
+        .insert({
+          pet_id: petId,
+          name: data.name,
+          phone: data.phone || null,
+          line_id: data.lineId || null,
+          email: data.email || null,
+          relation: data.relation,
+          note: data.note || null,
+        })
         .select('*')
         .single()
       if (error) throw error
-      return { id: stringValue(row.id), petId, name: data.name, phone: data.phone, relation: data.relation }
+      return {
+        id: stringValue(row.id),
+        petId,
+        name: data.name,
+        phone: optionalString(row.phone),
+        lineId: optionalString(row.line_id),
+        email: optionalString(row.email),
+        relation: data.relation,
+        note: optionalString(row.note),
+      }
     },
     () => {
       const contact: EmergencyContact = { id: `EC_${Date.now()}`, petId, ...data }
@@ -1141,5 +1272,305 @@ export const api = {
       }
       return { success: true }
     },
+  ),
+
+  // ── 機構 / 中途 ──────────────────────────────────────────────────
+  getMyOrganization: async (): Promise<Organization | null> => fallback(
+    async () => {
+      const memberId = await getActiveMemberId()
+      const { data } = await getSupabase()!
+        .from('organizations')
+        .select('*')
+        .eq('member_id', memberId)
+        .order('applied_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      return data ? mapOrganization(data) : null
+    },
+    () => null,
+  ),
+
+  applyOrganization: async (payload: {
+    name: string
+    type: OrgType
+    description?: string
+    phone?: string
+    address?: string
+    certUrl?: string
+  }): Promise<Organization> => {
+    const response = await fetch('/api/organizations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: payload.name,
+        type: payload.type,
+        description: payload.description,
+        phone: payload.phone,
+        address: payload.address,
+        cert_url: payload.certUrl,
+      }),
+    })
+    if (!response.ok) {
+      const err = await response.json().catch(() => null) as { error?: string } | null
+      throw new Error(err?.error ?? '申請失敗')
+    }
+    return response.json() as Promise<Organization>
+  },
+
+  // ── 送養追蹤回報 ─────────────────────────────────────────────────
+  getCheckpoint: async (id: string): Promise<CheckpointDetail | null> => fallback(
+    async () => {
+      const { data, error } = await getSupabase()!
+        .from('adoption_checkpoints')
+        .select(`
+          *,
+          adoption_tracking_plans (
+            report_questions,
+            organizations ( name ),
+            pets ( id, name, species, breed, photo_url )
+          )
+        `)
+        .eq('id', id)
+        .single()
+      if (error) throw error
+      return mapCheckpointDetail(data as DbRow)
+    },
+    () => null,
+  ),
+
+  submitCheckpoint: async (
+    id: string,
+    data: { photoUrls: string[]; responses: { q: string; a: string }[] },
+  ): Promise<{ success: boolean }> => fallback(
+    async () => {
+      const { error } = await getSupabase()!
+        .from('adoption_checkpoints')
+        .update({
+          status: 'submitted',
+          submitted_at: new Date().toISOString(),
+          photo_urls: data.photoUrls,
+          responses: data.responses,
+        })
+        .eq('id', id)
+      if (error) throw error
+      return { success: true }
+    },
+    () => ({ success: true }),
+  ),
+
+  // ── 送養追蹤計畫（機構建立）────────────────────────────────────
+  getMyAdoptionPlans: async (orgId: string): Promise<AdoptionTrackingPlan[]> => fallback(
+    async () => {
+      const { data, error } = await getSupabase()!
+        .from('adoption_tracking_plans')
+        .select('*, pets(name)')
+        .eq('organization_id', orgId)
+        .order('created_at', { ascending: false })
+      if (error) throw error
+      return (data ?? []).map(r => {
+        const pet = r.pets as { name: string } | null
+        return {
+          id: stringValue(r.id),
+          organizationId: stringValue(r.organization_id),
+          petId: stringValue(r.pet_id),
+          petName: pet ? stringValue(pet.name) : '',
+          adopterMemberId: stringValue(r.adopter_member_id),
+          adoptionDate: stringValue(r.adoption_date),
+          scheduleMonths: Array.isArray(r.schedule_months) ? r.schedule_months as number[] : [],
+          reportQuestions: Array.isArray(r.report_questions) ? r.report_questions as string[] : [],
+          status: stringValue(r.status, 'active') as AdoptionTrackingPlan['status'],
+          createdAt: stringValue(r.created_at),
+        }
+      })
+    },
+    () => [],
+  ),
+
+  createAdoptionPlan: async (payload: {
+    petId: string
+    adopterMemberId: string
+    adoptionDate: string
+    scheduleMonths: number[]
+    reportQuestions: string[]
+  }): Promise<{ id: string; success: boolean }> => {
+    const response = await fetch('/api/adoption-tracking', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        petId: payload.petId,
+        adopterMemberId: payload.adopterMemberId,
+        adoptionDate: payload.adoptionDate,
+        scheduleMonths: payload.scheduleMonths,
+        reportQuestions: payload.reportQuestions,
+      }),
+    })
+    if (!response.ok) {
+      const err = await response.json().catch(() => null) as { error?: string } | null
+      throw new Error(err?.error ?? '建立送養計畫失敗')
+    }
+    return response.json() as Promise<{ id: string; success: boolean }>
+  },
+
+  // ── 日常紀錄 ─────────────────────────────────────────────────────
+  getDailyLogs: async (petId: string, date?: string): Promise<PetDailyLog[]> => fallback(
+    async () => {
+      let q = getSupabase()!.from('pet_daily_logs').select('*')
+        .eq('pet_id', petId).order('created_at', { ascending: false })
+      if (date) q = q.eq('log_date', date)
+      const { data, error } = await q
+      if (error) throw error
+      return (data ?? []).map(r => ({
+        id: stringValue(r.id), petId: stringValue(r.pet_id),
+        logDate: stringValue(r.log_date),
+        type: stringValue(r.type) as PetDailyLog['type'],
+        data: (r.data ?? {}) as PetDailyLog['data'],
+        notes: optionalString(r.notes), createdAt: stringValue(r.created_at),
+      }))
+    },
+    () => [],
+  ),
+
+  addDailyLog: async (
+    petId: string,
+    payload: { type: PetDailyLog['type']; data: object; notes?: string; logDate?: string },
+  ): Promise<PetDailyLog> => fallback(
+    async () => {
+      const memberId = await getActiveMemberId()
+      const { data, error } = await getSupabase()!.from('pet_daily_logs')
+        .insert({
+          pet_id: petId, member_id: memberId,
+          log_date: payload.logDate ?? new Date().toISOString().slice(0, 10),
+          type: payload.type, data: payload.data, notes: payload.notes ?? null,
+        })
+        .select('*').single()
+      if (error) throw error
+      return {
+        id: stringValue(data.id), petId,
+        logDate: stringValue(data.log_date),
+        type: payload.type, data: payload.data as PetDailyLog['data'],
+        notes: payload.notes, createdAt: stringValue(data.created_at),
+      }
+    },
+    () => ({
+      id: `LOG_${Date.now()}`, petId,
+      logDate: payload.logDate ?? new Date().toISOString().slice(0, 10),
+      type: payload.type, data: payload.data as PetDailyLog['data'],
+      notes: payload.notes, createdAt: new Date().toISOString(),
+    }),
+  ),
+
+  getVaccineReminders: async (petId: string): Promise<VaccineReminder[]> => fallback(
+    async () => {
+      const { data, error } = await getSupabase()!.from('pet_vaccine_reminders')
+        .select('*').eq('pet_id', petId).eq('is_active', true)
+        .order('next_due_date', { ascending: true })
+      if (error) throw error
+      return (data ?? []).map(r => ({
+        id: stringValue(r.id), petId: stringValue(r.pet_id),
+        name: stringValue(r.name),
+        lastDoneDate: optionalString(r.last_done_date),
+        nextDueDate: optionalString(r.next_due_date),
+        notes: optionalString(r.notes), createdAt: stringValue(r.created_at),
+      }))
+    },
+    () => [],
+  ),
+
+  addVaccineReminder: async (
+    petId: string,
+    payload: { name: string; nextDueDate?: string; lastDoneDate?: string; notes?: string },
+  ): Promise<VaccineReminder> => fallback(
+    async () => {
+      const memberId = await getActiveMemberId()
+      const { data, error } = await getSupabase()!.from('pet_vaccine_reminders')
+        .insert({
+          pet_id: petId, member_id: memberId,
+          name: payload.name, next_due_date: payload.nextDueDate ?? null,
+          last_done_date: payload.lastDoneDate ?? null, notes: payload.notes ?? null,
+        })
+        .select('*').single()
+      if (error) throw error
+      return {
+        id: stringValue(data.id), petId, name: payload.name,
+        nextDueDate: payload.nextDueDate, lastDoneDate: payload.lastDoneDate,
+        notes: payload.notes, createdAt: stringValue(data.created_at),
+      }
+    },
+    () => ({
+      id: `VAC_${Date.now()}`, petId, name: payload.name,
+      nextDueDate: payload.nextDueDate, lastDoneDate: payload.lastDoneDate,
+      notes: payload.notes, createdAt: new Date().toISOString(),
+    }),
+  ),
+
+  deleteVaccineReminder: async (id: string): Promise<{ success: boolean }> => fallback(
+    async () => {
+      const { error } = await getSupabase()!.from('pet_vaccine_reminders')
+        .update({ is_active: false }).eq('id', id)
+      if (error) throw error
+      return { success: true }
+    },
+    () => ({ success: true }),
+  ),
+
+  // ── 照顧權轉移 ──────────────────────────────────────────────────
+  getPetTransfers: async (petId: string): Promise<PetTransfer[]> => fallback(
+    async () => {
+      const { data, error } = await getSupabase()!
+        .from('pet_transfers')
+        .select('*, from:from_member_id(name), to:to_member_id(name)')
+        .eq('pet_id', petId)
+        .order('transferred_at', { ascending: false })
+      if (error) throw error
+      return data.map(r => ({
+        id: stringValue(r.id),
+        petId,
+        fromMemberId: stringValue(r.from_member_id),
+        toMemberId: stringValue(r.to_member_id),
+        fromMemberName: optionalString(recordValue(r.from).name),
+        toMemberName: optionalString(recordValue(r.to).name),
+        transferType: stringValue(r.transfer_type) as TransferType,
+        reason: optionalString(r.reason),
+        transferredAt: stringValue(r.transferred_at),
+      }))
+    },
+    () => [],
+  ),
+
+  transferPet: async (
+    petId: string,
+    data: { toMemberId: string; transferType: TransferType; reason?: string },
+  ): Promise<{ success: boolean }> => fallback(
+    async () => {
+      const supabase = getSupabase()!
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      const { data: member } = await supabase
+        .from('members').select('id').eq('supabase_uid', user.id).single()
+      if (!member) throw new Error('Member not found')
+
+      const fromMemberId = stringValue(member.id)
+
+      const { error: transferError } = await supabase
+        .from('pet_transfers')
+        .insert({
+          pet_id: petId,
+          from_member_id: fromMemberId,
+          to_member_id: data.toMemberId,
+          transfer_type: data.transferType,
+          reason: data.reason || null,
+        })
+      if (transferError) throw transferError
+
+      const { error: petError } = await supabase
+        .from('pets')
+        .update({ primary_caregiver_id: data.toMemberId })
+        .eq('id', petId)
+      if (petError) throw petError
+
+      return { success: true }
+    },
+    () => ({ success: true }),
   ),
 }

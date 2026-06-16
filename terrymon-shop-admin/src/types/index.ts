@@ -3,6 +3,7 @@ export type ProductPetSpecies = 'all' | 'dog' | 'cat' | 'small_pet' | 'bird' | '
 
 export interface ProductFormData {
   name: string; petSpecies: ProductPetSpecies; category: string; subcategory?: string
+  storeSection?: string
   price: number; originalPrice?: number; cost: number; stock: number
   description: string; tags: string[]; status: ProductStatus
 }
@@ -19,6 +20,7 @@ export interface Vendor {
 export interface Product {
   id: string; vendorId: string; name: string
   petSpecies?: ProductPetSpecies; category: string; subcategory?: string
+  storeSection?: string
   price: number; originalPrice?: number; cost: number
   stock: number; imageUrl: string; images: string[]
   description: string; specs: Record<string, string>; tags: string[]

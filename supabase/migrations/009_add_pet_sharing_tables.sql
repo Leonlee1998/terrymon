@@ -17,6 +17,10 @@ create table if not exists pet_emergency_contacts (
   created_at  timestamptz not null default now_utc()
 );
 
+-- 相容已存在的舊版 table（可能沒有 sort_order 欄位）
+alter table pet_emergency_contacts
+  add column if not exists sort_order integer not null default 0;
+
 create index if not exists pet_emergency_contacts_pet_idx
   on pet_emergency_contacts (pet_id, sort_order);
 

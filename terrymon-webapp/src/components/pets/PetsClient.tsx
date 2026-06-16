@@ -13,6 +13,7 @@ import GroomingTab from './GroomingTab'
 import HealthTab from './HealthTab'
 import PetFormDialog from './PetFormDialog'
 import PetOverviewTab from './PetOverviewTab'
+import DailyTab from './DailyTab'
 
 interface Props {
   pets: Pet[]
@@ -86,7 +87,7 @@ export default function PetsClient({
             <TabsTrigger value="medical" className="text-xs">醫療</TabsTrigger>
             <TabsTrigger value="grooming" className="text-xs">美容</TabsTrigger>
             <TabsTrigger value="health" className="text-xs">健康</TabsTrigger>
-            <TabsTrigger value="profile" className="text-xs">資料</TabsTrigger>
+            <TabsTrigger value="daily" className="text-xs">日常</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
@@ -107,8 +108,8 @@ export default function PetsClient({
           <TabsContent value="health">
             <HealthTab healthData={healthData} devices={devices} pet={effectiveActivePet} />
           </TabsContent>
-          <TabsContent value="profile">
-            <PetProfileCard pet={effectiveActivePet} />
+          <TabsContent value="daily">
+            <DailyTab petId={effectiveActivePet.id} />
           </TabsContent>
         </Tabs>
       </main>

@@ -1,10 +1,1 @@
-{
-  "experimentalServices": {
-    "terrymon-webapp": {
-      "type": "web",
-      "routePrefix": "/",
-      "framework": "nextjs",
-      "buildCommand": "npm run build"
-    }
-  }
-}
+{}
