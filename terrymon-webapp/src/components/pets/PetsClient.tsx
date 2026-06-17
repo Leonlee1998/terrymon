@@ -18,6 +18,7 @@ import DailyTab from './DailyTab'
 interface Props {
   pets: Pet[]
   activePet: Pet | null
+  requestedPetId?: string
   medicalRecords: MedicalRecord[]
   healthData: PetHealthData
   devices: AIoTDevice[]
@@ -27,6 +28,7 @@ interface Props {
 export default function PetsClient({
   pets,
   activePet,
+  requestedPetId,
   medicalRecords,
   healthData,
   devices,
@@ -35,9 +37,11 @@ export default function PetsClient({
   const { member, setActivePet } = useAuthStore()
   const [addOpen, setAddOpen] = useState(false)
   const effectivePets = member?.pets ?? pets
-  const effectiveActivePet = activePet
-    ? member?.pets.find(p => p.id === activePet.id) ?? activePet
-    : effectivePets[0] ?? null
+  const effectiveActivePet = (() => {
+    if (activePet) return member?.pets.find(p => p.id === activePet.id) ?? activePet
+    if (requestedPetId) return effectivePets.find(p => p.id === requestedPetId) ?? effectivePets[0] ?? null
+    return effectivePets[0] ?? null
+  })()
 
   useEffect(() => {
     if (effectiveActivePet) setActivePet(effectiveActivePet.id)
