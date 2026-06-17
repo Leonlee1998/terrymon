@@ -4,20 +4,12 @@ import { useState, useEffect } from 'react'
 import { Bell, CalendarPlus, Trash2, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { api } from '@/services/api'
-import type { VaccineReminder, Species } from '@/types'
+import type { VaccineReminder } from '@/types'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
-const DOG_PRESETS = ['狂犬病疫苗', '八合一疫苗', '犬三合一/四合一', '萊姆病疫苗', '犬流感疫苗']
-const CAT_PRESETS = ['狂犬病疫苗', '貓三合一疫苗（FVRCP）', '貓白血病疫苗（FeLV）', '貓卡里西病毒疫苗']
-const OTHER_PRESETS = ['狂犬病疫苗']
-
-function getPresets(species: Species) {
-  if (species === 'dog') return DOG_PRESETS
-  if (species === 'cat') return CAT_PRESETS
-  return OTHER_PRESETS
-}
+const PRESETS = ['心絲蟲預防', '體內驅蟲', '體外驅蟲', '跳蚤蜱蟲防治']
 
 function downloadICS(name: string, date: string) {
   const d = date.replace(/-/g, '')
@@ -44,29 +36,28 @@ function fmtDate(d?: string) {
   return `${y}/${m}/${day}`
 }
 
-function addOneYear(date: string) {
+function addOneMonth(date: string) {
   const d = new Date(date)
-  d.setFullYear(d.getFullYear() + 1)
+  d.setMonth(d.getMonth() + 1)
   return d.toISOString().slice(0, 10)
 }
 
 interface Props {
   petId: string
-  species: Species
   reminders: VaccineReminder[]
   open: boolean
   onOpenChange: (o: boolean) => void
   onUpdate: (reminders: VaccineReminder[]) => void
 }
 
-export default function VaccineSheet({ petId, species, reminders, open, onOpenChange, onUpdate }: Props) {
+export default function DewormerSheet({ petId, reminders, open, onOpenChange, onUpdate }: Props) {
   const today = new Date().toISOString().slice(0, 10)
   const [name, setName] = useState('')
   const [lastDate, setLastDate] = useState(today)
-  const [nextDate, setNextDate] = useState(() => addOneYear(today))
+  const [nextDate, setNextDate] = useState(() => addOneMonth(today))
   const [adding, setAdding] = useState(false)
 
-  useEffect(() => { if (lastDate) setNextDate(addOneYear(lastDate)) }, [lastDate])
+  useEffect(() => { if (lastDate) setNextDate(addOneMonth(lastDate)) }, [lastDate])
 
   async function handleAdd() {
     if (!name.trim()) { toast.error('請填寫名稱'); return }
@@ -74,11 +65,11 @@ export default function VaccineSheet({ petId, species, reminders, open, onOpenCh
     try {
       const item = await api.addVaccineReminder(petId, {
         name: name.trim(), nextDueDate: nextDate || undefined,
-        lastDoneDate: lastDate || undefined, category: 'vaccine',
+        lastDoneDate: lastDate || undefined, category: 'dewormer',
       })
       onUpdate([...reminders, item])
-      setName(''); setLastDate(today); setNextDate(addOneYear(today))
-      toast.success('已新增疫苗紀錄')
+      setName(''); setLastDate(today); setNextDate(addOneMonth(today))
+      toast.success('已新增驅蟲紀錄')
     } catch { toast.error('新增失敗') } finally { setAdding(false) }
   }
 
@@ -88,17 +79,15 @@ export default function VaccineSheet({ petId, species, reminders, open, onOpenCh
     toast.success('已刪除')
   }
 
-  const presets = getPresets(species)
-
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-3xl px-5 pb-10 pt-2">
         <SheetHeader className="mb-4 pt-2">
-          <SheetTitle className="text-left text-lg font-black text-ink">💉 疫苗紀錄</SheetTitle>
+          <SheetTitle className="text-left text-lg font-black text-ink">🛡️ 驅蟲紀錄</SheetTitle>
         </SheetHeader>
 
         <div className="mb-5 space-y-2">
-          {reminders.length === 0 && <p className="py-4 text-center text-sm text-slate-t">尚無疫苗紀錄</p>}
+          {reminders.length === 0 && <p className="py-4 text-center text-sm text-slate-t">尚無驅蟲紀錄</p>}
           {reminders.map(r => {
             const overdue = r.nextDueDate && r.nextDueDate < today
             return (
@@ -127,23 +116,23 @@ export default function VaccineSheet({ petId, species, reminders, open, onOpenCh
         </div>
 
         <div className="space-y-3 rounded-2xl border border-border-t bg-surface p-4">
-          <p className="text-sm font-bold text-ink">新增疫苗紀錄</p>
+          <p className="text-sm font-bold text-ink">新增驅蟲紀錄</p>
           <div className="flex flex-wrap gap-1.5">
-            {presets.map(p => (
+            {PRESETS.map(p => (
               <button key={p} onClick={() => setName(p)}
                 className={`rounded-full border px-2.5 py-1 text-xs transition-colors ${name === p ? 'border-primary bg-primary-bg text-primary' : 'border-border-t text-slate-t'}`}>
                 {p}
               </button>
             ))}
           </div>
-          <Input value={name} onChange={e => setName(e.target.value)} placeholder="或自訂疫苗名稱" />
+          <Input value={name} onChange={e => setName(e.target.value)} placeholder="或自訂藥品名稱" />
           <div className="grid grid-cols-2 gap-2">
             <div>
               <p className="mb-1 text-xs text-slate-t">施打日期</p>
               <Input type="date" value={lastDate} onChange={e => setLastDate(e.target.value)} />
             </div>
             <div>
-              <p className="mb-1 text-xs text-slate-t">下次提醒（預設 +1 年）</p>
+              <p className="mb-1 text-xs text-slate-t">下次提醒（預設 +1 個月）</p>
               <Input type="date" value={nextDate} onChange={e => setNextDate(e.target.value)} />
             </div>
           </div>

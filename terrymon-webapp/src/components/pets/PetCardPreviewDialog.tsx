@@ -51,7 +51,7 @@ export default function PetCardPreviewDialog({ pet, onClose }: Props) {
           </button>
         </div>
 
-        {/* Card – 54:86 aspect ratio */}
+        {/* Card */}
         <div
           className="w-full max-w-[280px] overflow-hidden rounded-3xl shadow-2xl"
           style={{ aspectRatio: '54 / 86' }}

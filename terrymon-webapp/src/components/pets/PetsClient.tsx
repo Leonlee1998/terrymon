@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Plus } from 'lucide-react'
 import type { AIoTDevice, GroomingRecord, MedicalRecord, Pet, PetHealthData } from '@/types'
 import { useAuthStore } from '@/stores/authStore'
@@ -32,12 +32,16 @@ export default function PetsClient({
   devices,
   groomingRecords,
 }: Props) {
-  const { member } = useAuthStore()
+  const { member, setActivePet } = useAuthStore()
   const [addOpen, setAddOpen] = useState(false)
   const effectivePets = member?.pets ?? pets
   const effectiveActivePet = activePet
     ? member?.pets.find(p => p.id === activePet.id) ?? activePet
     : effectivePets[0] ?? null
+
+  useEffect(() => {
+    if (effectiveActivePet) setActivePet(effectiveActivePet.id)
+  }, [effectiveActivePet?.id])
 
   if (!effectiveActivePet) {
     return (
@@ -64,15 +68,9 @@ export default function PetsClient({
     <div className="flex min-h-screen flex-col bg-surface/40">
       <div className="sticky top-0 z-20 border-b border-border-t bg-white/95 backdrop-blur">
         <div className="mx-auto w-full max-w-3xl px-4 pt-4">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div>
-              <h1 className="text-xl font-black text-ink">我的寵物</h1>
-              <p className="text-xs text-slate-t">健康、醫療、美容紀錄集中管理</p>
-            </div>
-            <Button onClick={() => setAddOpen(true)} size="sm" className="bg-primary text-white hover:bg-primary-hover">
-              <Plus size={16} />
-              新增
-            </Button>
+          <div className="mb-3">
+            <h1 className="text-xl font-black text-ink">我的寵物</h1>
+            <p className="text-xs text-slate-t">健康、醫療、美容紀錄集中管理</p>
           </div>
           <PetSelector pets={effectivePets} activePetId={effectiveActivePet.id} />
         </div>
@@ -109,12 +107,11 @@ export default function PetsClient({
             <HealthTab healthData={healthData} devices={devices} pet={effectiveActivePet} />
           </TabsContent>
           <TabsContent value="daily">
-            <DailyTab petId={effectiveActivePet.id} />
+            <DailyTab petId={effectiveActivePet.id} species={effectiveActivePet.species} />
           </TabsContent>
         </Tabs>
       </main>
 
-      <PetFormDialog open={addOpen} onOpenChange={setAddOpen} />
     </div>
   )
 }

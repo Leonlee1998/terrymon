@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { FileText, HeartPulse, Scissors } from 'lucide-react'
 import HealthAlertCard from './HealthAlertCard'
 import PetOwnerSection from './PetOwnerSection'
+import DailySummaryCard from './DailySummaryCard'
 import type { AIoTDevice, GroomingRecord, MedicalRecord, Pet, PetHealthData } from '@/types'
 import { formatDate, formatPrice } from '@/lib/utils'
 
@@ -32,6 +33,8 @@ export default function PetOverviewTab({
   return (
     <div className="space-y-4">
       <HealthAlertCard pet={pet} healthData={healthData} devices={devices} />
+
+      <DailySummaryCard petId={pet.id} />
 
       <section className="grid gap-3 sm:grid-cols-3">
         <div className="rounded-xl border border-border-t bg-white p-4">

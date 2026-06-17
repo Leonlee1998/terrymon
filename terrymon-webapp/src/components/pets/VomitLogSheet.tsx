@@ -8,6 +8,7 @@ import type { PetDailyLog, VomitLogData } from '@/types'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import DailyPhotoUpload from './DailyPhotoUpload'
 
 const CONTENTS = [
   { key: 'food',  label: '未消化食物', alert: false },
@@ -20,27 +21,34 @@ const CONTENTS = [
 interface Props {
   petId: string
   logs: PetDailyLog[]
+  logDate: string
   open: boolean
   onOpenChange: (o: boolean) => void
   onAdded: (log: PetDailyLog) => void
 }
 
-export default function VomitLogSheet({ petId, logs, open, onOpenChange, onAdded }: Props) {
+export default function VomitLogSheet({ petId, logs, logDate, open, onOpenChange, onAdded }: Props) {
+  const today = new Date().toISOString().slice(0, 10)
   const [content, setContent] = useState<VomitLogData['content']>('food')
   const [notes, setNotes] = useState('')
+  const [photos, setPhotos] = useState<string[]>([])
+  const [date, setDate] = useState(logDate)
   const [saving, setSaving] = useState(false)
+
+  if (date !== logDate && !open) setDate(logDate)
 
   const vomitLogs = logs.filter(l => l.type === 'vomit').map(l => ({ ...l, data: l.data as VomitLogData }))
   const hasBlood = vomitLogs.some(l => l.data.content === 'blood')
+  const dateLabel = logDate === today ? '今天' : logDate
 
   async function handleSave() {
     setSaving(true)
     try {
       const found = CONTENTS.find(c => c.key === content)!
       const data: VomitLogData = { content, contentLabel: found.label }
-      const log = await api.addDailyLog(petId, { type: 'vomit', data, notes: notes.trim() || undefined })
+      const log = await api.addDailyLog(petId, { type: 'vomit', data, notes: notes.trim() || undefined, logDate: date, photoUrls: photos })
       onAdded(log)
-      setNotes('')
+      setNotes(''); setPhotos([])
       toast.success('已記錄')
     } catch { toast.error('記錄失敗') } finally { setSaving(false) }
   }
@@ -52,7 +60,6 @@ export default function VomitLogSheet({ petId, logs, open, onOpenChange, onAdded
           <SheetTitle className="text-left text-lg font-black text-ink">🤢 嘔吐記錄</SheetTitle>
         </SheetHeader>
 
-        {/* Today's logs */}
         {vomitLogs.length > 0 && (
           <div className="mb-4">
             {hasBlood && (
@@ -61,7 +68,7 @@ export default function VomitLogSheet({ petId, logs, open, onOpenChange, onAdded
                 <span className="font-semibold">含血嘔吐，建議盡快就診</span>
               </div>
             )}
-            <p className="mb-2 text-xs text-slate-t">今日 {vomitLogs.length} 筆</p>
+            <p className="mb-2 text-xs text-slate-t">{dateLabel} · {vomitLogs.length} 筆</p>
             <div className="flex flex-wrap gap-2">
               {vomitLogs.map((l, i) => {
                 const isAlert = l.data.content === 'blood'
@@ -75,9 +82,13 @@ export default function VomitLogSheet({ petId, logs, open, onOpenChange, onAdded
           </div>
         )}
 
-        {/* Form */}
         <div className="space-y-3 rounded-2xl border border-border-t bg-surface p-4">
           <p className="text-sm font-bold text-ink">新增一筆</p>
+
+          <div>
+            <p className="mb-1 text-xs text-slate-t">紀錄日期</p>
+            <Input type="date" value={date} max={today} onChange={e => setDate(e.target.value)} />
+          </div>
 
           <div className="grid grid-cols-2 gap-2">
             {CONTENTS.map(c => (
@@ -92,6 +103,8 @@ export default function VomitLogSheet({ petId, logs, open, onOpenChange, onAdded
               </button>
             ))}
           </div>
+
+          <DailyPhotoUpload value={photos} onChange={setPhotos} />
 
           <Input value={notes} onChange={e => setNotes(e.target.value)} placeholder="備註（選填）" />
 

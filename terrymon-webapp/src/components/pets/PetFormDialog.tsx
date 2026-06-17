@@ -265,11 +265,6 @@ function PetFormContent({ pet, onOpenChange }: Pick<Props, 'pet' | 'onOpenChange
           />
 
           <label className="block space-y-1.5">
-            <span className="text-sm font-medium text-ink">過敏或禁忌</span>
-            <Input value={form.allergies} onChange={e => setForm(f => ({ ...f, allergies: e.target.value }))} placeholder="例：雞肉、牛肉、藥物名稱" />
-          </label>
-
-          <label className="block space-y-1.5">
             <span className="text-sm font-medium text-ink">照護備註</span>
             <Textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={3} />
           </label>

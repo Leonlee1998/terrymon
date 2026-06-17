@@ -1424,7 +1424,9 @@ export const api = {
         logDate: stringValue(r.log_date),
         type: stringValue(r.type) as PetDailyLog['type'],
         data: (r.data ?? {}) as PetDailyLog['data'],
-        notes: optionalString(r.notes), createdAt: stringValue(r.created_at),
+        notes: optionalString(r.notes),
+        photoUrls: stringArray(r.photo_urls),
+        createdAt: stringValue(r.created_at),
       }))
     },
     () => [],
@@ -1432,7 +1434,7 @@ export const api = {
 
   addDailyLog: async (
     petId: string,
-    payload: { type: PetDailyLog['type']; data: object; notes?: string; logDate?: string },
+    payload: { type: PetDailyLog['type']; data: object; notes?: string; logDate?: string; photoUrls?: string[] },
   ): Promise<PetDailyLog> => fallback(
     async () => {
       const memberId = await getActiveMemberId()
@@ -1441,6 +1443,7 @@ export const api = {
           pet_id: petId, member_id: memberId,
           log_date: payload.logDate ?? new Date().toISOString().slice(0, 10),
           type: payload.type, data: payload.data, notes: payload.notes ?? null,
+          photo_urls: payload.photoUrls ?? [],
         })
         .select('*').single()
       if (error) throw error
@@ -1448,14 +1451,16 @@ export const api = {
         id: stringValue(data.id), petId,
         logDate: stringValue(data.log_date),
         type: payload.type, data: payload.data as PetDailyLog['data'],
-        notes: payload.notes, createdAt: stringValue(data.created_at),
+        notes: payload.notes, photoUrls: payload.photoUrls ?? [],
+        createdAt: stringValue(data.created_at),
       }
     },
     () => ({
       id: `LOG_${Date.now()}`, petId,
       logDate: payload.logDate ?? new Date().toISOString().slice(0, 10),
       type: payload.type, data: payload.data as PetDailyLog['data'],
-      notes: payload.notes, createdAt: new Date().toISOString(),
+      notes: payload.notes, photoUrls: payload.photoUrls ?? [],
+      createdAt: new Date().toISOString(),
     }),
   ),
 
@@ -1470,7 +1475,9 @@ export const api = {
         name: stringValue(r.name),
         lastDoneDate: optionalString(r.last_done_date),
         nextDueDate: optionalString(r.next_due_date),
-        notes: optionalString(r.notes), createdAt: stringValue(r.created_at),
+        notes: optionalString(r.notes),
+        category: (r.category === 'dewormer' ? 'dewormer' : 'vaccine') as VaccineReminder['category'],
+        createdAt: stringValue(r.created_at),
       }))
     },
     () => [],
@@ -1478,7 +1485,7 @@ export const api = {
 
   addVaccineReminder: async (
     petId: string,
-    payload: { name: string; nextDueDate?: string; lastDoneDate?: string; notes?: string },
+    payload: { name: string; nextDueDate?: string; lastDoneDate?: string; notes?: string; category?: 'vaccine' | 'dewormer' },
   ): Promise<VaccineReminder> => fallback(
     async () => {
       const memberId = await getActiveMemberId()
@@ -1487,19 +1494,22 @@ export const api = {
           pet_id: petId, member_id: memberId,
           name: payload.name, next_due_date: payload.nextDueDate ?? null,
           last_done_date: payload.lastDoneDate ?? null, notes: payload.notes ?? null,
+          category: payload.category ?? 'vaccine',
         })
         .select('*').single()
       if (error) throw error
       return {
         id: stringValue(data.id), petId, name: payload.name,
         nextDueDate: payload.nextDueDate, lastDoneDate: payload.lastDoneDate,
-        notes: payload.notes, createdAt: stringValue(data.created_at),
+        notes: payload.notes, category: payload.category ?? 'vaccine',
+        createdAt: stringValue(data.created_at),
       }
     },
     () => ({
       id: `VAC_${Date.now()}`, petId, name: payload.name,
       nextDueDate: payload.nextDueDate, lastDoneDate: payload.lastDoneDate,
-      notes: payload.notes, createdAt: new Date().toISOString(),
+      notes: payload.notes, category: payload.category ?? 'vaccine',
+      createdAt: new Date().toISOString(),
     }),
   ),
 

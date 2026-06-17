@@ -7,11 +7,13 @@ interface AuthStore {
   member: Member | null
   isLoggedIn: boolean
   _hydrated: boolean
+  activePetId: string | null
   setMember: (m: Member) => void
   updateMember: (fields: Partial<Omit<Member, 'id' | 'pets'>>) => void
   addPet: (pet: Pet) => void
   updatePet: (pet: Pet) => void
   removePet: (petId: string) => void
+  setActivePet: (id: string) => void
   logout: () => void
 }
 
@@ -21,6 +23,7 @@ export const useAuthStore = create<AuthStore>()(
       member: null,
       isLoggedIn: false,
       _hydrated: false,
+      activePetId: null,
       setMember: (member) => set({ member, isLoggedIn: true }),
       updateMember: (fields) => set(state => ({
         member: state.member ? { ...state.member, ...fields } : null,
@@ -40,7 +43,8 @@ export const useAuthStore = create<AuthStore>()(
           ? { ...state.member, pets: state.member.pets.filter(p => p.id !== petId) }
           : null,
       })),
-      logout: () => set({ member: null, isLoggedIn: false }),
+      setActivePet: (id) => set({ activePetId: id }),
+      logout: () => set({ member: null, isLoggedIn: false, activePetId: null }),
     }),
     {
       name: 'terrymon-auth',

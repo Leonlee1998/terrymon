@@ -2,9 +2,8 @@ import HomeHeader from '@/components/home/HomeHeader'
 import WelcomeCard from '@/components/home/WelcomeCard'
 import BarcodeWidget from '@/components/home/BarcodeWidget'
 import TodaySchedule from '@/components/home/TodaySchedule'
-import AIoTDashboard from '@/components/home/AIoTDashboard'
+import HomeAIoT from '@/components/home/HomeAIoT'
 import QuickActions from '@/components/home/QuickActions'
-import HealthAlerts from '@/components/home/HealthAlerts'
 import { api } from '@/services/api'
 
 export const dynamic = 'force-dynamic'
@@ -15,13 +14,7 @@ export default async function HomePage() {
     api.getPets(),
     api.getAppointments(),
   ])
-  const pet = pets[0] ?? member.pets[0]
-  const [healthData, devices] = pet
-    ? await Promise.all([
-        api.getHealthData(pet.id),
-        api.getDevices(pet.id),
-      ])
-    : [null, []]
+  const effectivePets = pets.length > 0 ? pets : member.pets
   const todayAppt = appointments.find(a =>
     a.status === 'confirmed' && new Date(a.date) >= new Date()
   ) ?? null
@@ -32,9 +25,8 @@ export default async function HomePage() {
       <div className="p-4 space-y-4 max-w-2xl mx-auto w-full">
         <WelcomeCard member={member} appointment={todayAppt} />
         <BarcodeWidget member={member} />
-        {pet && healthData && <HealthAlerts pet={pet} healthData={healthData} />}
         <TodaySchedule appointment={todayAppt} />
-        {pet && healthData && <AIoTDashboard pet={pet} devices={devices} healthData={healthData} />}
+        <HomeAIoT pets={effectivePets} />
         <QuickActions />
       </div>
     </div>

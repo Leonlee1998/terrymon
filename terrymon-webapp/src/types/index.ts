@@ -420,6 +420,7 @@ export interface PetDailyLog {
   type: 'diet' | 'poop' | 'vomit'
   data: DietLogData | PoopLogData | VomitLogData
   notes?: string
+  photoUrls?: string[]
   createdAt: string
 }
 
@@ -430,6 +431,7 @@ export interface VaccineReminder {
   lastDoneDate?: string
   nextDueDate?: string
   notes?: string
+  category?: 'vaccine' | 'dewormer'
   createdAt: string
 }
 

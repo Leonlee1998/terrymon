@@ -63,7 +63,7 @@ export default function PetProfileCard({ pet }: { pet: Pet }) {
             {pet.chipId && (
               <>
                 <p className="mt-1.5 text-[11px] font-medium tracking-widest text-gray-400">MICROCHIP</p>
-                <p className="text-sm font-bold tracking-wide text-ink">{pet.chipId}</p>
+                <p className="text-sm font-bold tracking-wide text-card-teal">{pet.chipId}</p>
               </>
             )}
           </div>
@@ -107,7 +107,7 @@ export default function PetProfileCard({ pet }: { pet: Pet }) {
           <div className="mx-5 mt-4 flex items-start gap-3 rounded-2xl border border-card-teal bg-card-teal-light px-4 py-3">
             <AlertTriangle size={16} className="mt-0.5 shrink-0 text-red-500" />
             <div>
-              <p className="text-[11px] font-medium tracking-wide text-red-500">注意事項 • NOTES</p>
+              <p className="text-[11px] font-medium tracking-wide text-red-500">照護備註 • NOTES</p>
               <p className="mt-1 text-sm font-bold text-gray-700">{pet.notes}</p>
             </div>
           </div>

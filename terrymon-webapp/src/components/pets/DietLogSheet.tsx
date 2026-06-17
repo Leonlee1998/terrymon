@@ -18,20 +18,27 @@ const MEAL_TIMES = [
 interface Props {
   petId: string
   logs: PetDailyLog[]
+  logDate: string
   open: boolean
   onOpenChange: (o: boolean) => void
   onAdded: (log: PetDailyLog) => void
 }
 
-export default function DietLogSheet({ petId, logs, open, onOpenChange, onAdded }: Props) {
+export default function DietLogSheet({ petId, logs, logDate, open, onOpenChange, onAdded }: Props) {
+  const today = new Date().toISOString().slice(0, 10)
   const [mealTime, setMealTime] = useState('morning')
   const [customLabel, setCustomLabel] = useState('')
   const [isCustom, setIsCustom] = useState(false)
   const [foodName, setFoodName] = useState('')
   const [amount, setAmount] = useState('')
+  const [date, setDate] = useState(logDate)
   const [saving, setSaving] = useState(false)
 
+  // Sync date when parent changes logDate (e.g. user switches day)
+  if (date !== logDate && !open) setDate(logDate)
+
   const dietLogs = logs.filter(l => l.type === 'diet').map(l => ({ ...l, data: l.data as DietLogData }))
+  const dateLabel = logDate === today ? '今天' : logDate
 
   async function handleSave() {
     const label = isCustom ? customLabel.trim() : MEAL_TIMES.find(m => m.key === mealTime)?.label ?? ''
@@ -45,7 +52,7 @@ export default function DietLogSheet({ petId, logs, open, onOpenChange, onAdded 
         foodName: foodName.trim(),
         amount: amount.trim() || undefined,
       }
-      const log = await api.addDailyLog(petId, { type: 'diet', data })
+      const log = await api.addDailyLog(petId, { type: 'diet', data, logDate: date })
       onAdded(log)
       setFoodName(''); setAmount('')
       toast.success(`${label} 已記錄`)
@@ -59,9 +66,9 @@ export default function DietLogSheet({ petId, logs, open, onOpenChange, onAdded 
           <SheetTitle className="text-left text-lg font-black text-ink">🍽️ 飲食記錄</SheetTitle>
         </SheetHeader>
 
-        {/* Today's logs */}
         {dietLogs.length > 0 && (
           <div className="mb-5 space-y-2">
+            <p className="text-xs text-slate-t">{dateLabel} · {dietLogs.length} 筆</p>
             {dietLogs.map(l => (
               <div key={l.id} className="flex items-center gap-3 rounded-2xl border border-border-t bg-white px-4 py-3">
                 <span className="min-w-[36px] rounded-full bg-primary-bg px-2 py-0.5 text-center text-[11px] font-bold text-primary">
@@ -76,11 +83,14 @@ export default function DietLogSheet({ petId, logs, open, onOpenChange, onAdded 
           </div>
         )}
 
-        {/* Form */}
         <div className="space-y-3 rounded-2xl border border-border-t bg-surface p-4">
           <p className="text-sm font-bold text-ink">新增一筆</p>
 
-          {/* Meal time selector */}
+          <div>
+            <p className="mb-1 text-xs text-slate-t">紀錄日期</p>
+            <Input type="date" value={date} max={today} onChange={e => setDate(e.target.value)} />
+          </div>
+
           <div className="flex flex-wrap gap-2">
             {MEAL_TIMES.map(m => (
               <button key={m.key}
