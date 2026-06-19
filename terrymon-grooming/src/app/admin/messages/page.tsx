@@ -46,7 +46,7 @@ export default function AdminMessagesPage() {
     <div className="p-6 max-w-2xl">
       <AdminPageHeader
         title="訊息中心"
-        description="與會員的對話記錄"
+        subtitle="與會員的對話記錄"
         action={
           <button
             onClick={() => { setLoading(true); load() }}
