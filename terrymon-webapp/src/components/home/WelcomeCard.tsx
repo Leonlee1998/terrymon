@@ -30,7 +30,7 @@ export default function WelcomeCard({ member, appointment }: Props) {
           </h2>
           {appointment ? (
             <p className="mt-3 text-sm leading-6 text-[#6d6258]">
-              {pet?.name} 今天 {appointment.time} 有
+              {pet?.name} 今天 {appointment.scheduledTime?.slice(0, 5)} 有
               {appointment.type === 'vet' ? '看診' : '美容'}預約，記得提早出門。
             </p>
           ) : (

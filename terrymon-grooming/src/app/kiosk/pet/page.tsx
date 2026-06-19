@@ -1,20 +1,20 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronLeft, AlertTriangle, ChevronRight, Clock } from 'lucide-react'
+import { ChevronLeft, AlertTriangle, ChevronRight } from 'lucide-react'
 import { useKioskStore } from '@/stores/kioskStore'
-import { MOCK_PET_GROOMING_RECORDS } from '@/lib/mock'
-import { getSpeciesEmoji, formatDate, calcAge } from '@/lib/utils'
+import { getSpeciesEmoji, calcAge } from '@/lib/utils'
 import type { Pet } from '@/types'
 
 export default function KioskPet() {
   const router = useRouter()
-  const { member, setSelectedPet, checkinMode } = useKioskStore()
+  const { member, selectedPet, setSelectedPet, checkinMode } = useKioskStore()
   const [selecting, setSelecting] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!member) router.replace('/kiosk')
-  }, [member, router])
+    if (!member) { router.replace('/kiosk'); return }
+    if (selectedPet) router.replace('/kiosk/services')
+  }, [member, selectedPet, router])
 
   if (!member) return null
 
@@ -38,7 +38,6 @@ export default function KioskPet() {
 
       <div className="flex-1 p-6 space-y-4 overflow-y-auto">
         {member.pets.map(pet => {
-          const lastGrooming = MOCK_PET_GROOMING_RECORDS.filter(r => r.petId === pet.id)[0]
           const isSelecting = selecting === pet.id
           return (
             <button
@@ -69,13 +68,6 @@ export default function KioskPet() {
                 </div>
                 <ChevronRight size={24} className={isSelecting ? 'text-primary' : 'text-slate-t'} />
               </div>
-
-              {lastGrooming && (
-                <div className="flex items-center gap-2 mt-3 px-3 py-2 bg-surface rounded-xl text-xs text-slate-t">
-                  <Clock size={12} />
-                  <span>上次美容：{formatDate(lastGrooming.date)} — {lastGrooming.services.join('、')}</span>
-                </div>
-              )}
 
               {pet.allergies.length > 0 && (
                 <div className="flex items-center gap-2 mt-2 bg-red-50 border border-red-200 rounded-xl px-3 py-2">

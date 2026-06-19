@@ -11,8 +11,9 @@ interface KioskStore {
   checkinMode:     CheckinMode
   selectedMain:    KioskService | null
   selectedAddons:  KioskService[]
-  selectedGroomer: string | null
-  selectedTime:    string | null
+  selectedGroomer:   string | null
+  selectedGroomerId: string | null
+  selectedTime:      string | null
   paymentMode:     PaymentMode
   balanceToUse:    number
   signatureData:   string | null
@@ -27,6 +28,7 @@ interface KioskStore {
   setMainService:     (s: KioskService) => void
   toggleAddon:        (s: KioskService) => void
   setGroomer:         (name: string) => void
+  setGroomerId:       (id: string | null) => void
   setTime:            (time: string) => void
   setPaymentMode:     (mode: PaymentMode) => void
   setBalanceToUse:    (amount: number) => void
@@ -46,7 +48,7 @@ interface KioskStore {
 const INITIAL_STATE = {
   member: null, selectedPet: null, checkinMode: 'walk_in' as CheckinMode,
   selectedMain: null, selectedAddons: [],
-  selectedGroomer: null, selectedTime: null,
+  selectedGroomer: null, selectedGroomerId: null, selectedTime: null,
   paymentMode: 'card' as PaymentMode, balanceToUse: 0,
   signatureData: null, contractUrl: null,
   weight: null, queueNum: null, appointmentId: null,
@@ -69,8 +71,9 @@ export const useKioskStore = create<KioskStore>()((set, get) => ({
     const exists = curr.find(a => a.id === s.id)
     set({ selectedAddons: exists ? curr.filter(a => a.id !== s.id) : [...curr, s] })
   },
-  setGroomer:      (name) => set({ selectedGroomer: name }),
-  setTime:         (time) => set({ selectedTime: time }),
+  setGroomer:    (name) => set({ selectedGroomer: name }),
+  setGroomerId:  (id)   => set({ selectedGroomerId: id }),
+  setTime:       (time) => set({ selectedTime: time }),
   setPaymentMode:  (mode) => set({ paymentMode: mode }),
   setBalanceToUse: (amount) => set({ balanceToUse: amount }),
   setSignature:    (data) => set({ signatureData: data }),

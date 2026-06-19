@@ -14,6 +14,7 @@ import type {
   MemberEvent, EmergencyContact, CaregiverPermissions, PetCaregiver, PetTransfer, TransferType,
   Organization, OrgType, OrgStatus, AdoptionCheckpoint, CheckpointDetail,
   AdoptionTrackingPlan, PetDailyLog, VaccineReminder,
+  GroomingStore, GroomingServiceItem, AvailableSlot, BookingInput,
 } from '@/types'
 import { DEFAULT_CAREGIVER_PERMISSIONS } from '@/types'
 
@@ -178,15 +179,28 @@ function mapAppointment(row: DbRow): Appointment {
     id: stringValue(row.id),
     memberId: stringValue(row.member_id),
     petId: stringValue(row.pet_id),
-    type: stringValue(row.type) as Appointment['type'],
-    date: stringValue(row.scheduled_date),
-    time: stringValue(row.scheduled_time).slice(0, 5),
-    endTime: optionalString(row.end_time)?.slice(0, 5),
-    location: stringValue(store.name),
-    address: optionalString(store.address),
-    status: stringValue(row.status) as AppointmentStatus,
+    storeId: stringValue(row.store_id),
+    storeName: optionalString(store.name),
+    type: stringValue(row.type, 'grooming') as Appointment['type'],
+    source: stringValue(row.source, 'webapp') as Appointment['source'],
+    status: stringValue(row.status, 'pending') as AppointmentStatus,
+    scheduledDate: stringValue(row.scheduled_date),
+    scheduledTime: stringValue(row.scheduled_time),
+    endTime: optionalString(row.end_time),
+    durationMin: row.duration_min != null ? numberValue(row.duration_min) : undefined,
+    groomerId: optionalString(row.groomer_id),
+    mainServiceId: optionalString(row.main_service_id),
+    addonServiceIds: Array.isArray(row.addon_service_ids) ? row.addon_service_ids as string[] : [],
+    estimatedPrice: row.estimated_price != null ? numberValue(row.estimated_price) : undefined,
+    depositAmount: row.deposit_amount != null ? numberValue(row.deposit_amount) : undefined,
+    depositPaidAt: optionalString(row.deposit_paid_at),
     notes: stringValue(row.notes),
-    reminderSent: booleanValue(row.reminder_sent),
+    cancelReason: optionalString(row.cancel_reason),
+    confirmedAt: optionalString(row.confirmed_at),
+    checkedInAt: optionalString(row.checked_in_at),
+    serviceStartedAt: optionalString(row.service_started_at),
+    cancelledAt: optionalString(row.cancelled_at),
+    createdAt: stringValue(row.created_at),
   }
 }
 
@@ -732,18 +746,6 @@ export const api = {
       return data.map(mapAppointment)
     },
     [],
-  ),
-
-  cancelAppointment: async (id: string) => fallback(
-    async () => {
-      const { error } = await getSupabase()!
-        .from('appointments')
-        .update({ status: 'cancelled' })
-        .eq('id', id)
-      if (error) throw error
-      return { success: true }
-    },
-    { success: true },
   ),
 
   getProducts: async (params?: { category?: string; search?: string }): Promise<Product[]> => fallback(
@@ -1583,4 +1585,184 @@ export const api = {
     },
     () => ({ success: true }),
   ),
+
+  // ── 美容預約 ─────────────────────────────────────────
+
+  getGroomingStores: () =>
+    fallback(
+      async () => {
+        const supabase = getSupabase()!
+        const { data, error } = await supabase
+          .from('stores')
+          .select('id, name, address, phone, type')
+          .eq('type', 'grooming')
+          .eq('is_active', true)
+          .order('name')
+        if (error) throw error
+        return (data ?? []).map((r: DbRow) => ({
+          id: stringValue(r.id),
+          name: stringValue(r.name),
+          address: optionalString(r.address),
+          phone: optionalString(r.phone),
+          type: stringValue(r.type),
+        }))
+      },
+      [],
+    ),
+
+  getGroomingServices: (storeId: string) =>
+    fallback(
+      async () => {
+        const supabase = getSupabase()!
+        const { data, error } = await supabase
+          .from('grooming_services')
+          .select('id, store_id, name, description, price, duration, is_addon')
+          .eq('store_id', storeId)
+          .eq('is_enabled', true)
+          .order('is_addon')
+          .order('sort_order')
+        if (error) throw error
+        return (data ?? []).map((r: DbRow) => ({
+          id: stringValue(r.id),
+          storeId: stringValue(r.store_id),
+          name: stringValue(r.name),
+          description: optionalString(r.description),
+          price: numberValue(r.price),
+          duration: numberValue(r.duration),
+          isAddon: booleanValue(r.is_addon),
+        }))
+      },
+      [],
+    ),
+
+  getAvailableSlots: (storeId: string, date: string, serviceId: string, groomerId?: string) =>
+    fallback(
+      async () => {
+        const supabase = getSupabase()!
+        const { data, error } = await supabase.rpc('get_available_slots', {
+          p_store_id:   storeId,
+          p_date:       date,
+          p_service_id: serviceId,
+          p_groomer_id: groomerId ?? null,
+        })
+        if (error) throw error
+        return (data ?? []).map((r: DbRow) => ({
+          slotTime:    stringValue(r.slot_time),
+          groomerId:   stringValue(r.groomer_id),
+          groomerName: stringValue(r.groomer_name),
+        }))
+      },
+      [],
+    ),
+
+  listMyAppointments: () =>
+    fallback(
+      async () => {
+        const supabase = getSupabase()!
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return []
+        const { data: member } = await supabase
+          .from('members').select('id').eq('supabase_uid', user.id).single()
+        if (!member) return []
+        const { data, error } = await supabase
+          .from('appointments')
+          .select(`
+            id, member_id, pet_id, store_id, type, source, status,
+            scheduled_date, scheduled_time, end_time, duration_min,
+            groomer_id, main_service_id, addon_service_ids,
+            estimated_price, deposit_amount, deposit_paid_at,
+            photo_url, notes, cancel_reason,
+            confirmed_at, checked_in_at, service_started_at, cancelled_at, created_at,
+            stores(name),
+            groomers(name),
+            grooming_services!main_service_id(name)
+          `)
+          .eq('member_id', stringValue(member.id))
+          .order('scheduled_date', { ascending: false })
+          .order('scheduled_time', { ascending: false })
+          .limit(50)
+        if (error) throw error
+        return (data ?? []).map((r: DbRow) => {
+          const store = r.stores as DbRow | null
+          const groomer = r.groomers as DbRow | null
+          const svc = r.grooming_services as DbRow | null
+          return {
+            id: stringValue(r.id),
+            memberId: stringValue(r.member_id),
+            petId: stringValue(r.pet_id),
+            storeId: stringValue(r.store_id),
+            storeName: store ? stringValue(store.name) : undefined,
+            type: stringValue(r.type, 'grooming') as 'grooming' | 'vet',
+            source: stringValue(r.source, 'webapp') as Appointment['source'],
+            status: stringValue(r.status, 'pending') as Appointment['status'],
+            scheduledDate: stringValue(r.scheduled_date),
+            scheduledTime: stringValue(r.scheduled_time),
+            endTime: optionalString(r.end_time),
+            durationMin: r.duration_min != null ? numberValue(r.duration_min) : undefined,
+            groomerId: optionalString(r.groomer_id),
+            groomerName: groomer ? stringValue(groomer.name) : undefined,
+            mainServiceId: optionalString(r.main_service_id),
+            mainServiceName: svc ? stringValue(svc.name) : undefined,
+            addonServiceIds: Array.isArray(r.addon_service_ids) ? r.addon_service_ids as string[] : [],
+            estimatedPrice: r.estimated_price != null ? numberValue(r.estimated_price) : undefined,
+            depositAmount: r.deposit_amount != null ? numberValue(r.deposit_amount) : undefined,
+            depositPaidAt: optionalString(r.deposit_paid_at),
+            photoUrl: optionalString(r.photo_url),
+            notes: stringValue(r.notes),
+            cancelReason: optionalString(r.cancel_reason),
+            confirmedAt: optionalString(r.confirmed_at),
+            checkedInAt: optionalString(r.checked_in_at),
+            serviceStartedAt: optionalString(r.service_started_at),
+            cancelledAt: optionalString(r.cancelled_at),
+            createdAt: stringValue(r.created_at),
+          } satisfies Appointment
+        })
+      },
+      [],
+    ),
+
+  createAppointment: async (input: BookingInput): Promise<{ id: string }> => {
+    const supabase = getSupabase()
+    if (!supabase) throw new Error('Supabase 未設定')
+    const { data, error } = await supabase.rpc('create_appointment', {
+      p_pet_id:     input.petId,
+      p_store_id:   input.storeId,
+      p_service_id: input.serviceId,
+      p_addon_ids:  input.addonIds ?? [],
+      p_date:       input.date,
+      p_time:       input.time,
+      p_groomer_id: input.groomerId ?? null,
+      p_notes:      input.notes ?? '',
+      p_photo_url:  input.photoUrl ?? null,
+    })
+    if (error) {
+      const msg = error.message.includes('SLOT_CONFLICT')
+        ? '此時段已被預約，請重新選擇'
+        : error.message.includes('INVALID_SERVICE')
+          ? '所選服務項目無效'
+          : error.message.includes('UNAUTHORIZED')
+            ? '請重新登入後再試'
+            : error.message
+      throw new Error(msg)
+    }
+    return { id: data as string }
+  },
+
+  cancelAppointment: async (id: string, reason?: string): Promise<{ depositForfeited: boolean; amount: number }> => {
+    const supabase = getSupabase()
+    if (!supabase) throw new Error('Supabase 未設定')
+    const { data, error } = await supabase.rpc('cancel_appointment', {
+      p_id:     id,
+      p_reason: reason ?? null,
+    })
+    if (error) {
+      const msg = error.message.includes('INVALID_STATE')
+        ? '此預約狀態不允許取消'
+        : error.message
+      throw new Error(msg)
+    }
+    const result = data as { deposit_forfeited: boolean; amount: number }
+    return { depositForfeited: result.deposit_forfeited, amount: result.amount }
+  },
+
 }

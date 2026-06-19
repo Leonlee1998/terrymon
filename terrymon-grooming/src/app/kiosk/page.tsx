@@ -1,5 +1,5 @@
 'use client'
-import { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useKioskStore } from '@/stores/kioskStore'
 
@@ -62,9 +62,22 @@ export default function KioskStandby() {
 }
 
 function TimeDisplay() {
-  const now = new Date()
-  const time = now.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })
-  const date = now.toLocaleDateString('zh-TW', { month: 'long', day: 'numeric', weekday: 'short' })
+  const [time, setTime] = useState('')
+  const [date, setDate] = useState('')
+
+  useEffect(() => {
+    function tick() {
+      const now = new Date()
+      setTime(now.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' }))
+      setDate(now.toLocaleDateString('zh-TW', { month: 'long', day: 'numeric', weekday: 'short' }))
+    }
+    tick()
+    const id = setInterval(tick, 1000)
+    return () => clearInterval(id)
+  }, [])
+
+  if (!time) return null
+
   return (
     <div className="absolute top-6 left-6 text-white/50 text-sm">
       <p className="text-3xl font-light">{time}</p>

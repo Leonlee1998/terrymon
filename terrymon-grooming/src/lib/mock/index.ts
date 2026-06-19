@@ -312,19 +312,17 @@ export const BREED_DATABASE: Breed[] = [
 ]
 
 export const MOCK_GROOMERS: Groomer[] = [
-  { id: 'G001', storeId: 'S001', name: '王美玲', rank: 'director',
-    specialties: ['貴賓', '比熊', '長毛犬'], maxDailySlots: 4, isActive: true, joinedAt: '2020-01-01' },
-  { id: 'G002', storeId: 'S001', name: '陳小芳', rank: 'senior',
+  { id: '11111111-1111-1111-1111-111111111101', storeId: '11111111-1111-1111-1111-111111111111', name: 'Mika', rank: 'director',
+    specialties: ['貴賓', '比熊', '長毛犬'], maxDailySlots: 5, isActive: true, joinedAt: '2020-01-01' },
+  { id: '11111111-1111-1111-1111-111111111102', storeId: '11111111-1111-1111-1111-111111111111', name: 'Leo', rank: 'senior',
     specialties: ['大型犬', '雙層毛'], maxDailySlots: 5, isActive: true, joinedAt: '2021-06-01' },
-  { id: 'G003', storeId: 'S001', name: '李阿志', rank: 'stylist',
+  { id: '3c9a303c-966d-4e0c-bd33-a28502d61c89', storeId: '11111111-1111-1111-1111-111111111111', name: '測試美容師', rank: 'stylist',
     specialties: ['洗澡', '基礎護理'], maxDailySlots: 6, isActive: true, joinedAt: '2023-03-01' },
-  { id: 'G004', storeId: 'S001', name: '張曉雯', rank: 'stylist',
-    specialties: ['貓咪', '短毛犬'], maxDailySlots: 6, isActive: true, joinedAt: '2024-01-15' },
 ]
 
 export const MOCK_SERVICES: GroomingService[] = [
   {
-    id: 'SV001', storeId: 'S001', name: '基礎洗澡', category: 'main',
+    id: 'SV001', storeId: '11111111-1111-1111-1111-111111111111', name: '基礎洗澡', category: 'main',
     description: '沐浴、吹乾、基本梳毛整理',
     applicableSpecies: ['dog', 'cat'], isEnabled: true, sortOrder: 1,
     priceMatrix: [
@@ -343,7 +341,7 @@ export const MOCK_SERVICES: GroomingService[] = [
     createdAt: '2024-01-01',
   },
   {
-    id: 'SV002', storeId: 'S001', name: '洗澡＋剪毛', category: 'main',
+    id: 'SV002', storeId: '11111111-1111-1111-1111-111111111111', name: '洗澡＋剪毛', category: 'main',
     description: '沐浴、吹乾、全身造型修剪',
     applicableSpecies: ['dog', 'cat'], isEnabled: true, sortOrder: 2,
     priceMatrix: [
@@ -361,7 +359,7 @@ export const MOCK_SERVICES: GroomingService[] = [
     createdAt: '2024-01-01',
   },
   {
-    id: 'SV003', storeId: 'S001', name: '全套精緻造型', category: 'main',
+    id: 'SV003', storeId: '11111111-1111-1111-1111-111111111111', name: '全套精緻造型', category: 'main',
     description: '沐浴、吹乾、精緻造型修剪、造型飾品',
     applicableSpecies: ['dog'], isEnabled: true, sortOrder: 3,
     priceMatrix: [
@@ -373,7 +371,7 @@ export const MOCK_SERVICES: GroomingService[] = [
     createdAt: '2024-01-01',
   },
   {
-    id: 'SV101', storeId: 'S001', name: '香氛護毛', category: 'addon',
+    id: 'SV101', storeId: '11111111-1111-1111-1111-111111111111', name: '香氛護毛', category: 'addon',
     description: '深層護毛精華，持久留香',
     applicableSpecies: ['dog', 'cat'], isEnabled: true, sortOrder: 1,
     priceMatrix: [
@@ -386,7 +384,7 @@ export const MOCK_SERVICES: GroomingService[] = [
     createdAt: '2024-01-01',
   },
   {
-    id: 'SV102', storeId: 'S001', name: '耳道深層清潔', category: 'addon',
+    id: 'SV102', storeId: '11111111-1111-1111-1111-111111111111', name: '耳道深層清潔', category: 'addon',
     description: '清除耳垢，預防外耳炎',
     applicableSpecies: ['dog', 'cat'], isEnabled: true, sortOrder: 2,
     priceMatrix: [
@@ -399,7 +397,7 @@ export const MOCK_SERVICES: GroomingService[] = [
     createdAt: '2024-01-01',
   },
   {
-    id: 'SV201', storeId: 'S001', name: '精緻全護套組', category: 'package',
+    id: 'SV201', storeId: '11111111-1111-1111-1111-111111111111', name: '精緻全護套組', category: 'package',
     description: '洗澡剪毛 + 香氛護毛 + 耳道清潔，套組九折',
     applicableSpecies: ['dog', 'cat'], isEnabled: true, sortOrder: 1,
     packageMainServiceId: 'SV002',
@@ -411,11 +409,11 @@ export const MOCK_SERVICES: GroomingService[] = [
 ]
 
 export const MOCK_SHOP_PRODUCTS: ShopProduct[] = [
-  { id: 'SP001', storeId: 'S001', name: '香氛沐浴乳 250ml', category: '清潔', price: 280, memberPrice: 250, stock: 30, isActive: true },
-  { id: 'SP002', storeId: 'S001', name: '護毛精華素 100ml', category: '護理', price: 380, memberPrice: 350, stock: 15, isActive: true },
-  { id: 'SP003', storeId: 'S001', name: '藍莓潔耳液 120ml', category: '清潔', price: 180, memberPrice: 160, stock: 20, isActive: true },
-  { id: 'SP004', storeId: 'S001', name: '造型噴霧 200ml',   category: '造型', price: 240, memberPrice: 220, stock: 12, isActive: true },
-  { id: 'SP005', storeId: 'S001', name: '天然除蚤噴劑 300ml', category: '保健', price: 320, memberPrice: 290, stock: 8,  isActive: true },
+  { id: 'SP001', storeId: '11111111-1111-1111-1111-111111111111', name: '香氛沐浴乳 250ml', category: '清潔', price: 280, memberPrice: 250, stock: 30, isActive: true },
+  { id: 'SP002', storeId: '11111111-1111-1111-1111-111111111111', name: '護毛精華素 100ml', category: '護理', price: 380, memberPrice: 350, stock: 15, isActive: true },
+  { id: 'SP003', storeId: '11111111-1111-1111-1111-111111111111', name: '藍莓潔耳液 120ml', category: '清潔', price: 180, memberPrice: 160, stock: 20, isActive: true },
+  { id: 'SP004', storeId: '11111111-1111-1111-1111-111111111111', name: '造型噴霧 200ml',   category: '造型', price: 240, memberPrice: 220, stock: 12, isActive: true },
+  { id: 'SP005', storeId: '11111111-1111-1111-1111-111111111111', name: '天然除蚤噴劑 300ml', category: '保健', price: 320, memberPrice: 290, stock: 8,  isActive: true },
 ]
 
 const _todayDate = new Date().toISOString().split('T')[0]
@@ -441,7 +439,7 @@ export const MOCK_GROOMING_RECORDS: GroomingRecord[] = [
   {
     id: 'GR001', memberId: 'M001', memberName: '林小華',
     petId: 'P001', petName: '小怪獸', petBreed: '柯基犬', petWeight: 9.2,
-    groomerId: 'G001', groomerName: '王美玲', storeId: 'S001',
+    groomerId: 'G001', groomerName: '王美玲', storeId: '11111111-1111-1111-1111-111111111111',
     date: _todayDate, startTime: '10:00', endTime: '12:30',
     services: ['洗澡＋剪毛', '香氛護毛'],
     totalPrice: 1980, paymentMethod: 'balance', balanceUsed: 1980, cardAmount: 0,
@@ -460,7 +458,7 @@ export const MOCK_GROOMING_RECORDS: GroomingRecord[] = [
   {
     id: 'GR002', memberId: 'M002', memberName: '張大明',
     petId: 'P003', petName: '胖虎', petBreed: '拉布拉多', petWeight: 32.5,
-    groomerId: 'G002', groomerName: '陳小芳', storeId: 'S001',
+    groomerId: 'G002', groomerName: '陳小芳', storeId: '11111111-1111-1111-1111-111111111111',
     date: _todayDate, startTime: '11:30',
     services: ['基礎洗澡'],
     totalPrice: 2000, paymentMethod: 'card', balanceUsed: 0, cardAmount: 2000,
@@ -526,8 +524,9 @@ export const MOCK_BRAND_PRODUCTS: BrandProduct[] = [
 ]
 
 export const MOCK_STORES: Store[] = [
-  { id: 'S001', name: 'TerryMon 台中西區店', type: 'grooming', address: '台中市西區精誠路88號',     isActive: true },
-  { id: 'S002', name: 'TerryMon 台北大安店', type: 'grooming', address: '台北市大安區復興南路200號', isActive: true },
+  { id: '11111111-1111-1111-1111-111111111111', name: 'TerryMon 寵物美容旗艦店',   type: 'grooming', address: '台北市信義區松仁路 88 號',       isActive: true },
+  { id: '33333333-3333-3333-3333-333333333333', name: 'TerryMon 寵物美容中山加盟店', type: 'grooming', address: '台北市中山區林森北路 200 號',     isActive: true },
+  { id: '44444444-4444-4444-4444-444444444444', name: 'TerryMon 寵物美容新竹直營店', type: 'grooming', address: '新竹市東區光復路二段 101 號', isActive: true },
 ]
 
 export const SHOP_INFO = {

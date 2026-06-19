@@ -36,7 +36,8 @@ export default function KioskSignature() {
   const {
     member, selectedPet, selectedMain, selectedAddons,
     setSignature, setContractUrl, totalPrice, serviceNames,
-    paymentMode, balanceToUse, cardAmount, appointmentId, selectedGroomer,
+    paymentMode, balanceToUse, cardAmount, appointmentId,
+    selectedGroomer, selectedGroomerId,
   } = useKioskStore()
   const { shopName, shopPhone, shopAddress } = useAdminStore()
 
@@ -137,13 +138,12 @@ export default function KioskSignature() {
         signatureUrl,
         contractUrl,
         appointmentId:   appointmentId ?? undefined,
-        groomerId:       selectedGroomer ?? undefined,
+        groomerId:       selectedGroomerId ?? undefined,
       })
 
       setPhase('done')
       router.push('/kiosk/complete')
     } catch (err) {
-      console.error(err)
       toast.error('處理失敗：' + (err as Error).message)
       setPhase('idle')
     }

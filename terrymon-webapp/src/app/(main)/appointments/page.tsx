@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function AppointmentsPage() {
   const [appointments, pets] = await Promise.all([
-    api.getAppointments(),
+    api.listMyAppointments(),
     api.getPets(),
   ])
 

@@ -5,7 +5,7 @@ import {
 } from '@/lib/mock'
 import { configuredStoreId, getSupabase } from '@/lib/supabase'
 import type {
-  Member, CompleteServicePayload, QueueItem, Groomer, GroomingService,
+  Member, Pet, CompleteServicePayload, QueueItem, Groomer, GroomingService,
   ShopProduct, GroomerShift, StoreHours, GroomingRecord,
   Brand, BrandProduct, Store, BreedOption, SpeciesType,
 } from '@/types'
@@ -69,14 +69,20 @@ function mapPet(row: any) {
   return {
     id: row.id,
     memberId: row.member_id,
+    primaryCaregiverId: row.primary_caregiver_id ?? undefined,
     name: row.name,
     species: row.species,
+    breedId: row.breed_id ?? undefined,
     breed: row.breed ?? '',
     birthDate: row.birth_date ?? '',
     weight: Number(row.weight ?? 0),
     photoUrl: row.photo_url ?? '',
     allergies: row.allergies ?? [],
     chipId: row.chip_id ?? undefined,
+    gender: row.gender ?? undefined,
+    isNeutered: row.is_neutered ?? undefined,
+    bloodType: row.blood_type ?? undefined,
+    caregiver: row.caregiver ?? undefined,
     notes: row.notes ?? '',
     isActive: row.is_active ?? true,
   }
@@ -248,18 +254,26 @@ function mapRecord(row: any): GroomingRecord {
 }
 
 export const posApi = {
-  lookupMember: async (input: string): Promise<Member | null> => {
+  lookupMember: async (input: string): Promise<{
+    member: Member | null
+    preSelectedPet?: Pet | null
+    todayAppointment?: { id: string; time: string; petName: string; petId: string; notes: string } | null
+  }> => {
     if (isTestLookup(input)) {
       await delay(250)
-      return { ...MOCK_MEMBER, pets: MOCK_PETS }
+      return { member: { ...MOCK_MEMBER, pets: MOCK_PETS }, preSelectedPet: null, todayAppointment: null }
     }
 
     return fallback(
       async () => {
-        const { member } = await apiPost<{ member: Member | null }>('/api/kiosk/lookup', { q: input })
-        return member
+        const res = await apiPost<{
+          member: Member | null
+          preSelectedPet?: Pet | null
+          todayAppointment?: { id: string; time: string; petName: string; petId: string; notes: string } | null
+        }>('/api/kiosk/lookup', { q: input })
+        return { member: res.member, preSelectedPet: res.preSelectedPet, todayAppointment: res.todayAppointment ?? null }
       },
-      () => lookupMember(input),
+      () => ({ member: lookupMember(input), preSelectedPet: null, todayAppointment: null }),
     )
   },
 

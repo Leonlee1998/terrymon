@@ -1,32 +1,50 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, Loader2 } from 'lucide-react'
 import { useKioskStore } from '@/stores/kioskStore'
-import { MOCK_GROOMER_NAMES } from '@/lib/mock'
 import { Button } from '@/components/ui/button'
 
-const AVAILABLE_SLOTS: Record<string, string[]> = {
-  '小美': ['10:00', '11:30', '14:00', '15:30'],
-  '小芳': ['09:30', '11:00', '13:30', '16:00'],
-  '阿志': ['10:30', '12:00', '14:30', '17:00'],
-}
-const WALK_IN_SLOTS = ['10:00','11:00','13:00','14:00','15:00','16:00']
+type Groomer = { id: string; name: string; is_active: boolean }
+
+const now = new Date()
+const WALK_IN_SLOTS = ['09:00','10:00','11:00','13:00','14:00','15:00','16:00','17:00']
+  .filter(t => {
+    const [h, m] = t.split(':').map(Number)
+    return h * 60 + m > now.getHours() * 60 + now.getMinutes()
+  })
 
 export default function KioskSchedule() {
   const router = useRouter()
-  const { member, selectedGroomer, selectedTime, setGroomer, setTime } = useKioskStore()
+  const { member, selectedGroomer, selectedTime, setGroomer, setGroomerId, setTime } = useKioskStore()
   const [step, setStep] = useState<'groomer' | 'time'>('groomer')
+  const [groomers, setGroomers] = useState<Groomer[]>([])
+  const [loadingGroomers, setLoadingGroomers] = useState(true)
 
   useEffect(() => {
     if (!member) router.replace('/kiosk')
   }, [member, router])
 
+  useEffect(() => {
+    fetch('/api/admin/groomers')
+      .then(r => r.json())
+      .then((data: Groomer[]) => setGroomers(Array.isArray(data) ? data.filter(g => g.is_active) : []))
+      .catch(() => {})
+      .finally(() => setLoadingGroomers(false))
+  }, [])
+
   if (!member) return null
 
-  const slots = selectedGroomer === '不指定'
-    ? WALK_IN_SLOTS
-    : AVAILABLE_SLOTS[selectedGroomer!] ?? []
+  function selectGroomer(groomer: Groomer | null) {
+    if (groomer) {
+      setGroomer(groomer.name)
+      setGroomerId(groomer.id)
+    } else {
+      setGroomer('不指定')
+      setGroomerId(null)
+    }
+    setStep('time')
+  }
 
   return (
     <div className="flex-1 flex flex-col bg-white">
@@ -44,45 +62,51 @@ export default function KioskSchedule() {
         {step === 'groomer' ? (
           <div className="space-y-3">
             <p className="text-sm text-slate-t mb-4">請選擇您希望的美容師</p>
-            {MOCK_GROOMER_NAMES.map(groomer => (
-              <button
-                key={groomer}
-                onClick={() => { setGroomer(groomer); setStep('time') }}
-                className={`w-full flex items-center gap-4 p-5 rounded-2xl border-2 text-left transition-all ${
-                  selectedGroomer === groomer
-                    ? 'border-primary bg-primary-bg'
-                    : 'border-border-t hover:border-primary/50'
-                }`}
-              >
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-xl font-bold text-primary">
-                  {groomer[0]}
-                </div>
-                <div>
-                  <p className="font-bold text-ink text-lg">{groomer}</p>
-                  <p className="text-slate-t text-sm">
-                    今日剩 {AVAILABLE_SLOTS[groomer]?.length ?? 0} 個時段
-                  </p>
-                </div>
-              </button>
-            ))}
-            <button
-              onClick={() => { setGroomer('不指定'); setStep('time') }}
-              className="w-full p-4 rounded-2xl border-2 border-dashed border-border-t text-slate-t hover:border-primary hover:text-primary transition-colors"
-            >
-              不指定，安排有空的美容師
-            </button>
+            {loadingGroomers ? (
+              <div className="flex justify-center py-8">
+                <Loader2 size={28} className="animate-spin text-primary" />
+              </div>
+            ) : (
+              <>
+                {groomers.map(groomer => (
+                  <button
+                    key={groomer.id}
+                    onClick={() => selectGroomer(groomer)}
+                    className={`w-full flex items-center gap-4 p-5 rounded-2xl border-2 text-left transition-all ${
+                      selectedGroomer === groomer.name
+                        ? 'border-primary bg-primary-bg'
+                        : 'border-border-t hover:border-primary/50'
+                    }`}
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-xl font-bold text-primary">
+                      {groomer.name[0]}
+                    </div>
+                    <div>
+                      <p className="font-bold text-ink text-lg">{groomer.name}</p>
+                      <p className="text-slate-t text-sm">今日 {WALK_IN_SLOTS.length} 個可用時段</p>
+                    </div>
+                  </button>
+                ))}
+                <button
+                  onClick={() => selectGroomer(null)}
+                  className="w-full p-4 rounded-2xl border-2 border-dashed border-border-t text-slate-t hover:border-primary hover:text-primary transition-colors"
+                >
+                  不指定，安排有空的美容師
+                </button>
+              </>
+            )}
           </div>
         ) : (
           <div>
             <button
-              onClick={() => { setStep('groomer') }}
+              onClick={() => setStep('groomer')}
               className="text-primary text-sm mb-4 flex items-center gap-1"
             >
               ← 重新選美容師
             </button>
             <p className="text-sm text-slate-t mb-4">{selectedGroomer} 今日可預約時段</p>
             <div className="grid grid-cols-3 gap-3">
-              {slots.map(time => (
+              {(WALK_IN_SLOTS.length > 0 ? WALK_IN_SLOTS : ['10:00','11:00','13:00','14:00','15:00']).map(time => (
                 <button
                   key={time}
                   onClick={() => setTime(time)}

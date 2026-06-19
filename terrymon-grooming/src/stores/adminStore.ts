@@ -69,7 +69,7 @@ export const useAdminStore = create<AdminStore>()(
       shifts:       MOCK_SHIFTS,
       storeHours:   MOCK_STORE_HOURS,
       breeds:       BREED_DATABASE,
-      shopName: 'TerryMon 寵物美容', shopPhone: '04-2345-6789', shopAddress: '台中市西區精誠路 88 號', shopLineId: '@terrymon',
+      shopName: 'TerryMon 寵物美容旗艦店', shopPhone: '02-2711-5566', shopAddress: '台北市信義區松仁路 88 號', shopLineId: '@terrymon',
       contractTemplate: CONTRACT_TEMPLATE,
 
       login:  () => set({ isLoggedIn: true }),

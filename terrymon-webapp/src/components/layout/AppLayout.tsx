@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import BottomNav from '@/components/layout/BottomNav'
 import SideNav from '@/components/layout/SideNav'
+import AppHeader from '@/components/layout/AppHeader'
 import { useAuthStore } from '@/stores/authStore'
 import { useNotifStore } from '@/stores/notificationStore'
 import { api } from '@/services/api'
@@ -59,6 +60,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </div>
       {/* Main content */}
       <main className="min-h-screen flex-1 pb-20 md:ml-60 md:pb-6">
+        <AppHeader />
         {children}
       </main>
       {/* Mobile bottom nav */}

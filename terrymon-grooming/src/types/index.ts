@@ -23,14 +23,20 @@ export interface Member {
 export interface Pet {
   id: string
   memberId: string
+  primaryCaregiverId?: string
   name: string
   species: Species
+  breedId?: string
   breed: string
   birthDate: string
   weight: number
   photoUrl: string
   allergies: string[]
   chipId?: string
+  gender?: 'male' | 'female'
+  isNeutered?: boolean
+  bloodType?: string
+  caregiver?: string
   notes: string
   isActive?: boolean
 }

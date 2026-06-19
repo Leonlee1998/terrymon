@@ -5,20 +5,23 @@ import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, Users, Store, Building2, ClipboardCheck,
   Receipt, BarChart3, LogOut, ShieldCheck, Menu, X, ShieldAlert,
+  History, UserCog,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
-import type { PlatformAdmin } from '@/types'
+import type { AdminRole, PlatformAdmin } from '@/types'
 
-const NAV = [
-  { href: '/dashboard',       label: '總覽',   icon: LayoutDashboard },
-  { href: '/members',         label: '會員管理', icon: Users },
-  { href: '/vendors',         label: '商家管理', icon: Store },
-  { href: '/organizations',   label: '機構審核', icon: ShieldCheck },
-  { href: '/stores',          label: '店鋪管理', icon: Building2 },
-  { href: '/store-placements', label: '進駐審核', icon: ClipboardCheck },
-  { href: '/finance',         label: '金流對帳', icon: Receipt },
-  { href: '/reports',         label: '報表',   icon: BarChart3 },
+const NAV: { href: string; label: string; icon: React.ElementType; roles: AdminRole[] | null }[] = [
+  { href: '/dashboard',        label: '總覽',     icon: LayoutDashboard, roles: null },
+  { href: '/members',          label: '會員管理',  icon: Users,           roles: ['super_admin', 'ops', 'support'] },
+  { href: '/vendors',          label: '商家管理',  icon: Store,           roles: ['super_admin', 'ops'] },
+  { href: '/organizations',    label: '機構審核',  icon: ShieldCheck,     roles: ['super_admin', 'ops'] },
+  { href: '/stores',           label: '店鋪管理',  icon: Building2,       roles: ['super_admin', 'ops'] },
+  { href: '/store-placements', label: '進駐審核',  icon: ClipboardCheck,  roles: ['super_admin', 'ops'] },
+  { href: '/finance',          label: '金流對帳',  icon: Receipt,         roles: ['super_admin', 'finance'] },
+  { href: '/reports',          label: '報表',     icon: BarChart3,       roles: ['super_admin', 'finance'] },
+  { href: '/audit-log',        label: '稽核紀錄',  icon: History,         roles: ['super_admin', 'ops', 'finance'] },
+  { href: '/admins',           label: '管理員帳號', icon: UserCog,         roles: ['super_admin'] },
 ]
 
 const ROLE_LABEL: Record<string, string> = {
@@ -52,7 +55,7 @@ export default function AdminSidebar({ admin }: { admin: PlatformAdmin }) {
       </div>
 
       <nav className="flex-1 space-y-1 px-3">
-        {NAV.map(({ href, label, icon: Icon }) => {
+        {NAV.filter(({ roles }) => !roles || roles.includes(admin.role)).map(({ href, label, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(href + '/')
           return (
             <Link

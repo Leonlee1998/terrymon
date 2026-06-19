@@ -2,13 +2,13 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { CalendarDays, ChevronLeft, Gift, Loader2, ScanLine, Wallet } from 'lucide-react'
+import { AlertTriangle, CalendarDays, ChevronLeft, Gift, Loader2, PawPrint, ScanLine, Wallet } from 'lucide-react'
 import { posApi } from '@/services/api'
 import { useKioskStore } from '@/stores/kioskStore'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { formatPrice } from '@/lib/utils'
-import type { Member } from '@/types'
+import { formatPrice, getSpeciesEmoji } from '@/lib/utils'
+import type { Member, Pet } from '@/types'
 
 type Phase = 'input' | 'loading' | 'confirm' | 'error'
 type TodayAppt = { id: string; time: string; petName: string; petId: string; notes: string }
@@ -17,10 +17,11 @@ const TEST_PHONE = '0912345678'
 
 export default function KioskScan() {
   const router = useRouter()
-  const { setMember, setCheckinMode, setAppointmentId } = useKioskStore()
+  const { setMember, setCheckinMode, setAppointmentId, setSelectedPet } = useKioskStore()
   const [input, setInput] = useState('')
   const [phase, setPhase] = useState<Phase>('input')
   const [foundMember, setFoundMember] = useState<Member | null>(null)
+  const [preSelectedPet, setPreSelectedPet] = useState<Pet | null>(null)
   const [todayAppt, setTodayAppt] = useState<TodayAppt | null>(null)
 
   async function handleLookup(value = input) {
@@ -30,17 +31,19 @@ export default function KioskScan() {
     setInput(q)
     setPhase('loading')
     setFoundMember(null)
+    setPreSelectedPet(null)
     setTodayAppt(null)
 
     try {
-      const member = await posApi.lookupMember(q)
+      const { member, preSelectedPet: pet, todayAppointment } = await posApi.lookupMember(q)
       if (!member) {
         setPhase('error')
         return
       }
 
       setFoundMember(member)
-      setTodayAppt(await posApi.getAppointmentToday(member.id))
+      setPreSelectedPet(pet ?? null)
+      setTodayAppt(todayAppointment ?? null)
       setPhase('confirm')
     } catch {
       setPhase('error')
@@ -52,6 +55,7 @@ export default function KioskScan() {
 
     setMember(foundMember)
     setCheckinMode(mode)
+    if (preSelectedPet) setSelectedPet(preSelectedPet)
     setAppointmentId(mode === 'has_appointment' && todayAppt ? todayAppt.id : null)
     router.push(mode === 'has_appointment' && todayAppt ? '/kiosk/appointment' : '/kiosk/schedule')
   }
@@ -102,6 +106,49 @@ export default function KioskScan() {
         </div>
 
         <div className="flex-1 p-6 space-y-4 overflow-y-auto">
+          {/* Pre-selected pet card (from pet QR scan) */}
+          {preSelectedPet && (
+            <div className="bg-primary-bg border-2 border-primary rounded-2xl p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <PawPrint size={16} className="text-primary" />
+                <p className="font-semibold text-primary">已識別寵物</p>
+              </div>
+              <div className="flex items-center gap-3">
+                {preSelectedPet.photoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={preSelectedPet.photoUrl} alt={preSelectedPet.name}
+                       className="w-16 h-16 rounded-xl object-cover" />
+                ) : (
+                  <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center text-2xl">
+                    {getSpeciesEmoji(preSelectedPet.species)}
+                  </div>
+                )}
+                <div className="flex-1">
+                  <p className="font-black text-xl text-ink">{preSelectedPet.name}</p>
+                  <p className="text-slate-t text-sm">{preSelectedPet.breed} · {preSelectedPet.weight} kg</p>
+                  {preSelectedPet.bloodType && (
+                    <p className="text-slate-t text-xs">血型：{preSelectedPet.bloodType}</p>
+                  )}
+                </div>
+              </div>
+              {preSelectedPet.allergies.length > 0 && (
+                <div className="flex items-start gap-2 mt-3 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
+                  <AlertTriangle size={14} className="text-red-600 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-bold text-red-700">⚠️ 過敏史（請告知美容師）</p>
+                    <p className="text-xs text-red-600">{preSelectedPet.allergies.join('、')}</p>
+                  </div>
+                </div>
+              )}
+              {preSelectedPet.notes && (
+                <div className="flex items-start gap-2 mt-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+                  <AlertTriangle size={14} className="text-amber-600 shrink-0 mt-0.5" />
+                  <p className="text-xs text-amber-700">{preSelectedPet.notes}</p>
+                </div>
+              )}
+            </div>
+          )}
+
           {todayAppt ? (
             <div className="bg-primary-bg border border-primary/30 rounded-2xl p-4">
               <div className="flex items-center gap-2 mb-2">
@@ -120,32 +167,23 @@ export default function KioskScan() {
             </div>
           ) : (
             <div className="bg-surface border border-border-t rounded-2xl px-4 py-3 text-center">
-              <p className="text-sm text-slate-t">目前沒有查到今日預約，可以使用現場報到測試完整流程。</p>
+              <p className="text-sm text-slate-t">目前沒有查到今日預約，可以使用現場報到。</p>
             </div>
           )}
 
           <div className="border-2 border-border-t rounded-2xl p-4">
             <p className="font-semibold text-ink mb-1">現場報到</p>
-            <p className="text-sm text-slate-t mb-3">選擇美容師與時段後，再選寵物與服務。</p>
+            <p className="text-sm text-slate-t mb-3">
+              {preSelectedPet ? `已選擇 ${preSelectedPet.name}，直接選擇美容師與時段。` : '選擇美容師與時段後，再選寵物與服務。'}
+            </p>
             <Button
               onClick={() => handleConfirm('walk_in')}
               variant="outline"
               className="w-full border-border-t font-semibold"
             >
-              開始現場報到
+              {preSelectedPet ? `以 ${preSelectedPet.name} 現場報到` : '開始現場報到'}
             </Button>
           </div>
-
-          <button
-            onClick={() => handleConfirm('walk_in')}
-            className="w-full flex items-center justify-between border border-border-t rounded-2xl px-4 py-3 hover:border-primary hover:bg-primary-bg transition-colors"
-          >
-            <div className="flex items-center gap-2">
-              <Wallet size={18} className="text-primary" />
-              <span className="font-medium text-ink">先略過儲值，繼續測試報到</span>
-            </div>
-            <span className="text-slate-t text-sm">{formatPrice(foundMember.balance)}</span>
-          </button>
         </div>
       </div>
     )
@@ -173,7 +211,7 @@ export default function KioskScan() {
           ))}
           <div className="flex flex-col items-center gap-3 text-slate-t">
             <ScanLine size={52} className="text-primary" />
-            <p className="text-sm text-center">將 QR Code 放入框內</p>
+            <p className="text-sm text-center">掃描會員或寵物 QR Code</p>
           </div>
           <div className="absolute inset-4 overflow-hidden pointer-events-none">
             <div className="w-full h-0.5 bg-primary/60 animate-[scan_2s_ease-in-out_infinite]" />

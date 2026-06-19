@@ -37,15 +37,15 @@ async function fetchAll(member: Member): Promise<CalEvent[]> {
     const pet = member.pets.find(p => p.id === a.petId)
     all.push({
       id: a.id,
-      date: a.date,
+      date: a.scheduledDate,
       type: 'appointment',
       source: a.type === 'vet' ? 'vet' : 'grooming',
       petId: a.petId,
       petName: pet?.name ?? '寵物',
-      title: a.type === 'vet' ? '看診預約' : '美容預約',
-      detail: `${a.location}`,
+      title: a.mainServiceName ?? (a.type === 'vet' ? '看診預約' : '美容預約'),
+      detail: a.storeName ?? '',
       status: a.status,
-      time: a.time,
+      time: a.scheduledTime?.slice(0, 5),
     })
   }
 

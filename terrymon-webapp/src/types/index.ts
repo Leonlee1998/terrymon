@@ -1,6 +1,9 @@
 ﻿// ?? ?箸?? ??????????????????????????????????????????
 export type Species           = 'dog' | 'cat' | 'other'
-export type AppointmentStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled'
+export type AppointmentStatus =
+  | 'pending' | 'confirmed' | 'rejected'
+  | 'checked_in' | 'in_service' | 'completed'
+  | 'cancelled' | 'no_show'
 export type DocumentType      = 'prescription' | 'receipt' | 'contract' | 'report'
 export type ServiceType       = 'vet' | 'grooming' | 'other'
 export type OrderStatus       = 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled'
@@ -164,15 +167,67 @@ export interface Appointment {
   id: string
   memberId: string
   petId: string
+  storeId: string
+  storeName?: string
   type: ServiceType
+  source: 'kiosk' | 'webapp' | 'pos' | 'line' | 'phone'
+  status: AppointmentStatus
+  scheduledDate: string
+  scheduledTime: string
+  endTime?: string
+  durationMin?: number
+  groomerId?: string
+  groomerName?: string
+  mainServiceId?: string
+  mainServiceName?: string
+  addonServiceIds: string[]
+  estimatedPrice?: number
+  depositAmount?: number
+  depositPaidAt?: string
+  photoUrl?: string
+  notes: string
+  cancelReason?: string
+  confirmedAt?: string
+  checkedInAt?: string
+  serviceStartedAt?: string
+  cancelledAt?: string
+  createdAt: string
+}
+
+export interface GroomingStore {
+  id: string
+  name: string
+  address?: string
+  phone?: string
+  type: string
+}
+
+export interface GroomingServiceItem {
+  id: string
+  storeId: string
+  name: string
+  description?: string
+  price: number
+  duration: number
+  isAddon: boolean
+}
+
+export interface AvailableSlot {
+  slotTime: string
+  groomerId: string
+  groomerName: string
+}
+
+export interface BookingInput {
+  petId: string
+  storeId: string
+  serviceId: string
+  addonIds: string[]
   date: string
   time: string
-  endTime?: string
-  location: string
-  address?: string
-  status: AppointmentStatus
+  groomerId?: string
   notes: string
-  reminderSent: boolean
+  photoUrl?: string
 }
 
 // ?? ?? ?????????????????????????????????????????????

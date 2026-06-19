@@ -93,6 +93,7 @@ export interface TransactionRow {
   id: string
   memberId: string
   memberName?: string
+  memberEmail?: string
   storeId?: string
   type: TransactionType
   totalAmount: number
@@ -100,11 +101,21 @@ export interface TransactionRow {
   pointsUsed: number
   cardAmount: number
   cashAmount: number
+  balanceAfter: number
   paymentMethod?: string
   paymentGateway?: string
   gatewayTxId?: string
   note?: string
+  settledAt?: string
+  originalTxId?: string
   createdAt: string
+}
+
+export interface FinanceSummary {
+  totalIn: number
+  totalRefund: number
+  pendingSettlement: number
+  txCount: number
 }
 
 export interface DashboardStats {
@@ -113,6 +124,37 @@ export interface DashboardStats {
   storeCount: number
   revenue30d: number
   topupCount30d: number
+}
+
+export interface DashboardMetrics {
+  memberCount: number
+  newMembersThisMonth: number
+  activeMembersThisWeek: number
+  vendorPendingCount: number
+  orgPendingCount: number
+  placementPendingCount: number
+  gmv30d: number
+  netRevenue30d: number
+  refundRate30d: number
+  refundAmount30d: number
+  topupAmount30d: number
+  topupCount30d: number
+  totalPlatformBalance: number
+  storeCount: number
+}
+
+export interface RevenueBreakdownDay {
+  date: string
+  service: number
+  order: number
+  topup: number
+  refund: number
+}
+
+export interface TopStoreRow {
+  storeName: string
+  revenue: number
+  txCount: number
 }
 
 export type OrgType   = 'individual' | 'shelter' | 'rescue'
@@ -133,4 +175,26 @@ export interface OrgRow {
   status: OrgStatus
   appliedAt: string
   approvedAt?: string
+}
+
+export interface AuditLogRow {
+  id: string
+  adminId: string | null
+  adminName?: string
+  adminEmail?: string
+  action: string
+  targetTable: string | null
+  targetId: string | null
+  payload: Record<string, unknown>
+  createdAt: string
+}
+
+export interface AdminAccountRow {
+  id: string
+  supabaseUid: string | null
+  name: string
+  email: string
+  role: AdminRole
+  isActive: boolean
+  createdAt: string
 }

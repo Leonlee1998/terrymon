@@ -28,12 +28,14 @@ export default function TodaySchedule({ appointment }: Props) {
             </p>
             <div className="flex items-center gap-1 text-xs text-slate-t mt-1">
               <Clock size={12} />
-              <span>{appointment.date} {appointment.time}</span>
+              <span>{appointment.scheduledDate} {appointment.scheduledTime?.slice(0, 5)}</span>
             </div>
-            <div className="flex items-center gap-1 text-xs text-slate-t mt-0.5">
-              <MapPin size={12} />
-              <span>{appointment.location}</span>
-            </div>
+            {appointment.storeName && (
+              <div className="flex items-center gap-1 text-xs text-slate-t mt-0.5">
+                <MapPin size={12} />
+                <span>{appointment.storeName}</span>
+              </div>
+            )}
           </div>
           <span className="bg-primary-bg text-primary text-xs font-medium px-2 py-1 rounded-full">
             已確認

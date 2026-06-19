@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import { useState } from 'react'
+import { QRCodeSVG } from 'qrcode.react'
 import { AlertTriangle, ChevronRight, Edit2, Eye, PawPrint, Users } from 'lucide-react'
 import type { Pet } from '@/types'
 import PetFormDialog from './PetFormDialog'
@@ -124,13 +125,23 @@ export default function PetProfileCard({ pet }: { pet: Pet }) {
         </button>
 
         {/* ── Footer ── */}
-        <div className="relative mt-4 flex items-end justify-end px-6 pb-6">
+        <div className="relative mt-4 flex items-end justify-between px-6 pb-6">
           <PawPrint
             size={90}
             className="pointer-events-none absolute bottom-4 left-4 -rotate-[25deg] text-card-teal opacity-10"
             fill="currentColor"
             strokeWidth={0}
           />
+          <div className="relative z-10 flex flex-col items-center">
+            <QRCodeSVG
+              value={`TERRYMON-PET-${pet.id}`}
+              size={56}
+              bgColor="transparent"
+              fgColor="#4AAAB5"
+              level="M"
+            />
+            <p className="mt-0.5 text-[9px] font-bold tracking-widest text-card-teal opacity-60">PET QR</p>
+          </div>
           <Image
             src="/assets/logo.png"
             alt="TerryMon 預約怪獸"

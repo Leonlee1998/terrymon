@@ -1,10 +1,11 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronLeft, CalendarDays, Clock, PawPrint } from 'lucide-react'
+import { ChevronLeft, CalendarDays, Clock, PawPrint, Loader2 } from 'lucide-react'
 import { useKioskStore } from '@/stores/kioskStore'
 import { posApi } from '@/services/api'
 import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
 
 type ApptDetail = {
   id: string
@@ -18,6 +19,7 @@ export default function KioskAppointment() {
   const router = useRouter()
   const { member, appointmentId, setTime } = useKioskStore()
   const [apptData, setApptData] = useState<ApptDetail | null>(null)
+  const [checking, setChecking] = useState(false)
 
   useEffect(() => {
     if (!member) router.replace('/kiosk')
@@ -30,8 +32,28 @@ export default function KioskAppointment() {
 
   if (!member) return null
 
-  function handleConfirm() {
+  async function handleConfirm() {
     if (apptData) setTime(apptData.time)
+
+    if (appointmentId) {
+      setChecking(true)
+      try {
+        const res = await fetch('/api/kiosk/checkin-appointment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ appointmentId }),
+        })
+        if (!res.ok) {
+          const err = await res.json() as { error?: string }
+          toast.warning(err.error ?? '報到更新失敗，請通知工作人員')
+        }
+      } catch {
+        toast.warning('網路異常，請通知工作人員確認')
+      } finally {
+        setChecking(false)
+      }
+    }
+
     router.push('/kiosk/pet')
   }
 
@@ -100,10 +122,13 @@ export default function KioskAppointment() {
 
       <div className="border-t border-border-t p-4 flex-shrink-0">
         <Button
-          onClick={handleConfirm}
-          className="w-full h-14 bg-primary hover:bg-primary-hover text-white font-bold text-lg"
+          onClick={() => void handleConfirm()}
+          disabled={checking}
+          className="w-full h-14 bg-primary hover:bg-primary-hover text-white font-bold text-lg disabled:opacity-70"
         >
-          確認，選擇寵物 →
+          {checking
+            ? <><Loader2 size={20} className="animate-spin mr-2 inline" />報到中...</>
+            : '確認，選擇寵物 →'}
         </Button>
       </div>
     </div>

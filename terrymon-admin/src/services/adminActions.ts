@@ -4,7 +4,7 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { getCurrentAdmin } from '@/lib/auth'
 import type { AdminRole, VendorStatus, PlacementStatus, OrgStatus } from '@/types'
 
-type Result = { ok: boolean; error?: string }
+type Result = { ok: boolean; error?: string; data?: unknown }
 
 async function requireAdmin(roles?: AdminRole[]) {
   const admin = await getCurrentAdmin()
@@ -113,6 +113,111 @@ export async function setOrgStatus(orgId: string, status: OrgStatus): Promise<Re
     if (error) return { ok: false, error: error.message }
     await audit(admin.id, `org_${status}`, 'organizations', orgId, { status })
     revalidatePath('/organizations')
+    return { ok: true }
+  } catch (e) {
+    return { ok: false, error: (e as Error).message }
+  }
+}
+
+// ---------- 金流操作 ----------
+
+export async function issueRefund(
+  originalTxId: string, amount: number, reason: string
+): Promise<Result> {
+  try {
+    const admin = await requireAdmin(['super_admin', 'finance'])
+    if (!Number.isInteger(amount) || amount <= 0) return { ok: false, error: '退款金額必須為正整數' }
+    if (!reason.trim()) return { ok: false, error: '請填寫退款原因' }
+
+    const { data, error } = await createAdminClient().rpc('admin_issue_refund', {
+      p_admin_id: admin.id,
+      p_original_tx_id: originalTxId,
+      p_amount: amount,
+      p_reason: reason.trim(),
+    })
+    if (error) return { ok: false, error: error.message }
+    revalidatePath('/finance')
+    return { ok: true, data }
+  } catch (e) {
+    return { ok: false, error: (e as Error).message }
+  }
+}
+
+export async function settleTransaction(txId: string): Promise<Result> {
+  try {
+    const admin = await requireAdmin(['super_admin', 'finance'])
+    const { error } = await createAdminClient().from('transactions')
+      .update({ settled_at: new Date().toISOString() }).eq('id', txId).is('settled_at', null)
+    if (error) return { ok: false, error: error.message }
+    await audit(admin.id, 'tx_settle', 'transactions', txId, {})
+    revalidatePath('/finance')
+    return { ok: true }
+  } catch (e) {
+    return { ok: false, error: (e as Error).message }
+  }
+}
+
+// ---------- 管理員帳號管理（super_admin 專屬）----------
+
+export async function inviteAdmin(
+  name: string, email: string, role: AdminRole
+): Promise<Result> {
+  try {
+    const admin = await requireAdmin(['super_admin'])
+    if (!name.trim() || !email.trim()) return { ok: false, error: '請填寫姓名與 Email' }
+
+    const sb = createAdminClient()
+    const { data: existing } = await sb.from('platform_admins')
+      .select('id').eq('email', email.trim().toLowerCase()).maybeSingle()
+    if (existing) return { ok: false, error: '此 Email 已建立後台帳號' }
+
+    const { data: authData, error: inviteErr } = await sb.auth.admin.inviteUserByEmail(
+      email.trim().toLowerCase(),
+      { data: { is_platform_admin: true } }
+    )
+    if (inviteErr) return { ok: false, error: inviteErr.message }
+
+    const { error: dbErr } = await sb.from('platform_admins').insert({
+      supabase_uid: authData.user.id,
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+      role,
+      is_active: true,
+    })
+    if (dbErr) return { ok: false, error: dbErr.message }
+
+    await audit(admin.id, 'admin_invite', 'platform_admins', authData.user.id, { name, email, role })
+    revalidatePath('/admins')
+    return { ok: true }
+  } catch (e) {
+    return { ok: false, error: (e as Error).message }
+  }
+}
+
+export async function updateAdminRole(adminId: string, role: AdminRole): Promise<Result> {
+  try {
+    const admin = await requireAdmin(['super_admin'])
+    if (adminId === admin.id) return { ok: false, error: '無法修改自己的角色' }
+    const { error } = await createAdminClient().from('platform_admins')
+      .update({ role }).eq('id', adminId)
+    if (error) return { ok: false, error: error.message }
+    await audit(admin.id, 'admin_role_change', 'platform_admins', adminId, { role })
+    revalidatePath('/admins')
+    return { ok: true }
+  } catch (e) {
+    return { ok: false, error: (e as Error).message }
+  }
+}
+
+export async function setAdminActive(adminId: string, isActive: boolean): Promise<Result> {
+  try {
+    const admin = await requireAdmin(['super_admin'])
+    if (adminId === admin.id) return { ok: false, error: '無法停用自己的帳號' }
+    const { error } = await createAdminClient().from('platform_admins')
+      .update({ is_active: isActive }).eq('id', adminId)
+    if (error) return { ok: false, error: error.message }
+    await audit(admin.id, isActive ? 'admin_activate' : 'admin_deactivate', 'platform_admins', adminId, { isActive })
+    revalidatePath('/admins')
     return { ok: true }
   } catch (e) {
     return { ok: false, error: (e as Error).message }

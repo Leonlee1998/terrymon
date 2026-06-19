@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import { QRCodeSVG } from 'qrcode.react'
 import { AlertTriangle, PawPrint } from 'lucide-react'
 import type { Pet } from '@/types'
 
@@ -93,12 +94,16 @@ export default function PetPreviewBackCard({ pet }: { pet: Pet }) {
 
       {/* Footer – fixed at bottom */}
       <div className="relative flex shrink-0 items-center justify-between px-4 pb-4 pt-2">
-        <PawPrint
-          size={52}
-          className="pointer-events-none -rotate-[25deg] text-card-teal opacity-10"
-          fill="currentColor"
-          strokeWidth={0}
-        />
+        <div className="flex flex-col items-center">
+          <QRCodeSVG
+            value={`TERRYMON-PET-${pet.id}`}
+            size={44}
+            bgColor="transparent"
+            fgColor="#4AAAB5"
+            level="M"
+          />
+          <p className="mt-0.5 text-[8px] font-bold tracking-widest text-card-teal opacity-60">PET QR</p>
+        </div>
         <Image src="/assets/logo.png" alt="TerryMon 預約怪獸" width={80} height={27} className="object-contain" />
       </div>
     </div>

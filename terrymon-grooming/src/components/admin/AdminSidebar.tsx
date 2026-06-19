@@ -2,30 +2,52 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import {
-  LayoutDashboard, Scissors, CalendarDays,
-  Users, FileText, Settings, LogOut, Stethoscope, ShoppingBag, PackagePlus, Boxes,
+  LayoutDashboard, Scissors, CalendarDays, ClipboardList,
+  Users, FileText, Settings, LogOut, Stethoscope, ShoppingBag, PackagePlus, Boxes, MessageSquare,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAdminStore } from '@/stores/adminStore'
 import { toast } from 'sonner'
 
-const NAV = [
-  { href: '/admin',               icon: LayoutDashboard, label: '儀表板' },
-  { href: '/admin/services',      icon: Scissors,        label: '服務管理' },
-  { href: '/admin/shop-products',  icon: ShoppingBag,  label: '現場商品' },
-  { href: '/admin/brands',         icon: Boxes,        label: '品牌管理' },
-  { href: '/admin/brand-products', icon: PackagePlus,  label: '品牌商品 Push' },
-  { href: '/admin/schedule',      icon: CalendarDays,    label: '排班管理' },
-  { href: '/admin/members',       icon: Users,           label: '會員查詢' },
-  { href: '/admin/records',       icon: FileText,        label: '服務紀錄' },
-  { href: '/admin/settings',      icon: Settings,        label: '系統設定' },
+const BASE_NAV = [
+  { href: '/admin',               icon: LayoutDashboard, label: '今日工作台', badge: 'dashboard' },
+  { href: '/admin/appointments',  icon: ClipboardList,   label: '預約管理',   badge: 'pending' },
+  { href: '/admin/schedule',      icon: CalendarDays,    label: '排班管理',   badge: null },
+  { href: '/admin/services',      icon: Scissors,        label: '服務管理',   badge: null },
+  { href: '/admin/shop-products', icon: ShoppingBag,     label: '現場商品',   badge: null },
+  { href: '/admin/brands',        icon: Boxes,           label: '品牌管理',   badge: null },
+  { href: '/admin/brand-products',icon: PackagePlus,     label: '品牌商品',   badge: null },
+  { href: '/admin/messages',      icon: MessageSquare,   label: '訊息中心',   badge: null },
+  { href: '/admin/members',       icon: Users,           label: '會員查詢',   badge: null },
+  { href: '/admin/records',       icon: FileText,        label: '服務紀錄',   badge: null },
+  { href: '/admin/settings',      icon: Settings,        label: '系統設定',   badge: null },
 ]
 
 export default function AdminSidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const { shopName, logout } = useAdminStore()
+  const [pendingCount, setPendingCount] = useState(0)
+  const [checkedInCount, setCheckedInCount] = useState(0)
+
+  useEffect(() => {
+    async function fetchCounts() {
+      try {
+        const [r1, r2] = await Promise.all([
+          fetch('/api/admin/appointments?status=pending'),
+          fetch('/api/admin/appointments?status=checked_in'),
+        ])
+        const [d1, d2] = await Promise.all([r1.json(), r2.json()])
+        setPendingCount(Array.isArray(d1) ? d1.length : 0)
+        setCheckedInCount(Array.isArray(d2) ? d2.length : 0)
+      } catch { /* silent */ }
+    }
+    void fetchCounts()
+    const id = setInterval(fetchCounts, 60_000)
+    return () => clearInterval(id)
+  }, [])
 
   function handleLogout() {
     logout()
@@ -45,8 +67,11 @@ export default function AdminSidebar() {
 
       {/* Nav */}
       <nav className="flex-1 p-3 space-y-0.5">
-        {NAV.map(({ href, icon: Icon, label }) => {
+        {BASE_NAV.map(({ href, icon: Icon, label, badge }) => {
           const active = pathname === href || (href !== '/admin' && pathname.startsWith(href))
+          const badgeCount =
+            badge === 'dashboard' ? checkedInCount :
+            badge === 'pending'   ? pendingCount   : 0
           return (
             <Link
               key={href}
@@ -59,7 +84,15 @@ export default function AdminSidebar() {
               )}
             >
               <Icon size={18} />
-              {label}
+              <span className="flex-1">{label}</span>
+              {badgeCount > 0 && (
+                <span className={cn(
+                  'text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center',
+                  badge === 'dashboard' ? 'bg-emerald-400 text-white' : 'bg-yellow-400 text-gray-900'
+                )}>
+                  {badgeCount}
+                </span>
+              )}
             </Link>
           )
         })}

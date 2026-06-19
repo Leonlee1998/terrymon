@@ -1,4 +1,3 @@
-import HomeHeader from '@/components/home/HomeHeader'
 import WelcomeCard from '@/components/home/WelcomeCard'
 import BarcodeWidget from '@/components/home/BarcodeWidget'
 import TodaySchedule from '@/components/home/TodaySchedule'
@@ -16,12 +15,11 @@ export default async function HomePage() {
   ])
   const effectivePets = pets.length > 0 ? pets : member.pets
   const todayAppt = appointments.find(a =>
-    a.status === 'confirmed' && new Date(a.date) >= new Date()
+    a.status === 'confirmed' && new Date(a.scheduledDate) >= new Date()
   ) ?? null
 
   return (
     <div className="flex flex-col animate-fade-in">
-      <HomeHeader />
       <div className="p-4 space-y-4 max-w-2xl mx-auto w-full">
         <WelcomeCard member={member} appointment={todayAppt} />
         <BarcodeWidget member={member} />
