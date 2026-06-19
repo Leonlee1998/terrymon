@@ -81,28 +81,22 @@ export default function MemberProfileCard({ member }: { member: Member }) {
           </span>
           <span className="text-xs text-white/50 ml-auto">加入於 {formatDate(m.memberSince)}</span>
         </div>
-      </div>
 
-      {/* ── 寄件資訊 ── */}
-      <div className="bg-white rounded-2xl border border-border-t p-4">
-        <div className="flex items-center justify-between mb-2">
+        {/* 寄件資訊 hint row */}
+        <button
+          onClick={() => setEditOpen(true)}
+          className="mt-3 pt-3 border-t border-white/20 w-full flex items-center justify-between group"
+        >
           <div className="flex items-center gap-1.5">
-            <MapPin size={14} className="text-primary" />
-            <h3 className="text-sm font-bold text-ink">寄件資訊</h3>
+            <MapPin size={12} className="text-white/60 shrink-0" />
+            {sa ? (
+              <span className="text-xs text-white/80">{sa.recipientName}・{sa.city}{sa.district} {sa.address}</span>
+            ) : (
+              <span className="text-xs text-white/50">寄件資訊未設定（點此新增）</span>
+            )}
           </div>
-          <button onClick={() => setEditOpen(true)} className="text-xs text-primary font-medium hover:underline">
-            {sa ? '編輯' : '新增'}
-          </button>
-        </div>
-        {sa ? (
-          <div className="space-y-0.5">
-            <p className="text-sm font-medium text-ink">{sa.recipientName} · {sa.phone}</p>
-            <p className="text-xs text-slate-t">{sa.zipCode} {sa.city}{sa.district}</p>
-            <p className="text-xs text-slate-t">{sa.address}</p>
-          </div>
-        ) : (
-          <p className="text-sm text-slate-t">尚未設定，商城結帳時可快速填入</p>
-        )}
+          <Edit2 size={11} className="text-white/40 group-hover:text-white/70 transition-colors shrink-0" />
+        </button>
       </div>
 
       <AvatarPickerDialog open={avatarOpen} onOpenChange={setAvatarOpen} currentAvatarUrl={m.avatarUrl} />

@@ -3,8 +3,7 @@ import { useRouter } from 'next/navigation'
 import type { Member, DocItem, Order, Organization } from '@/types'
 import { useAuthStore } from '@/stores/authStore'
 import MemberProfileCard from './MemberProfileCard'
-import HandleCard from './HandleCard'
-import QRCodeCard from './QRCodeCard'
+import MemberIDCard from './MemberIDCard'
 import BalanceCard from './BalanceCard'
 import DocumentsList from './DocumentsList'
 import OrderSummary from './OrderSummary'
@@ -36,8 +35,7 @@ export default function MemberClient({ member, documents, orders, organization }
 
       <div className="flex-1 p-4 max-w-2xl mx-auto w-full space-y-4 pb-8">
         <MemberProfileCard member={effectiveMember} />
-        <HandleCard member={effectiveMember} />
-        <QRCodeCard member={effectiveMember} />
+        <MemberIDCard member={effectiveMember} />
         <BalanceCard member={effectiveMember} />
         <OrderSummary orders={orders} />
         <DocumentsList documents={documents} />

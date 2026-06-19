@@ -96,6 +96,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ member, preSelectedPet, todayAppointment })
   }
 
+  // 條碼格式：TM-{handle}
+  if (input.startsWith('TM-')) {
+    const handle = input.replace(/^TM-/, '')
+    const { data, error } = await supabase
+      .from('members')
+      .select('*, pets(*)')
+      .eq('handle', handle)
+      .maybeSingle()
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (!data) return NextResponse.json({ member: null })
+    const member = mapMember(data)
+    const todayAppointment = await getTodayAppointment(supabase, member.id)
+    return NextResponse.json({ member, todayAppointment })
+  }
+
   // Member QR Code: TERRYMON-{uuid} or phone/email
   const isQr = input.startsWith('TERRYMON-')
   const memberId = isQr ? input.replace(/^TERRYMON-/, '').split('-').slice(0, 5).join('-') : null
