@@ -19,6 +19,8 @@ export async function GET() {
 
   const convIds = convs.map(c => c.id)
 
+  type MemberInfo = { id: string; name: string; phone: string }
+
   // 取每個對話的 member 資訊
   const { data: members } = await supabase
     .from('conversation_members')
@@ -36,19 +38,17 @@ export async function GET() {
   const result = convs.map(conv => {
     const memberInfo = members?.find(m => m.conversation_id === conv.id)
     const lastMsg    = lastMsgs?.find(m => m.conversation_id === conv.id)
-
-    // 未讀：sender_id 有值（member 發的）的最新訊息
-    const hasUnread = lastMsg && lastMsg.sender_id !== null
+    const m = memberInfo?.members as unknown as MemberInfo | undefined
 
     return {
       id:           conv.id,
-      member_id:    (memberInfo?.members as Record<string, string>)?.id ?? null,
-      member_name:  (memberInfo?.members as Record<string, string>)?.name ?? '未知會員',
-      member_phone: (memberInfo?.members as Record<string, string>)?.phone ?? '',
+      member_id:    m?.id ?? null,
+      member_name:  m?.name ?? '未知會員',
+      member_phone: m?.phone ?? '',
       last_content:      lastMsg?.content ?? null,
       last_content_type: lastMsg?.content_type ?? null,
       last_at:           lastMsg?.created_at ?? conv.created_at,
-      has_unread:        hasUnread ?? false,
+      has_unread:        !!(lastMsg?.sender_id),
     }
   }).sort((a, b) => new Date(b.last_at).getTime() - new Date(a.last_at).getTime())
 
