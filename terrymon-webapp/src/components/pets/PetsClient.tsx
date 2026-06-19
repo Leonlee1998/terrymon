@@ -107,9 +107,9 @@ export default function PetsClient({
           </div>
 
           {/* Profile row */}
-          <div className="flex items-center gap-3 pb-3">
-            {/* Avatar */}
-            <div className="relative h-12 w-12 shrink-0">
+          <div className="flex items-center gap-4 pb-3">
+            {/* Avatar 64px */}
+            <div className="relative h-16 w-16 shrink-0">
               <div className="absolute inset-0 rounded-full border-2 border-card-teal" />
               {pet.photoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -119,7 +119,7 @@ export default function PetsClient({
                   className="h-full w-full rounded-full object-cover p-0.5"
                 />
               ) : (
-                <div className="flex h-full w-full items-center justify-center rounded-full bg-card-teal-light p-0.5 text-xl">
+                <div className="flex h-full w-full items-center justify-center rounded-full bg-card-teal-light p-0.5 text-3xl">
                   {emoji}
                 </div>
               )}
@@ -127,30 +127,30 @@ export default function PetsClient({
 
             {/* Name + badges */}
             <div className="min-w-0 flex-1">
-              <p className="text-lg font-black leading-tight text-card-teal">{pet.name}</p>
-              <div className="mt-1 flex flex-wrap gap-1.5">
-                {pet.breed  && <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-500">{pet.breed}</span>}
-                {age        && <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-500">{age}</span>}
-                {pet.weight && <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-500">{pet.weight} KG</span>}
+              <p className="text-2xl font-black leading-tight text-card-teal">{pet.name}</p>
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                {pet.breed  && <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-semibold text-gray-500">{pet.breed}</span>}
+                {age        && <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-semibold text-gray-500">{age}</span>}
+                {pet.weight && <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-semibold text-gray-500">{pet.weight} KG</span>}
               </div>
-              {gender && <p className="mt-0.5 text-[10px] text-gray-400">{gender}</p>}
+              {gender && <p className="mt-1 text-xs text-gray-400">{gender}</p>}
             </div>
 
             {/* ✏️ 👁️ */}
-            <div className="flex shrink-0 gap-1">
+            <div className="flex shrink-0 flex-col gap-1.5">
               <button
                 onClick={() => setEditOpen(true)}
                 className="flex h-8 w-8 items-center justify-center rounded-xl border border-border-t bg-surface text-slate-t transition-colors hover:border-card-teal hover:bg-card-teal-light hover:text-card-teal"
                 aria-label="編輯寵物資料"
               >
-                <Edit2 size={14} />
+                <Edit2 size={15} />
               </button>
               <button
                 onClick={() => setPreviewOpen(true)}
                 className="flex h-8 w-8 items-center justify-center rounded-xl border border-card-teal bg-card-teal-light text-card-teal transition-colors hover:bg-card-teal hover:text-white"
                 aria-label="預覽寵物卡片"
               >
-                <Eye size={14} />
+                <Eye size={15} />
               </button>
             </div>
           </div>
