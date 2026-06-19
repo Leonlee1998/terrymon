@@ -13,6 +13,19 @@ export function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' })
 }
 
+export function formatTime(isoStr: string): string {
+  const d = new Date(isoStr)
+  const now = new Date()
+  const diffMs = now.getTime() - d.getTime()
+  const diffMin = Math.floor(diffMs / 60000)
+  if (diffMin < 1)  return '剛剛'
+  if (diffMin < 60) return `${diffMin} 分鐘前`
+  const diffH = Math.floor(diffMin / 60)
+  if (diffH < 24)   return `${diffH} 小時前`
+  const isSameYear = d.getFullYear() === now.getFullYear()
+  return d.toLocaleDateString('zh-TW', { month: '2-digit', day: '2-digit', ...(isSameYear ? {} : { year: 'numeric' }) })
+}
+
 export function getSpeciesEmoji(species: string): string {
   return species === 'dog' ? '🐕' : species === 'cat' ? '🐈' : '🐾'
 }
