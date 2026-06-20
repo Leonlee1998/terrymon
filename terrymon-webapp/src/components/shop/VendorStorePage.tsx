@@ -1,7 +1,7 @@
 'use client'
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, ShoppingCart } from 'lucide-react'
+import { ArrowLeft, MessageCircle, ShoppingCart } from 'lucide-react'
 import { useCartStore } from '@/stores/cartStore'
 import ProductCard from './ProductCard'
 import VendorStoreHeader from './VendorStoreHeader'
@@ -42,6 +42,13 @@ export default function VendorStorePage({ vendor, products }: Props) {
             <ArrowLeft size={20} />
           </button>
           <span className="flex-1 font-semibold text-ink text-sm truncate">{vendor.storeName}</span>
+          <button
+            onClick={() => router.push(`/messages/shop/${vendor.id}`)}
+            className="text-slate-t hover:text-ink p-1 transition-colors"
+            aria-label="與商家聊聊"
+          >
+            <MessageCircle size={20} />
+          </button>
           <button onClick={() => router.push('/shop/cart')} className="relative text-slate-t hover:text-ink p-1">
             <ShoppingCart size={20} />
             {totalItems > 0 && (

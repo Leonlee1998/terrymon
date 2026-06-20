@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Minus, Plus, ShoppingCart, Star } from 'lucide-react'
+import { ArrowLeft, MessageCircle, Minus, Plus, ShoppingCart, Star } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { useCartStore } from '@/stores/cartStore'
@@ -54,13 +54,24 @@ export default function ProductDetail({ product, vendor }: Props) {
 
         {/* Price block */}
         <div className="bg-white px-4 pt-3 pb-4 mb-2">
-          <div className="flex items-baseline gap-2 flex-wrap">
-            <span className="text-2xl font-black text-accent">{formatPrice(product.price)}</span>
-            {product.originalPrice && (
-              <span className="text-sm text-slate-t line-through">{formatPrice(product.originalPrice)}</span>
-            )}
-            {discount && (
-              <span className="text-xs bg-accent text-white px-1.5 py-0.5 rounded font-bold">-{discount}%</span>
+          <div className="flex items-center gap-3">
+            <div className="flex items-baseline gap-2 flex-wrap flex-1">
+              <span className="text-2xl font-black text-accent">{formatPrice(product.price)}</span>
+              {product.originalPrice && (
+                <span className="text-sm text-slate-t line-through">{formatPrice(product.originalPrice)}</span>
+              )}
+              {discount && (
+                <span className="text-xs bg-accent text-white px-1.5 py-0.5 rounded font-bold">-{discount}%</span>
+              )}
+            </div>
+            {vendor && (
+              <button
+                onClick={() => router.push(`/messages/shop/${vendor.id}?msg=${encodeURIComponent(`我想詢問關於「${product.name}」的問題`)}`)}
+                className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-primary text-primary text-xs font-semibold hover:bg-primary-bg transition-colors"
+              >
+                <MessageCircle size={14} />
+                詢問商家
+              </button>
             )}
           </div>
 

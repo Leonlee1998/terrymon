@@ -70,7 +70,7 @@ export default function PetPreviewBackCard({ pet }: { pet: Pet }) {
             <div className="flex flex-col gap-3 border-r border-border-t pr-3">
               <BackInfo label="生日 • BORN"   value={fmtBirth(pet.birthDate)} />
               <BackInfo label="性別 • SEX"    value={genderText(pet)} />
-              <BackInfo label="照顧者"         value={pet.caregiver || '—'} />
+              <BackInfo label="照顧者 • CAREGIVER" value={pet.caregiver || '—'} />
             </div>
             <div className="flex flex-col gap-3 pl-1">
               <BackInfo label="體重 • WEIGHT" value={pet.weight ? `${pet.weight} KG` : '—'} />

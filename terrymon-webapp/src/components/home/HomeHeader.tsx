@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { Bell, CalendarDays, Search } from 'lucide-react'
-import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { useNotifStore } from '@/stores/notificationStore'
@@ -13,9 +13,11 @@ import CalendarSheet from './CalendarSheet'
 import SearchSheet from './SearchSheet'
 
 export default function HomeHeader() {
-  const { notifications, unreadCount, markAllRead } = useNotifStore()
-  const [calOpen, setCalOpen] = useState(false)
+  const router   = useRouter()
+  const { notifications, unreadCount, markAllRead, markOneRead } = useNotifStore()
+  const [calOpen, setCalOpen]       = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
+  const [sheetOpen, setSheetOpen]   = useState(false)
 
   async function handleMarkAllRead() {
     markAllRead()
@@ -54,7 +56,7 @@ export default function HomeHeader() {
             <CalendarDays size={18} />
           </button>
 
-        <Sheet>
+        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetTrigger asChild>
             <button className="relative grid size-10 place-items-center rounded-2xl border border-[#eadfd2] bg-white text-ink shadow-sm transition hover:border-primary/40">
               <Bell size={20} />
@@ -85,7 +87,13 @@ export default function HomeHeader() {
                     className={`w-full rounded-2xl border p-3 text-left transition-colors ${
                       item.isRead ? 'border-[#eadfd2] bg-white' : 'border-primary/30 bg-primary-bg'
                     }`}
-                    onClick={() => toast.info(item.body)}
+                    onClick={() => {
+                      markOneRead(item.id)
+                      if (item.actionUrl) {
+                        setSheetOpen(false)
+                        router.push(item.actionUrl)
+                      }
+                    }}
                   >
                     <p className="text-sm font-bold text-ink">{item.title}</p>
                     <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-t">{item.body}</p>

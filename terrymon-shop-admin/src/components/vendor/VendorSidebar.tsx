@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, Package, ShoppingBag,
-  Tag, BarChart2, Settings, LogOut, Store, MapPin
+  Tag, BarChart2, Settings, LogOut, Store, MapPin, MessageCircle
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useVendorStore } from '@/stores/vendorStore'
@@ -16,6 +16,7 @@ const NAV = [
   { href: '/orders',           icon: ShoppingBag,     label: '訂單管理' },
   { href: '/promotions',       icon: Tag,             label: '行銷活動' },
   { href: '/store-placements', icon: MapPin,          label: '實體進駐' },
+  { href: '/messages',         icon: MessageCircle,   label: '顧客訊息' },
   { href: '/reports',          icon: BarChart2,       label: '銷售報表' },
   { href: '/settings',         icon: Settings,        label: '商家設定' },
 ]

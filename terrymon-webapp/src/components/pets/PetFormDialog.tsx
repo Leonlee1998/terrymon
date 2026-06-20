@@ -35,6 +35,7 @@ interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
   pet?: Pet | null
+  onNewPet?: (pet: Pet) => void
 }
 
 const emptyForm: PetForm = {
@@ -61,10 +62,10 @@ function parseAllergies(value: string) {
     .filter(Boolean)
 }
 
-export default function PetFormDialog({ open, onOpenChange, pet }: Props) {
+export default function PetFormDialog({ open, onOpenChange, pet, onNewPet }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      {open && <PetFormContent pet={pet} onOpenChange={onOpenChange} />}
+      {open && <PetFormContent pet={pet} onOpenChange={onOpenChange} onNewPet={onNewPet} />}
     </Dialog>
   )
 }
@@ -88,7 +89,7 @@ function initialForm(pet?: Pet | null, memberName?: string): PetForm {
   } : { ...emptyForm, caregiver: memberName ?? '' }
 }
 
-function PetFormContent({ pet, onOpenChange }: Pick<Props, 'pet' | 'onOpenChange'>) {
+function PetFormContent({ pet, onOpenChange, onNewPet }: Pick<Props, 'pet' | 'onOpenChange' | 'onNewPet'>) {
   const router = useRouter()
   const { addPet, updatePet, removePet, member } = useAuthStore()
   const [form, setForm] = useState<PetForm>(() => initialForm(pet, member?.name))
@@ -147,10 +148,14 @@ function PetFormContent({ pet, onOpenChange }: Pick<Props, 'pet' | 'onOpenChange
         ? await api.updatePet(pet.id, payload)
         : await api.createPet(payload)
 
-      if (pet) updatePet(nextPet)
-      else addPet(nextPet)
-
-      toast.success(pet ? '寵物資料已更新' : '已新增寵物')
+      if (pet) {
+        updatePet(nextPet)
+        toast.success('寵物資料已更新')
+      } else {
+        addPet(nextPet)
+        toast.success('已新增寵物')
+        onNewPet?.(nextPet)
+      }
       onOpenChange(false)
       router.push('/pets')
       router.refresh()
@@ -180,7 +185,7 @@ function PetFormContent({ pet, onOpenChange }: Pick<Props, 'pet' | 'onOpenChange
   }
 
   return (
-    <DialogContent className="max-h-[92dvh] overflow-y-auto sm:max-w-xl">
+    <DialogContent className="max-h-[92dvh] overflow-y-auto rounded-2xl sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>{isEdit ? '編輯寵物資料' : '新增寵物'}</DialogTitle>
         </DialogHeader>

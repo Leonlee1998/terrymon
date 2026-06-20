@@ -67,7 +67,7 @@ export default function PetTransferDialog({ open, onOpenChange, petId, petName, 
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-md">
+      <DialogContent className="max-h-[90dvh] overflow-y-auto rounded-2xl sm:max-w-md">
         <DialogHeader>
           <DialogTitle>轉移照顧權 — {petName}</DialogTitle>
         </DialogHeader>

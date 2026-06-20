@@ -1,18 +1,20 @@
 'use client'
+import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { Bell, MessageCircle } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { useNotifStore } from '@/stores/notificationStore'
 import { formatTime } from '@/lib/utils'
 import { api } from '@/services/api'
-import { toast } from 'sonner'
 
 export default function AppHeader() {
   const pathname = usePathname()
-  const { notifications, unreadCount, markAllRead } = useNotifStore()
+  const router   = useRouter()
+  const { notifications, unreadCount, markAllRead, markOneRead } = useNotifStore()
+  const [sheetOpen, setSheetOpen] = useState(false)
 
   // 有自己 header 的頁面，不顯示全域 AppHeader
   const hide =
@@ -47,7 +49,7 @@ export default function AppHeader() {
           </Link>
 
           {/* 通知 */}
-          <Sheet>
+          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>
               <button
                 className="relative grid size-10 place-items-center rounded-2xl border border-[#eadfd2] bg-white text-ink shadow-sm transition hover:border-primary/40"
@@ -81,7 +83,13 @@ export default function AppHeader() {
                       className={`w-full rounded-2xl border p-3 text-left transition-colors ${
                         item.isRead ? 'border-[#eadfd2] bg-white' : 'border-primary/30 bg-primary-bg'
                       }`}
-                      onClick={() => toast.info(item.body)}
+                      onClick={() => {
+                        markOneRead(item.id)
+                        if (item.actionUrl) {
+                          setSheetOpen(false)
+                          router.push(item.actionUrl)
+                        }
+                      }}
                     >
                       <p className="text-sm font-bold text-ink">{item.title}</p>
                       <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-t">{item.body}</p>

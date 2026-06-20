@@ -117,7 +117,7 @@ export async function POST(req: NextRequest) {
     type:       'service_complete',
     title:      '美容服務完成！',
     body:       `${displayPetName} 已完成美容服務，消費 NT$${totalPrice}。感謝光臨 TerryMon！`,
-    action_url: `/grooming/${recordId}`,
+    action_url: `/messages/grooming/${STORE_ID}`,
   })
 
   // Step 6: 若有預約，更新 appointments.status = 'completed'

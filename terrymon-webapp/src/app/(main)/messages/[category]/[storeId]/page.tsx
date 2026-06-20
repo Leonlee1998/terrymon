@@ -1,6 +1,6 @@
 'use client'
 import React, { useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowLeft, Send, CalendarDays } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useAuthStore } from '@/stores/authStore'
@@ -74,14 +74,15 @@ export default function ChatRoomPage({
 }) {
   const { category, storeId } = React.use(params)
 
-  const router = useRouter()
-  const { member } = useAuthStore()
-  const supabase = createClient()
+  const router       = useRouter()
+  const searchParams = useSearchParams()
+  const { member }   = useAuthStore()
+  const supabase     = createClient()
 
   const [storeName, setStoreName]   = useState('')
   const [convId, setConvId]         = useState<string | null>(null)
   const [messages, setMessages]     = useState<Message[]>([])
-  const [input, setInput]           = useState('')
+  const [input, setInput]           = useState(searchParams.get('msg') ?? '')
   const [loading, setLoading]       = useState(true)
   const [sending, setSending]       = useState(false)
   const bottomRef                   = useRef<HTMLDivElement>(null)

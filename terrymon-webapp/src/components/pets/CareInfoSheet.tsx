@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { api } from '@/services/api'
 import type { EmergencyContact, Pet, PetCaregiver } from '@/types'
 import EmergencyContactsSection from './EmergencyContactsSection'
@@ -32,24 +32,21 @@ export default function CareInfoSheet({
   }, [open, pet.id])
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="bottom"
-        className="max-h-[85vh] overflow-y-auto rounded-t-3xl px-5 pb-10 pt-2"
-      >
-        <SheetHeader className="mb-5 pt-2">
-          <SheetTitle className="text-left text-lg font-black text-ink">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md rounded-2xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-left text-lg font-black text-ink">
             {pet.name} 的照護資訊
-          </SheetTitle>
-        </SheetHeader>
+          </DialogTitle>
+        </DialogHeader>
 
         {loading ? (
-          <div className="space-y-3">
+          <div className="space-y-3 py-2">
             <div className="h-20 animate-pulse rounded-xl bg-surface" />
             <div className="h-20 animate-pulse rounded-xl bg-surface" />
           </div>
         ) : (
-          <div className="space-y-7">
+          <div className="space-y-7 pb-2">
             <EmergencyContactsSection
               petId={pet.id}
               contacts={contacts}
@@ -62,7 +59,7 @@ export default function CareInfoSheet({
             />
           </div>
         )}
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   )
 }
