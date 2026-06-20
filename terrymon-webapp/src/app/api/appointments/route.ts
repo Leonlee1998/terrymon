@@ -70,11 +70,11 @@ export async function POST(request: Request) {
     }
 
     // 預先建立對話室，確保店家確認預約時 sendStoreMessage 能找到對話
-    await supabase.rpc('get_or_create_conversation', {
+    void supabase.rpc('get_or_create_conversation', {
       p_type:     'grooming',
       p_ref_type: 'store',
       p_ref_id:   storeId,
-    }).catch(() => {/* non-blocking */})
+    })
 
     return NextResponse.json({ id: data as string }, { status: 201 })
   } catch (err) {
